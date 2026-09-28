@@ -251,6 +251,28 @@ shadowJar {
 
 assemble.dependsOn shadowJar
 
+// The mixin annotation processor writes pathtodivinity.refmap.json into build/tmp/compileJava, and an
+// incremental recompile can leave it out. A jar without it crashes outside dev ("could not find any targets
+// matching 'inventoryTick'"), so always compile in full and refuse to produce a jar without the refmap.
+tasks.withType(JavaCompile).configureEach {
+    options.incremental = false
+}
+[tasks.named('jar'), tasks.named('shadowJar')].each { jarTask ->
+    jarTask.configure {
+        doLast {
+            def jarFile = destinationDirectory.get().file(archiveFileName.get()).asFile
+            def zip = new java.util.zip.ZipFile(jarFile)
+            try {
+                if (zip.getEntry('pathtodivinity.refmap.json') == null) {
+                    throw new GradleException("${jarFile.name} is missing pathtodivinity.refmap.json; run ./gradlew clean, then build")
+                }
+            } finally {
+                zip.close()
+            }
+        }
+    }
+}
+
 reobf {
     shadowJar {}
 }
