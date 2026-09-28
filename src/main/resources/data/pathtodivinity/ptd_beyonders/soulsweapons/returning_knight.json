@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:returning_knight"
+  },
+  "pathway": "lotm:sailor",
+  "sequence": 5,
+  "ability_sequence": 7,
+  "health_multiplier": 1.6,
+  "damage_multiplier": 1.6,
+  "boss": true
+}

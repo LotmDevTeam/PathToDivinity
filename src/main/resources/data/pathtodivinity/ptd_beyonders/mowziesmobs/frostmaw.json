@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
+  "match": {
+    "entity": "mowziesmobs:frostmaw"
+  },
+  "sequence": 7,
+  "health_multiplier": 1.2,
+  "damage_multiplier": 1.2,
+  "boss": true
+}

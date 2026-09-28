@@ -19,6 +19,8 @@ import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.swimmingtuna.pathtodivinity.PTD;
+import net.swimmingtuna.pathtodivinity.behavior.PhaseDetectors;
+import net.swimmingtuna.pathtodivinity.behavior.SpecialHandlers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,7 +80,15 @@ public class ProfileLoader extends SimpleJsonResourceReloadListener {
                     continue;
                 }
                 List<String> warnings = new ArrayList<>();
-                loaded.add(BeyonderProfile.parse(id, packId, packOrder.getOrDefault(packId, -1), json, warnings));
+                BeyonderProfile profile = BeyonderProfile.parse(id, packId, packOrder.getOrDefault(packId, -1), json, warnings);
+                if (profile.special() != null && !SpecialHandlers.exists(profile.special())) {
+                    warnings.add("unknown special \"" + profile.special() + "\" ignored");
+                }
+                if (profile.phaseTwo() != null && (profile.match().kind() != EntityMatcher.Kind.ENTITY
+                        || !PhaseDetectors.supports(profile.match().entityId()))) {
+                    warnings.add("phase_two has no effect: Path to Divinity can't detect a second phase for " + profile.match());
+                }
+                loaded.add(profile);
                 for (String warning : warnings) {
                     PTD.LOGGER.warn("Boss profile {} (from {}): {}", id, packId, warning);
                 }

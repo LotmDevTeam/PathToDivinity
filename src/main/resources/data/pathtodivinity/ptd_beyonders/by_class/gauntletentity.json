@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "match": {
+    "class_name": "GauntletEntity"
+  },
+  "sequence": 7,
+  "health_multiplier": 1.1,
+  "damage_multiplier": 2.0,
+  "boss": true
+}

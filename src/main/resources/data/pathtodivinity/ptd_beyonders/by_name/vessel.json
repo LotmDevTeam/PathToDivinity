@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "match": {
+    "name_contains": "vessel"
+  },
+  "sequence": 3,
+  "health_multiplier": 4.0,
+  "damage_multiplier": 2.5,
+  "boss": true,
+  "drops": [
+    {
+      "item": "terramity:pocket_universe"
+    }
+  ]
+}

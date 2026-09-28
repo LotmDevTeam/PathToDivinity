@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:gob"
+  },
+  "pathway": "lotm:monster",
+  "sequence": 4,
+  "ability_sequence": 6,
+  "health_multiplier": 3.0,
+  "damage_multiplier": 1.8,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:speed",
+      "amplifier": 1
+    }
+  ]
+}

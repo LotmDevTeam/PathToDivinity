@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:chaos_monarch"
+  },
+  "pathway": "lotm:monster",
+  "sequence": 5,
+  "ability_sequence": 7,
+  "health_multiplier": 1.8,
+  "damage_multiplier": 4.5,
+  "boss": true,
+  "persistent_data": {
+    "luck": 500.0
+  }
+}

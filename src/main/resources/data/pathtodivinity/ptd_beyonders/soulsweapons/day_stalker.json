@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:day_stalker"
+  },
+  "sequence": 2,
+  "health_multiplier": 4.0,
+  "damage_multiplier": 1.1,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:speed",
+      "amplifier": 2
+    }
+  ],
+  "allies": {
+    "entities": [
+      "soulsweapons:night_prowler"
+    ],
+    "radius": 25.0,
+    "interval_ticks": 40
+  },
+  "phase_two": {
+    "health_multiplier": 2.0,
+    "damage_multiplier": 2.6
+  }
+}

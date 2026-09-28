@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:ancient_guardian"
+  },
+  "sequence": 7,
+  "health_multiplier": 1.3,
+  "boss": true
+}

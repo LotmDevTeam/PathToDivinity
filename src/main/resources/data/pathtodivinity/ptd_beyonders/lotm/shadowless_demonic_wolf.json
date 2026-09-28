@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "lotm:shadowless_demonic_wolf"
+  },
+  "health_multiplier": 1.5,
+  "damage_multiplier": 1.1,
+  "boss": true
+}

@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "match": {
+    "class_name": "VoidBlossomEntity"
+  },
+  "sequence": 6,
+  "health_multiplier": 1.2,
+  "damage_multiplier": 1.3,
+  "boss": true
+}

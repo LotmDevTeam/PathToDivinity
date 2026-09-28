@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:cloud_golem"
+  },
+  "pathway": "lotm:sailor",
+  "sequence": 4,
+  "ability_sequence": 6,
+  "health_multiplier": 2.0,
+  "boss": true
+}

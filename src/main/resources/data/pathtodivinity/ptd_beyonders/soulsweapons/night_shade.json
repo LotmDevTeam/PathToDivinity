@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:night_shade"
+  },
+  "sequence": 5,
+  "health_multiplier": 2.5,
+  "damage_multiplier": 1.5,
+  "boss": true
+}

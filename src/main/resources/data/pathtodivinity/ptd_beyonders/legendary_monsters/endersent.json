@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:endersent"
+  },
+  "sequence": 8,
+  "health_multiplier": 1.5,
+  "damage_multiplier": 4.0,
+  "boss": true
+}

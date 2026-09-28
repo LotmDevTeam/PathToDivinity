@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:accursed_lord_boss"
+  },
+  "sequence": 5,
+  "health_multiplier": 2.0,
+  "damage_multiplier": 1.7,
+  "boss": true
+}

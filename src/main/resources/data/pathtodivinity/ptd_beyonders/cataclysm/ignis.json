@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    }
+  ],
+  "match": {
+    "entity": "cataclysm:ignis"
+  },
+  "sequence": 4,
+  "health_multiplier": 1.2,
+  "damage_multiplier": 0.9,
+  "boss": true
+}

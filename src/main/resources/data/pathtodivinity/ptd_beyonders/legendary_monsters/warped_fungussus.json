@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:warped_fungussus"
+  },
+  "sequence": 9,
+  "health_multiplier": 1.5,
+  "damage_multiplier": 1.4,
+  "boss": true
+}

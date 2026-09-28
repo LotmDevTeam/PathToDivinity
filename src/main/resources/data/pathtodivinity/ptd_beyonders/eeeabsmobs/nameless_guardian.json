@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
+  "match": {
+    "entity": "eeeabsmobs:nameless_guardian"
+  },
+  "sequence": 4,
+  "health_multiplier": 1.7,
+  "damage_multiplier": 2.2,
+  "boss": true
+}

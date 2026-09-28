@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "aquamirae"
+    }
+  ],
+  "match": {
+    "entity": "aquamirae:maw"
+  },
+  "sequence": 9,
+  "health_multiplier": 2.0,
+  "damage_multiplier": 1.5,
+  "boss": true
+}

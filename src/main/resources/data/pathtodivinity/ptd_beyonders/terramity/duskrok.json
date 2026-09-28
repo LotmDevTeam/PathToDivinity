@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:duskrok"
+  },
+  "sequence": 8,
+  "health_multiplier": 1.3,
+  "damage_multiplier": 1.3,
+  "boss": true,
+  "drops": [
+    {
+      "item": "minecraft:netherite_scrap"
+    }
+  ]
+}

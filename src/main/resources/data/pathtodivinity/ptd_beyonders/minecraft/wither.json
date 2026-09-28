@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "minecraft:wither"
+  },
+  "sequence": 6,
+  "health_multiplier": 1.0,
+  "damage_multiplier": 1.1,
+  "boss": true,
+  "drops": [
+    {
+      "item": "soulsweapons:lord_soul_dark"
+    },
+    {
+      "item": "soulsweapons:shard_of_uncertainty"
+    }
+  ]
+}

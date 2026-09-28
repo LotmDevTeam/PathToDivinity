@@ -1,0 +1,14 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    }
+  ],
+  "match": {
+    "entity": "born_in_chaos_v1:glutton_fish"
+  },
+  "sequence": 9,
+  "boss": true
+}

@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    }
+  ],
+  "match": {
+    "entity": "born_in_chaos_v1:lord_pumpkinhead"
+  },
+  "pathway": "lotm:warrior",
+  "sequence": 3,
+  "ability_sequence": 5,
+  "health_multiplier": 5.0,
+  "damage_multiplier": 1.2,
+  "boss": true,
+  "allies": {
+    "all_mobs": true,
+    "radius": 25.0,
+    "interval_ticks": 3
+  }
+}

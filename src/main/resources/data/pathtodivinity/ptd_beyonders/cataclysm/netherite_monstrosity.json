@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    }
+  ],
+  "match": {
+    "entity": "cataclysm:netherite_monstrosity"
+  },
+  "sequence": 6,
+  "health_multiplier": 1.2,
+  "damage_multiplier": 1.5,
+  "boss": true
+}

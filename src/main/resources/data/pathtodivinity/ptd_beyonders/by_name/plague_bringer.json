@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "match": {
+    "name_contains": "plague_bringer"
+  },
+  "sequence": 7,
+  "health_multiplier": 0.7,
+  "damage_multiplier": 1.7,
+  "boss": true
+}

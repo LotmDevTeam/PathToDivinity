@@ -1,0 +1,14 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
+  "match": {
+    "entity": "eeeabsmobs:corpse_warlock"
+  },
+  "sequence": 7,
+  "boss": true
+}

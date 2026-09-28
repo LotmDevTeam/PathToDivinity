@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
+  "match": {
+    "entity": "mowziesmobs:ferrous_wroughtnaut"
+  },
+  "sequence": 9,
+  "health_multiplier": 1.0,
+  "damage_multiplier": 1.2,
+  "boss": true
+}

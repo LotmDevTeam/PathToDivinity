@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "aquamirae"
+    }
+  ],
+  "match": {
+    "entity": "aquamirae:maze_mother"
+  },
+  "sequence": 7,
+  "health_multiplier": 1.5,
+  "damage_multiplier": 1.6,
+  "boss": true
+}

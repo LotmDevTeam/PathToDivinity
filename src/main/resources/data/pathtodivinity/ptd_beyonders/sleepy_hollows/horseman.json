@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "sleepy_hollows"
+    }
+  ],
+  "match": {
+    "entity": "sleepy_hollows:horseman"
+  },
+  "pathway": "lotm:spectator",
+  "sequence": 4,
+  "ability_sequence": 6,
+  "health_multiplier": 1.5,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:speed",
+      "amplifier": 1
+    }
+  ]
+}

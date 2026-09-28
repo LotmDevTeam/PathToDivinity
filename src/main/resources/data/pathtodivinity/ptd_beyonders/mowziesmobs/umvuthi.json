@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
+  "match": {
+    "entity": "mowziesmobs:umvuthi"
+  },
+  "sequence": 9,
+  "health_multiplier": 1.0,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:regeneration",
+      "amplifier": 1
+    }
+  ]
+}

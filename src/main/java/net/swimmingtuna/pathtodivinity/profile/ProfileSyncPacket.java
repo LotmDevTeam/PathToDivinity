@@ -47,6 +47,10 @@ public final class ProfileSyncPacket {
     public static void onDatapackSync(OnDatapackSyncEvent event) {
         ProfileSyncPacket packet = new ProfileSyncPacket(BeyonderProfiles.server().all());
         ServerPlayer player = event.getPlayer();
+        if (player == null) {
+            // A /reload: bring LOTM's registrations in line with the new profiles too.
+            BeyonderRegistrations.apply(event.getPlayerList().getServer(), false);
+        }
         CHANNEL.send(player != null ? PacketDistributor.PLAYER.with(() -> player) : PacketDistributor.ALL.noArg(), packet);
     }
 

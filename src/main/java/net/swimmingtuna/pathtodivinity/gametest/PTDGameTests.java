@@ -5,13 +5,14 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
@@ -95,7 +96,9 @@ public class PTDGameTests {
             return;
         }
         ItemStack stack = new ItemStack(gated.get());
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        // A FakePlayer, not makeMockServerPlayerInLevel(): the mock has no network channel, and mods
+        // that send packets to joining players crash it.
+        FakePlayer player = FakePlayerFactory.getMinecraft(helper.getLevel());
         player.setGameMode(GameType.SURVIVAL);
         helper.assertFalse(SequenceGates.canUse(player, stack), "a player without a pathway must be blocked");
         var holder = BeyonderHolderAttacher.getHolderUnwrap(player);
@@ -106,6 +109,9 @@ public class PTDGameTests {
         player.setGameMode(GameType.CREATIVE);
         holder.setPathwayAndSequenceNoSpirituality(BeyonderClassInit.SAILOR.get(), 9);
         helper.assertTrue(SequenceGates.canUse(player, stack), "creative players bypass gates");
+        // The FakePlayer is shared by the level: leave it as it was.
+        holder.removeCurrentClass();
+        player.setGameMode(GameType.SURVIVAL);
         helper.succeed();
     }
 }

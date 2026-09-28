@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:gundalf"
+  },
+  "sequence": 2,
+  "health_multiplier": 6.0,
+  "damage_multiplier": 1.5,
+  "boss": true
+}

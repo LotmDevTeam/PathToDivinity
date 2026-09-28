@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "lotm:wandering"
+  },
+  "health_multiplier": 1.5,
+  "damage_multiplier": 0.8
+}

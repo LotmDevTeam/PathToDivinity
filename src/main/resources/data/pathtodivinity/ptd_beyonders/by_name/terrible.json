@@ -1,7 +1,7 @@
 {
   "format": 1,
   "match": {
-    "entity": "minecraft:elder_guardian"
+    "name_contains": "terrible"
   },
   "sequence": 8,
   "health_multiplier": 1.0,

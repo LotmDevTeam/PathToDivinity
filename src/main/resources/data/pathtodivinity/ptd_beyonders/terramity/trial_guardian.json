@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:trial_guardian"
+  },
+  "sequence": 3,
+  "health_multiplier": 4.0,
+  "boss": true
+}

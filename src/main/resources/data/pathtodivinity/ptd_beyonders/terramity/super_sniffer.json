@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:super_sniffer"
+  },
+  "sequence": 2,
+  "health_multiplier": 6.0,
+  "damage_multiplier": 1.2,
+  "boss": true,
+  "special": "pathtodivinity:super_sniffer"
+}
