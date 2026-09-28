@@ -12,6 +12,7 @@ import com.github.L_Ender.cataclysm.init.ModItems;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 /** Only call when {@link ModCompat#CATACLYSM} is loaded. */
 public final class CataclysmCompat {
@@ -23,7 +24,7 @@ public final class CataclysmCompat {
     public static float projectileDamageMultiplier(Entity directSource) {
         if (directSource instanceof Tidal_Tentacle_Entity tidalTentacleEntity) {
             if (tidalTentacleEntity.getCreatorEntity() != null && tidalTentacleEntity.getCreatorEntity() instanceof Player) {
-                return 4.0f;
+                return PTDBalance.TIDAL_TENTACLE_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (directSource instanceof Wither_Howitzer_Entity projectile) {
             if (projectile.getOwner() != null && projectile.getOwner() instanceof Player player) {
@@ -34,31 +35,31 @@ public final class CataclysmCompat {
                         break;
                     }
                 }
-                return hasVoidAssault ? 1.7f : 1.3f;
+                return (hasVoidAssault ? PTDBalance.WITHER_HOWITZER_VOID_ASSAULT_HIT_MULTIPLIER : PTDBalance.WITHER_HOWITZER_HIT_MULTIPLIER).scale(1.0f);
             }
         } else if (directSource instanceof Wither_Missile_Entity projectile) {
             if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                return 1.3f;
+                return PTDBalance.WITHER_MISSILE_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (directSource instanceof Sandstorm_Entity projectile) {
             if (projectile.getCaster() != null && projectile.getCaster() instanceof Player) {
-                return 1.5f;
+                return PTDBalance.SANDSTORM_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (directSource instanceof Phantom_Halberd_Entity projectile) {
             if (projectile.getCaster() != null && projectile.getCaster() instanceof Player) {
-                return 1.5f;
+                return PTDBalance.PHANTOM_HALBERD_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (directSource instanceof Wave_Entity projectile) {
             if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                return 1.5f;
+                return PTDBalance.WAVE_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (directSource instanceof Void_Vortex_Entity projectile) {
             if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                return 2.0f;
+                return PTDBalance.VOID_VORTEX_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (directSource instanceof Cursed_Sandstorm_Entity projectile) {
             if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                return 1.5f;
+                return PTDBalance.CURSED_SANDSTORM_HIT_MULTIPLIER.scale(1.0f);
             }
         }
         return 1.0f;

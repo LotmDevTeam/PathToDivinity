@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.OnyxStormRightclickedProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = OnyxStormRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class OnyxStormDamageMixin {
             constant = @Constant(doubleValue = 20.0D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 0.6D;
+        return PTDBalance.ONYX_STORM_DAMAGE.apply(damage);
     }
 }

@@ -7,6 +7,7 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.profile.ProfileSyncPacket;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public class PTD {
     public PTD() {
         MinecraftForge.EVENT_BUS.register(this);
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, "pathtodivinity-server.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, "pathtodivinity-balance.toml");
         FMLJavaModLoadingContext.get().getModEventBus().addListener(PTDServerConfig::onConfigLoading);
         ProfileSyncPacket.register();
         MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);

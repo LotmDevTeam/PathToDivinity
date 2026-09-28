@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.PlanetBusterLaserProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = PlanetBusterLaserProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class PlanetBusterDamageMixin {
             constant = @Constant(doubleValue = 70.0D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 3.0D;
+        return PTDBalance.PLANET_BUSTER_DAMAGE.apply(damage);
     }
 }

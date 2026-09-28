@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.BlasphemicRaptureRightclickedProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = BlasphemicRaptureRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class BlasphemicRaptureDamageMixin {
             constant = @Constant(doubleValue = 2.25D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 4D;
+        return PTDBalance.BLASPHEMIC_RAPTURE_DAMAGE.apply(damage);
     }
 }

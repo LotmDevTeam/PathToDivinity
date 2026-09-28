@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.ConductiteLaserRifleRightclickedProcedu
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = ConductiteLaserRifleRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class ConductiteLaserRifleDamageMixin {
             constant = @Constant(doubleValue = 1.2D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 2.1D;
+        return PTDBalance.CONDUCTITE_LASER_RIFLE_DAMAGE.apply(damage);
     }
 }

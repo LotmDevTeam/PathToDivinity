@@ -24,7 +24,6 @@
     "Celestisynth.CelestisynthHurtDispatchMixin",
     "Celestisynth.CelestisynthItemTiersMixin",
     "Celestisynth.CrescentiaBarrageAttackMixin",
-    "Celestisynth.FrostboundDanceAttackMixin",
     "Celestisynth.KeresRendMixin",
     "Celestisynth.PoltergeistBarrierCallAttackMixin",
     "Celestisynth.PoltergeistCosmicSteelAttackMixin",

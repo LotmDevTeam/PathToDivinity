@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.CosmicStormRightclickedProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = CosmicStormRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class CosmicStormDamageMixin {
             constant = @Constant(doubleValue = 25.0D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 0.8D;
+        return PTDBalance.COSMIC_STORM_DAMAGE.apply(damage);
     }
 }

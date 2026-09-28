@@ -81,6 +81,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.Map;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mod.EventBusSubscriber(modid = PTD.MOD_ID)
@@ -261,17 +262,17 @@ public class ModEvents {
     private static float projectileDamageMultiplier(Entity directSource) {
         ResourceLocation sourceId = PTDEntities.idOf(directSource);
         if (sourceId.equals(PTDEntities.SOLARIS_BOMB)) {
-            return 5.0f;
+            return PTDBalance.SOLARIS_BOMB_HIT_MULTIPLIER.scale(1.0f);
         } else if (sourceId.equals(PTDEntities.CRESCENTIA_DRAGON)) {
-            return 2.0f;
+            return PTDBalance.CRESCENTIA_DRAGON_HIT_MULTIPLIER.scale(1.0f);
         } else if (sourceId.equals(PTDEntities.FROSTBOUND_SHARD)) {
-            return 6.5f;
+            return PTDBalance.FROSTBOUND_SHARD_HIT_MULTIPLIER.scale(1.0f);
         } else if (sourceId.equals(PTDEntities.PUMPKIN_PISTOL_PROJECTILE)) {
             if (directSource instanceof Projectile projectile && projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                return 7.0f;
+                return PTDBalance.PUMPKIN_PISTOL_HIT_MULTIPLIER.scale(1.0f);
             }
         } else if (sourceId.equals(PTDEntities.FREYR_SWORD)) {
-            return 1.8f;
+            return PTDBalance.FREYR_SWORD_HIT_MULTIPLIER.scale(1.0f);
         } else if (ModCompat.CATACLYSM.equals(sourceId.getNamespace())) {
             return CataclysmCompat.projectileDamageMultiplier(directSource);
         } else if (ModCompat.EEEABS_MOBS.equals(sourceId.getNamespace())) {

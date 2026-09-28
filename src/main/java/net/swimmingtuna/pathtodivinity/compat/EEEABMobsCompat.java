@@ -3,6 +3,7 @@ package net.swimmingtuna.pathtodivinity.compat;
 import com.eeeab.eeeabsmobs.sever.entity.effect.EntityGuardianLaser;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 /** Only call when {@link ModCompat#EEEABS_MOBS} is loaded. */
 public final class EEEABMobsCompat {
@@ -14,7 +15,7 @@ public final class EEEABMobsCompat {
     public static float projectileDamageMultiplier(Entity directSource) {
         if (directSource instanceof EntityGuardianLaser projectile) {
             if (projectile.getOwner() != null && !(projectile.getOwner() instanceof Player)) {
-                return 0.6f;
+                return PTDBalance.GUARDIAN_LASER_MOB_HIT_MULTIPLIER.scale(1.0f);
             }
         }
         return 1.0f;

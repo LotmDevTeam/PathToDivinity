@@ -4,6 +4,7 @@ import com.obscuria.aquamirae.common.entities.CaptainCornelia;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 /**
  * Removes Captain Cornelia's "very low HP" wall.
@@ -26,6 +27,6 @@ public class CaptainCorneliaMixin {
 
     @ModifyConstant(method = "baseTick", constant = @Constant(floatValue = 16.0F))
     private float ptd$removeLowHealthRegen(float original) {
-        return -1.0F;
+        return PTDBalance.CAPTAIN_CORNELIA_NO_LOW_HEALTH_REGEN.isOn() ? -1.0F : original;
     }
 }
