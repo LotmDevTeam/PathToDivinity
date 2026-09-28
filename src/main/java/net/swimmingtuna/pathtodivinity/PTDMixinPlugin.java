@@ -3,11 +3,14 @@ package net.swimmingtuna.pathtodivinity;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.LoadingModList;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
+import org.spongepowered.asm.service.MixinService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,6 +61,8 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
             "Terramity", "terramity",
             "SurfaceRuleManagerMixin", "terrablender_surface_rule_fix"
     );
+
+    private static final Set<String> BACKPORTED_METHODS = Set.of("parse", "fromNamespaceAndPath", "withDefaultNamespace");
 
     private final Map<String, Boolean> integrationEnabled = new HashMap<>();
     private final Set<String> disabledMixins = new HashSet<>();
@@ -112,6 +117,9 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(".ResourceLocationBackportMixin")) {
+            return !hasMethod(targetClassName, "parse");
+        }
         if (disabledMixins.contains(mixinClassName)) {
             LOGGER.info("Skipping mixin {}: listed in disabled_mixins", mixinClassName);
             return false;
@@ -127,6 +135,17 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
         }
         LOGGER.debug("Skipping mixin {}: optional mod '{}' is not installed", mixinClassName, modId);
         return false;
+    }
+
+    /** Reads the target's bytecode (without loading it) to see whether a method already exists. */
+    private static boolean hasMethod(String className, String methodName) {
+        try {
+            ClassNode node = MixinService.getService().getBytecodeProvider().getClassNode(className.replace('.', '/'));
+            return node.methods.stream().anyMatch(method -> method.name.equals(methodName));
+        } catch (Exception e) {
+            LOGGER.warn("Could not inspect {}; assuming it has {}: {}", className, methodName, e.toString());
+            return true;
+        }
     }
 
     private static String toggleKey(String mixinClassName) {
@@ -170,5 +189,13 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        if (mixinClassName.endsWith(".ResourceLocationBackportMixin")) {
+            // Mixin only adds private static methods; the backported factories must be public.
+            for (MethodNode method : targetClass.methods) {
+                if (BACKPORTED_METHODS.contains(method.name) && (method.access & Opcodes.ACC_STATIC) != 0) {
+                    method.access = (method.access & ~Opcodes.ACC_PRIVATE) | Opcodes.ACC_PUBLIC;
+                }
+            }
+        }
     }
 }
