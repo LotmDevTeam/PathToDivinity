@@ -61,6 +61,7 @@ import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
+import net.swimmingtuna.pathtodivinity.PTDTags;
 import net.swimmingtuna.pathtodivinity.PTDUtil;
 import net.swimmingtuna.pathtodivinity.compat.BornInChaosCompat;
 import net.swimmingtuna.pathtodivinity.compat.CataclysmCompat;
@@ -129,23 +130,7 @@ public class ModEvents {
             int tickCount = living.tickCount;
             if (tickCount % PTDServerConfig.ITEM_SCAN_INTERVAL_TICKS.get() == 0 && living instanceof Player player) {
                 removeBannedEnchantments(player, living.getMainHandItem());
-                // Scan by item rather than Inventory.contains(defaultInstance), which compares NBT and so
-                // missed any damaged or enchanted razor.
-                Item razor = PTDItems.get(PTDItems.MEHRUNES_RAZOR);
-                if (razor != null) {
-                    boolean removedRazor = false;
-                    for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                        ItemStack stack = player.getInventory().getItem(i);
-                        if (stack.is(razor)) {
-                            player.getInventory().setItem(i, ItemStack.EMPTY);
-                            removedRazor = true;
-                        }
-                    }
-                    if (removedRazor) {
-                        player.containerMenu.broadcastChanges();
-                        player.sendSystemMessage(Component.literal("Mehrunes Razor cannot be used.").withStyle(ChatFormatting.RED));
-                    }
-                }
+                // Banned items (Mehrunes Razor included) come from #pathtodivinity:banned.
                 PTDUtil.removeBannedItem(living);
             }
 
@@ -265,7 +250,7 @@ public class ModEvents {
                     BlockPos.betweenClosedStream(box).forEach(pos -> {
                         BlockState state = level.getBlockState(pos);
                         if (!state.isAir() && pos.getY() >= mob.getY() + 1 && state.getFluidState().isEmpty()
-                                && BeyonderUtil.canDestroyBlock(mob, pos)) {
+                                && !state.is(PTDTags.BOSS_UNBREAKABLE) && BeyonderUtil.canDestroyBlock(mob, pos)) {
                             level.destroyBlock(pos, drops, mob);
                         }
                     });
@@ -694,7 +679,7 @@ public class ModEvents {
                     multiplyDamage(living,0.8);
                 }
             } else if (entity instanceof ItemEntity item) {
-                if (PTDItems.is(item.getItem(), PTDItems.MUSIC_SHEET_OF_UNTIMELY_DEATH)) {
+                if (item.getItem().is(PTDTags.DESTROYED)) {
                     event.setCanceled(true);
                 }
             }

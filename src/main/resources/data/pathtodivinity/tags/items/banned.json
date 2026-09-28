@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "terramity:ultra_sniffer_fur",
+      "required": false
+    },
+    {
+      "id": "terramity:poker_chip_bracelets",
+      "required": false
+    },
+    {
+      "id": "terramity:fateful_coin",
+      "required": false
+    },
+    {
+      "id": "terramity:lucky_dice",
+      "required": false
+    },
+    {
+      "id": "cataclysm:cursium_chestplate",
+      "required": false
+    },
+    {
+      "id": "soulsweapons:mehrunes_razor",
+      "required": false
+    }
+  ]
+}

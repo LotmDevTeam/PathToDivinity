@@ -6,6 +6,7 @@
   "refmap": "pathtodivinity.refmap.json",
   "mixins": [
     "SurfaceRuleManagerMixin",
+    "ItemStackInventoryTickMixin",
     "Aquamirae.CaptainCorneliaMixin",
     "AwakenedBosses.HerobrineAxeMixin",
     "AwakenedBosses.HerobrineSwordMixin",
@@ -20,6 +21,7 @@
     "Celestisynth.BreezebreakerMixin",
     "Celestisynth.BreezebreakerWheelAttackMixin",
     "Celestisynth.BreezebreakerWindRoarAttackMixin",
+    "Celestisynth.CelestisynthHurtDispatchMixin",
     "Celestisynth.CelestisynthItemTiersMixin",
     "Celestisynth.CrescentiaBarrageAttackMixin",
     "Celestisynth.FrostboundDanceAttackMixin",

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "terramity:music_sheet_of_untimely_death",
+      "required": false
+    }
+  ]
+}

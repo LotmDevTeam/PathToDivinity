@@ -10,9 +10,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
-import net.swimmingtuna.pathtodivinity.compat.PTDItems;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 
 import java.util.HashSet;
@@ -145,17 +143,9 @@ public class PTDUtil {
     }
 
 
+    /** In {@code #pathtodivinity:banned}. */
     public static boolean isBannableItem(ItemStack itemStack) {
-        return
-
-                PTDItems.is(itemStack, PTDItems.ULTRA_SNIFFER_FUR) ||
-                        PTDItems.is(itemStack, PTDItems.POKER_CHIP_BRACELETS) ||
-                        PTDItems.is(itemStack, PTDItems.FATEFUL_COIN) ||
-                        PTDItems.is(itemStack, PTDItems.LUCKY_DICE) ||
-
-                        PTDItems.is(itemStack, PTDItems.CURSIUM_CHESTPLATE);
-        //DyrolianSword
-
+        return itemStack.is(PTDTags.BANNED);
     }
 
 
@@ -171,10 +161,8 @@ public class PTDUtil {
             }
         }
         if (living instanceof Player player) {
-            // getContainerSize() covers the main inventory, armor and offhand, so held items are
-            // included. (Held Celestisynth weapons used to be moved into the inventory first, only
-            // to be dropped by this same loop straight after.)
-            boolean canUseSequence4Items = canUseSequence4Items(player);
+            // getContainerSize() covers the main inventory, armor and offhand. Sequence-gated items are
+            // no longer taken away here: they stay, inert, until the player can use them (gating/).
             Inventory inventory = player.getInventory();
             for (int i = 0; i < inventory.getContainerSize(); i++) {
                 ItemStack itemStack = inventory.getItem(i);
@@ -182,11 +170,7 @@ public class PTDUtil {
                     inventory.setItem(i, ItemStack.EMPTY);
                     disposeOfBannedItem(player, itemStack);
                     living.sendSystemMessage(Component.literal("Banned item removed from inventory: " + itemStack.getHoverName().getString()).withStyle(ChatFormatting.RED));
-                } else if (!canUseSequence4Items && isBannableSequence5Item(itemStack)) {
-                    inventory.setItem(i, ItemStack.EMPTY);
-                    player.drop(itemStack, false);
-                    living.sendSystemMessage(Component.literal("Item dropped from inventory: " + itemStack.getHoverName().getString() + " (Requires Sequence 4 or higher)").withStyle(ChatFormatting.GOLD));
-                } else if (PTDItems.is(itemStack, PTDItems.MUSIC_SHEET_OF_UNTIMELY_DEATH)) {
+                } else if (itemStack.is(PTDTags.DESTROYED)) {
                     inventory.setItem(i, ItemStack.EMPTY);
                 }
             }
@@ -201,27 +185,5 @@ public class PTDUtil {
         if (living instanceof Player player && PTDServerConfig.BANNED_ITEM_ACTION.get() == PTDServerConfig.BannedItemAction.DROP) {
             player.drop(removed, false);
         }
-    }
-
-    /**
-     * Whether the player is a Beyonder of Sequence 4 or stronger (lower number = stronger).
-     * Players without a pathway have sequence -1, which the old {@code getSequence > 4} check
-     * treated as allowed, so non-Beyonders could use every restricted weapon.
-     */
-    public static boolean canUseSequence4Items(Player player) {
-        int sequence = BeyonderUtil.getSequence(player);
-        return sequence >= 0 && sequence <= 4;
-    }
-
-    public static boolean isBannableSequence5Item(ItemStack stack) {
-        return
-                PTDItems.is(stack, PTDItems.AQUAFLORA) ||
-                        PTDItems.is(stack, PTDItems.KERES) ||
-                        PTDItems.is(stack, PTDItems.BREEZEBREAKER) ||
-                        PTDItems.is(stack, PTDItems.SOLARIS) ||
-                        PTDItems.is(stack, PTDItems.CRESCENTIA) ||
-                        PTDItems.is(stack, PTDItems.POLTERGEIST) ||
-                        PTDItems.is(stack, PTDItems.RAINFALL_SERENITY) ||
-                        PTDItems.is(stack, PTDItems.FROSTBOUND);
     }
 }
