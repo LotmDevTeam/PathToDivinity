@@ -9,7 +9,9 @@
   "match": {
     "entity": "terramity:duskrok"
   },
+  "pathway": "lotm:sleepless",
   "sequence": 8,
+  "ability_sequence": -1,
   "health_multiplier": 1.3,
   "damage_multiplier": 1.3,
   "boss": true,

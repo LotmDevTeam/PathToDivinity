@@ -175,10 +175,26 @@ public final class PTDServerConfig {
 
     // ---- Migration from the old COMMON config ----
 
-    private static final Path LEGACY_COMMON_FILE = FMLPaths.CONFIGDIR.get().resolve("pathtodivinity-common.toml");
+    private static final Path LEGACY_COMMON_FILE = FMLPaths.CONFIGDIR.get().resolve(FOLDER).resolve("pathtodivinity-common.toml");
 
     /**
-     * Health/damage multipliers used to live in {@code config/pathtodivinity-common.toml}. The first
+     * Released versions wrote config/pathtodivinity-common.toml. It is kept (each world copies its
+     * multipliers once, see {@link #onConfigLoading}) but moved into config/ptd/ with the other files.
+     */
+    public static void relocateLegacyCommonFile() {
+        Path old = FMLPaths.CONFIGDIR.get().resolve("pathtodivinity-common.toml");
+        try {
+            if (Files.exists(old) && !Files.exists(LEGACY_COMMON_FILE)) {
+                Files.createDirectories(LEGACY_COMMON_FILE.getParent());
+                Files.move(old, LEGACY_COMMON_FILE);
+            }
+        } catch (IOException e) {
+            PTD.LOGGER.warn("Could not move {} into config/{}/: {}", old.getFileName(), FOLDER, e.toString());
+        }
+    }
+
+    /**
+     * Health/damage multipliers used to live in {@code config/ptd/pathtodivinity-common.toml}. The first
      * time a world's server config loads, copy them over, then leave a marker beside the server config
      * so later edits to it are never overwritten. The legacy file is left alone so every world migrates.
      */

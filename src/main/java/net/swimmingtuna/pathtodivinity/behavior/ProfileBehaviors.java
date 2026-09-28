@@ -13,6 +13,8 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.profile.BeyonderProfile;
+import net.swimmingtuna.pathtodivinity.profile.BeyonderRegistrations;
+import net.swimmingtuna.pathtodivinity.profile.EntityMatcher;
 
 /**
  * What a boss profile does to its mob, apart from the lookups other code makes directly
@@ -29,6 +31,10 @@ public final class ProfileBehaviors {
 
     /** When the mob joins a level, including when it is loaded from disk (scaling applies once). */
     public static void onJoin(LivingEntity living, BeyonderProfile profile) {
+        if (profile.match().kind() != EntityMatcher.Kind.ENTITY && !profile.pathways().isEmpty()
+                && living.level().getServer() != null) {
+            BeyonderRegistrations.registerRuleMatch(living.level().getServer(), living.getType(), profile);
+        }
         if (profile.healthMultiplier() != null) {
             SpecialHandlers.SpecialHandler special = SpecialHandlers.get(profile.special());
             if (special == null || !special.applyHealth(living, profile.healthMultiplier())) {

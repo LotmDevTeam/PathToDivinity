@@ -9,7 +9,9 @@
   "match": {
     "entity": "legendary_monsters:warped_fungussus"
   },
+  "pathway": "lotm:secrets_supplicant",
   "sequence": 9,
+  "ability_sequence": -1,
   "health_multiplier": 1.5,
   "damage_multiplier": 1.4,
   "boss": true

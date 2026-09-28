@@ -9,7 +9,9 @@
   "match": {
     "entity": "cataclysm:netherite_monstrosity"
   },
+  "pathway": "lotm:warrior",
   "sequence": 6,
+  "ability_sequence": -1,
   "health_multiplier": 1.2,
   "damage_multiplier": 1.5,
   "boss": true

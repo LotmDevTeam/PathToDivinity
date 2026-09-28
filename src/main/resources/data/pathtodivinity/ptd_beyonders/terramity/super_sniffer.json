@@ -9,7 +9,9 @@
   "match": {
     "entity": "terramity:super_sniffer"
   },
+  "pathway": "lotm:monster",
   "sequence": 2,
+  "ability_sequence": -1,
   "health_multiplier": 6.0,
   "damage_multiplier": 1.2,
   "boss": true,

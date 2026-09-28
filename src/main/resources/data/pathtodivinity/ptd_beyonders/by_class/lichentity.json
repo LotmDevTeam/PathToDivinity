@@ -3,7 +3,9 @@
   "match": {
     "class_name": "LichEntity"
   },
+  "pathway": "lotm:corpse_collector",
   "sequence": 7,
+  "ability_sequence": -1,
   "health_multiplier": 1.0,
   "damage_multiplier": 1.1,
   "boss": true

@@ -9,7 +9,9 @@
   "match": {
     "entity": "mowziesmobs:frostmaw"
   },
+  "pathway": "lotm:warrior",
   "sequence": 7,
+  "ability_sequence": -1,
   "health_multiplier": 1.2,
   "damage_multiplier": 1.2,
   "boss": true

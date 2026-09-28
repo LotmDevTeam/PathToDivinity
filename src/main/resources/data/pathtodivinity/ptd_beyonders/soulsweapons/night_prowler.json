@@ -9,7 +9,9 @@
   "match": {
     "entity": "soulsweapons:night_prowler"
   },
+  "pathway": "lotm:sleepless",
   "sequence": 2,
+  "ability_sequence": -1,
   "health_multiplier": 3.0,
   "damage_multiplier": 0.4,
   "boss": true,

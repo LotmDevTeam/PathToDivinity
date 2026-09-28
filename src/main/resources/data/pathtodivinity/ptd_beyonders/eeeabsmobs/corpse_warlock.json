@@ -9,6 +9,8 @@
   "match": {
     "entity": "eeeabsmobs:corpse_warlock"
   },
+  "pathway": "lotm:corpse_collector",
   "sequence": 7,
+  "ability_sequence": -1,
   "boss": true
 }

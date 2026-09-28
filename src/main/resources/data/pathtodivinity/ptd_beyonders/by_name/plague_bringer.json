@@ -3,7 +3,9 @@
   "match": {
     "name_contains": "plague_bringer"
   },
+  "pathway": "lotm:corpse_collector",
   "sequence": 7,
+  "ability_sequence": -1,
   "health_multiplier": 0.7,
   "damage_multiplier": 1.7,
   "boss": true

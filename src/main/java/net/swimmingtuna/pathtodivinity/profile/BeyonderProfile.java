@@ -22,7 +22,9 @@ import java.util.Set;
  * @param id              the file's id, e.g. {@code pathtodivinity:cataclysm/the_harbinger}
  * @param packIndex       position of the datapack that supplied it (higher = loaded later); breaks priority ties
  * @param sequence        the sequence LOTM reports for this mob (scaling, spirituality, damage), or null
- * @param abilitySequence the sequence the mob picks abilities at via {@code /beyonderentity}; defaults to {@code sequence}
+ * @param abilitySequence the sequence the mob picks abilities at via {@code /beyonderentity}; defaults to {@code sequence}.
+ *                        {@link #NO_ABILITIES} (-1): a Beyonder of its pathway that uses no abilities and gets none of
+ *                        LOTM's pathway stat modifiers or events
  * @param pathways        one pathway, or a pool to pick from; empty = no LOTM registration
  */
 public record BeyonderProfile(
@@ -46,6 +48,8 @@ public record BeyonderProfile(
         @Nullable ResourceLocation special) {
 
     public static final int FORMAT = 1;
+    /** {@code "ability_sequence": -1}: registered with LOTM as a Beyonder of its pathway, but inert. */
+    public static final int NO_ABILITIES = -1;
 
     private static final Set<String> KNOWN_KEYS = Set.of("format", "conditions", "match", "priority", "disabled",
             "pathway", "reroll", "sequence", "ability_sequence", "health_multiplier", "damage_multiplier", "boss",
@@ -76,10 +80,22 @@ public record BeyonderProfile(
     public record PhaseTwo(double healthMultiplier, double damageMultiplier) {
     }
 
-    /** The sequence used for {@code /beyonderentity}, or null when the profile registers nothing. */
+    /**
+     * The sequence the mob is registered with in LOTM (which fixes what LOTM reports as its pathway and
+     * sequence id), or null when the profile registers nothing. With {@code ability_sequence} -1 this is
+     * the profile's {@code sequence}: the mob is a Beyonder of that sequence that uses no abilities.
+     */
     @Nullable
-    public Integer effectiveAbilitySequence() {
-        return abilitySequence != null ? abilitySequence : sequence;
+    public Integer registrationSequence() {
+        if (abilitySequence == null || abilitySequence == NO_ABILITIES) {
+            return sequence;
+        }
+        return abilitySequence;
+    }
+
+    /** False for {@code "ability_sequence": -1}: no abilities, no LOTM pathway stat modifiers or events. */
+    public boolean usesAbilities() {
+        return abilitySequence == null || abilitySequence != NO_ABILITIES;
     }
 
     // ---- Parsing ----
@@ -119,9 +135,13 @@ public record BeyonderProfile(
         };
 
         Integer sequence = optionalSequence(json, "sequence");
-        Integer abilitySequence = optionalSequence(json, "ability_sequence");
+        Integer abilitySequence = json.has("ability_sequence") && GsonHelper.getAsInt(json, "ability_sequence") == NO_ABILITIES
+                ? Integer.valueOf(NO_ABILITIES) : optionalSequence(json, "ability_sequence");
         if (abilitySequence != null && pathways.isEmpty()) {
             warnings.add("ability_sequence has no effect without a pathway");
+        }
+        if (abilitySequence != null && abilitySequence == NO_ABILITIES && sequence == null && !pathways.isEmpty()) {
+            warnings.add("ability_sequence -1 needs a sequence to register the mob with; it will not be registered");
         }
 
         Double health = optionalMultiplier(json, "health_multiplier");

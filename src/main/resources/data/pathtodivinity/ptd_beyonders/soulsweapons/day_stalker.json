@@ -9,7 +9,9 @@
   "match": {
     "entity": "soulsweapons:day_stalker"
   },
+  "pathway": "lotm:warrior",
   "sequence": 2,
+  "ability_sequence": -1,
   "health_multiplier": 4.0,
   "damage_multiplier": 1.1,
   "boss": true,

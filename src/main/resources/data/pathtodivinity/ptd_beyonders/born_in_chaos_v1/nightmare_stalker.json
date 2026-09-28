@@ -9,7 +9,9 @@
   "match": {
     "entity": "born_in_chaos_v1:nightmare_stalker"
   },
+  "pathway": "lotm:sleepless",
   "sequence": 9,
+  "ability_sequence": -1,
   "health_multiplier": 1.2,
   "boss": true
 }

@@ -9,7 +9,9 @@
   "match": {
     "entity": "born_in_chaos_v1:sir_pumpkinhead"
   },
+  "pathway": "lotm:sleepless",
   "sequence": 6,
+  "ability_sequence": -1,
   "health_multiplier": 2.2,
   "damage_multiplier": 2.8,
   "boss": true

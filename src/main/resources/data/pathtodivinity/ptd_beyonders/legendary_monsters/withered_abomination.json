@@ -9,7 +9,9 @@
   "match": {
     "entity": "legendary_monsters:withered_abomination"
   },
+  "pathway": "lotm:corpse_collector",
   "sequence": 7,
+  "ability_sequence": -1,
   "health_multiplier": 1.2,
   "boss": true
 }

@@ -3,7 +3,9 @@
   "match": {
     "class_name": "VoidBlossomEntity"
   },
+  "pathway": "lotm:secrets_supplicant",
   "sequence": 6,
+  "ability_sequence": -1,
   "health_multiplier": 1.2,
   "damage_multiplier": 1.3,
   "boss": true

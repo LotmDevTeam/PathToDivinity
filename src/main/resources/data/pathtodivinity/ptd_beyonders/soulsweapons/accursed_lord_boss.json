@@ -9,7 +9,9 @@
   "match": {
     "entity": "soulsweapons:accursed_lord_boss"
   },
+  "pathway": "lotm:corpse_collector",
   "sequence": 5,
+  "ability_sequence": -1,
   "health_multiplier": 2.0,
   "damage_multiplier": 1.7,
   "boss": true

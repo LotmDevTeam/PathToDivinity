@@ -9,7 +9,9 @@
   "match": {
     "entity": "soulsweapons:night_shade"
   },
+  "pathway": "lotm:sleepless",
   "sequence": 5,
+  "ability_sequence": -1,
   "health_multiplier": 2.5,
   "damage_multiplier": 1.5,
   "boss": true

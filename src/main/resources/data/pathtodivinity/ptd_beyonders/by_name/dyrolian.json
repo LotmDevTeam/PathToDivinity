@@ -3,7 +3,9 @@
   "match": {
     "name_contains": "dyrolian"
   },
+  "pathway": "lotm:warrior",
   "sequence": 6,
+  "ability_sequence": -1,
   "health_multiplier": 0.5,
   "damage_multiplier": 1.3,
   "boss": true

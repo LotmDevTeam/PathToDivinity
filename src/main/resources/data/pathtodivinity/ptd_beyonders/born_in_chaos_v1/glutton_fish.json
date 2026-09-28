@@ -9,6 +9,8 @@
   "match": {
     "entity": "born_in_chaos_v1:glutton_fish"
   },
+  "pathway": "lotm:sailor",
   "sequence": 9,
+  "ability_sequence": -1,
   "boss": true
 }

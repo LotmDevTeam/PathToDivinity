@@ -9,7 +9,9 @@
   "match": {
     "entity": "legendary_monsters:lava_eater"
   },
+  "pathway": "lotm:warrior",
   "sequence": 6,
+  "ability_sequence": -1,
   "health_multiplier": 1.7,
   "damage_multiplier": 1.2,
   "boss": true

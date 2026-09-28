@@ -7,6 +7,7 @@
   "mixins": [
     "SurfaceRuleManagerMixin",
     "ItemStackInventoryTickMixin",
+    "ResourceLocationBackportMixin",
     "Aquamirae.CaptainCorneliaMixin",
     "AwakenedBosses.HerobrineAxeMixin",
     "AwakenedBosses.HerobrineSwordMixin",
@@ -38,6 +39,7 @@
     "LOTMC.BeyonderEntityDataMixin",
     "LOTMC.BeyonderHolderRespawnGuardMixin",
     "LOTMC.BeyonderUtilMixin",
+    "LOTMC.LotmJoinModifiersMixin",
     "LOTMC.PotionCauldronBlockEntityMixin",
     "ObscureAPI.ObscureAPIAttributesMixin",
     "Terramity.AdvancedAutomaticRifleDamageMixin",

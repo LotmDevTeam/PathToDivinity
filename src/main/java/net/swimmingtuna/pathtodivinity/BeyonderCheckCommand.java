@@ -22,6 +22,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
+import net.swimmingtuna.pathtodivinity.profile.BeyonderProfile;
+import net.swimmingtuna.pathtodivinity.profile.BeyonderProfiles;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -93,8 +95,13 @@ public class BeyonderCheckCommand {
         }
 
         BeyonderClass pathway = BeyonderUtil.getPathway(living);
+        BeyonderProfile profile = BeyonderProfiles.find(living);
         if (pathway == null) {
             message.append(Component.literal("\n  Not a Beyonder").withStyle(ChatFormatting.RED));
+            if (profile != null && profile.sequence() != null) {
+                message.append(Component.literal(" (PtD sequence " + profile.sequence() + ", no LOTM pathway in its profile)")
+                        .withStyle(ChatFormatting.GRAY));
+            }
         } else {
             int sequence = BeyonderUtil.getSequence(living);
             List<Component> sequenceNames = pathway.sequenceNames();
@@ -108,6 +115,10 @@ public class BeyonderCheckCommand {
                         .append(Component.literal(")").withStyle(ChatFormatting.WHITE));
             }
             message.append(line);
+            if (profile != null && !profile.usesAbilities()) {
+                message.append(Component.literal("\n  Abilities: off").withStyle(ChatFormatting.YELLOW)
+                        .append(Component.literal(" (ability_sequence -1 in " + profile.id() + ")").withStyle(ChatFormatting.GRAY)));
+            }
             message.append(Component.literal("\n  Spirituality: ").withStyle(ChatFormatting.YELLOW)
                     .append(Component.literal(BeyonderUtil.getSpirituality(living) + " / " + BeyonderUtil.getMaxSpirituality(living)).withStyle(ChatFormatting.WHITE)));
         }

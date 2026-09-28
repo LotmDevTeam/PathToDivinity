@@ -9,7 +9,9 @@
   "match": {
     "entity": "legendary_monsters:frostbitten_golem"
   },
+  "pathway": "lotm:warrior",
   "sequence": 8,
+  "ability_sequence": -1,
   "health_multiplier": 1.3,
   "boss": true
 }

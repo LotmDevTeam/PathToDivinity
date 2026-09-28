@@ -9,7 +9,9 @@
   "match": {
     "entity": "terramity:trial_guardian"
   },
+  "pathway": "lotm:warrior",
   "sequence": 3,
+  "ability_sequence": -1,
   "health_multiplier": 4.0,
   "boss": true
 }

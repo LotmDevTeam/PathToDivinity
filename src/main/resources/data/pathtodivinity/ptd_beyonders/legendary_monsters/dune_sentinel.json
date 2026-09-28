@@ -9,7 +9,9 @@
   "match": {
     "entity": "legendary_monsters:dune_sentinel"
   },
+  "pathway": "lotm:warrior",
   "sequence": 8,
+  "ability_sequence": -1,
   "health_multiplier": 1.25,
   "boss": true
 }
