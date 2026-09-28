@@ -29,6 +29,12 @@ mixin {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+// -PlotmOnly: leave every optional integration off the runtime classpath (they stay compileOnly), to
+// check that Path to Divinity still loads and works with only LOTM and its libraries, e.g.
+// ./gradlew runGameTestServer -PlotmOnly
+def lotmOnly = project.hasProperty('lotmOnly')
+def optionalMod = lotmOnly ? 'compileOnly' : 'implementation'
+
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
 
@@ -63,6 +69,8 @@ minecraft {
         }
 
         gameTestServer {
+            // Its own world, never run/: -PlotmOnly and all-mods runs also get separate worlds.
+            workingDirectory project.file(lotmOnly ? 'run-gametest-lotm' : 'run-gametest')
             property 'forge.enabledGameTestNamespaces', mod_id
         }
 
@@ -126,35 +134,35 @@ dependencies {
 
 
     //Aquamirae
-    implementation fg.deobf("curse.maven:aquamirae-536254:7985699")
+    add(optionalMod, fg.deobf("curse.maven:aquamirae-536254:7985699"))
     //Awakened Bosses
-    implementation fg.deobf("curse.maven:awakenedbosses-548167:5057212")
+    add(optionalMod, fg.deobf("curse.maven:awakenedbosses-548167:5057212"))
     //Better Combat
     implementation fg.deobf("curse.maven:bettercombat-639842:7287334")
     //Born in Chaos
-    implementation fg.deobf("curse.maven:borninchaos-686437:7917933")
+    add(optionalMod, fg.deobf("curse.maven:borninchaos-686437:7917933"))
     //Bosses of Mass Destruction
-    implementation fg.deobf("curse.maven:bomd-438365:4993305")
+    add(optionalMod, fg.deobf("curse.maven:bomd-438365:4993305"))
     //Cataclysm
-    implementation fg.deobf("curse.maven:cataclysm-551586:8246047")
+    add(optionalMod, fg.deobf("curse.maven:cataclysm-551586:8246047"))
     //Celestisynth
-    implementation fg.deobf("curse.maven:celestisynth-872712:7686018")
+    add(optionalMod, fg.deobf("curse.maven:celestisynth-872712:7686018"))
     //EEEAB's Mobs
-    implementation fg.deobf("curse.maven:eeeabmobs-921600:8073814")
+    add(optionalMod, fg.deobf("curse.maven:eeeabmobs-921600:8073814"))
     //Legendary Monsters
-    implementation fg.deobf("curse.maven:legendarymonsters-944035:8312236")
+    add(optionalMod, fg.deobf("curse.maven:legendarymonsters-944035:8312236"))
     //LOTMC
     implementation fg.deobf("curse.maven:lord-of-the-mysteries-craft-1095869:8680807")
     //Marium's Soulslike Weaponry
-    implementation fg.deobf("curse.maven:soulsweapons-632066:7321885")
+    add(optionalMod, fg.deobf("curse.maven:soulsweapons-632066:7321885"))
     //Monster Expansion
-    implementation fg.deobf("curse.maven:monsterexpansion-1336105:7388120")
+    add(optionalMod, fg.deobf("curse.maven:monsterexpansion-1336105:7388120"))
     //Mowzie's Mobs
-    implementation fg.deobf("curse.maven:mowziesmobs-250498:7815705")
+    add(optionalMod, fg.deobf("curse.maven:mowziesmobs-250498:7815705"))
     //Mutant Monsters
-    implementation fg.deobf("curse.maven:mutantmonsters-852665:5107399")
+    add(optionalMod, fg.deobf("curse.maven:mutantmonsters-852665:5107399"))
     //Terramity
-    implementation fg.deobf("curse.maven:terramity-1084134:6054971")
+    add(optionalMod, fg.deobf("curse.maven:terramity-1084134:6054971"))
 
 
 
