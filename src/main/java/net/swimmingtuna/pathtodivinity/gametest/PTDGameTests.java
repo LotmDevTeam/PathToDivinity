@@ -22,6 +22,8 @@ import net.swimmingtuna.pathtodivinity.PTDUtil;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.gating.SequenceGates;
+import net.swimmingtuna.pathtodivinity.profile.BeyonderProfile;
+import net.swimmingtuna.pathtodivinity.profile.BeyonderProfiles;
 
 import java.util.Optional;
 
@@ -67,6 +69,18 @@ public class PTDGameTests {
         double actualDamage = guardian.getPersistentData().getDouble("PTDDamageMultiplier");
         helper.assertTrue(Math.abs(actualDamage - expectedDamage) < 1e-6,
                 "Elder Guardian damage multiplier should be " + expectedDamage + " but was " + actualDamage);
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void profileLoadedFromDatapack(GameTestHelper helper) {
+        ElderGuardian guardian = helper.spawn(EntityType.ELDER_GUARDIAN, MIDDLE);
+        BeyonderProfile profile = BeyonderProfiles.find(guardian);
+        helper.assertTrue(profile != null, "the default Elder Guardian profile should be loaded");
+        helper.assertTrue(profile.boss() && Integer.valueOf(8).equals(profile.sequence()), "profile should be a Sequence 8 boss");
+        helper.assertTrue(Double.valueOf(1.3).equals(profile.damageMultiplier()), "profile damage multiplier should be 1.3");
+        Zombie zombie = helper.spawn(EntityType.ZOMBIE, MIDDLE.east());
+        helper.assertTrue(BeyonderProfiles.find(zombie) == null, "a zombie has no profile");
         helper.succeed();
     }
 
