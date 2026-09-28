@@ -31,8 +31,8 @@ public class PTD {
 
     public PTD() {
         MinecraftForge.EVENT_BUS.register(this);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, "pathtodivinity-server.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, "pathtodivinity-balance.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, PTDServerConfig.FILE_NAME);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, PTDBalance.FILE_NAME);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(PTDServerConfig::onConfigLoading);
         ProfileSyncPacket.register();
         MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);

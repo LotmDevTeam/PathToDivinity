@@ -14,13 +14,17 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Server rules: {@code serverconfig/pathtodivinity-server.toml} in each world, synced to clients.
- * Modpacks can ship defaults for new worlds in {@code defaultconfigs/pathtodivinity-server.toml}.
+ * Server rules: {@code serverconfig/ptd/pathtodivinity-server.toml} in each world, synced to clients.
+ * Modpacks can ship defaults for new worlds in {@code defaultconfigs/ptd/pathtodivinity-server.toml}.
  *
  * <p>Values are only readable while a server is running. Every default equals the behaviour this
  * mod had before the options existed.
  */
 public final class PTDServerConfig {
+
+    /** Every config file Path to Divinity creates lives in a {@code ptd} folder of its config directory. */
+    public static final String FOLDER = "ptd";
+    public static final String FILE_NAME = FOLDER + "/pathtodivinity-server.toml";
 
     public static final ForgeConfigSpec SPEC;
 

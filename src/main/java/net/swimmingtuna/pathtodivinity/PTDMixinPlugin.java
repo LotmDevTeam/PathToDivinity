@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
             "SurfaceRuleManagerMixin", "terrablender"
     );
 
-    /** Kill-switch keys in config/pathtodivinity-mixins.toml, per mixin sub-package or top-level mixin. */
+    /** Kill-switch keys in config/ptd/pathtodivinity-mixins.toml, per mixin sub-package or top-level mixin. */
     private static final Map<String, String> TOGGLE_KEYS = Map.of(
             "Aquamirae", "aquamirae",
             "AwakenedBosses", "awakened_bosses",
@@ -61,12 +63,21 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
     private final Set<String> disabledMixins = new HashSet<>();
 
     /**
-     * Reads (and on first launch writes) config/pathtodivinity-mixins.toml. Only NightConfig and
+     * Reads (and on first launch writes) config/ptd/pathtodivinity-mixins.toml. Only NightConfig and
      * FMLPaths are used: at this point no Forge config, nor any other class of this mod, may load.
      */
     @Override
     public void onLoad(String mixinPackage) {
-        Path file = FMLPaths.CONFIGDIR.get().resolve("pathtodivinity-mixins.toml");
+        Path file = FMLPaths.CONFIGDIR.get().resolve("ptd").resolve("pathtodivinity-mixins.toml");
+        Path oldFile = FMLPaths.CONFIGDIR.get().resolve("pathtodivinity-mixins.toml");
+        try {
+            Files.createDirectories(file.getParent());
+            if (Files.exists(oldFile) && !Files.exists(file)) {
+                Files.move(oldFile, file); // written there by earlier development builds
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Could not prepare {}: {}", file, e.toString());
+        }
         try (CommentedFileConfig config = CommentedFileConfig.builder(file).preserveInsertionOrder().build()) {
             config.load();
             config.setComment("integrations", String.join("\n",

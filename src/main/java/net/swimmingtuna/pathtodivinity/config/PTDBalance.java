@@ -4,7 +4,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 /**
  * Weapon and mob balance for the mods Path to Divinity adjusts:
- * {@code serverconfig/pathtodivinity-balance.toml} in each world, synced to clients so tooltips match.
+ * {@code serverconfig/ptd/pathtodivinity-balance.toml} in each world, synced to clients so tooltips match.
  *
  * <p>Every number is the absolute value the weapon uses, except keys ending in {@code _multiplier},
  * which scale a value the other mod computes at runtime. Each mod's {@code enabled = false} makes all
@@ -15,6 +15,8 @@ import net.minecraftforge.common.ForgeConfigSpec;
  * return their defaults.
  */
 public final class PTDBalance {
+
+    public static final String FILE_NAME = PTDServerConfig.FOLDER + "/pathtodivinity-balance.toml";
 
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     private static Group currentGroup;
@@ -77,7 +79,7 @@ public final class PTDBalance {
     public static final Value VULCAN_DAMAGE = value("vulcan_damage", 1.05, "Projectile damage (Terramity: 0.35)");
 
     // ---- Celestisynth ----
-    public static final Group CELESTISYNTH = group("celestisynth", "Celestisynth weapons. Tier stats (attack damage, durability) are in config/pathtodivinity-startup.toml.");
+    public static final Group CELESTISYNTH = group("celestisynth", "Celestisynth weapons. Tier stats (attack damage, durability) are in config/ptd/pathtodivinity-startup.toml.");
     public static final Value AQUAFLORA_BLAST_OFF_DAMAGE = value("aquaflora_blast_off_damage", 11.0, "Damage factor (Celestisynth: 1.3)");
     public static final Value AQUAFLORA_FLOWERS_AWAY_DAMAGE = value("aquaflora_flowers_away_damage", 3.5, "Damage factor (Celestisynth: 0.5)");
     public static final Value AQUAFLORA_PETAL_PIERCES_DAMAGE = value("aquaflora_petal_pierces_damage", 0.275, "Damage factor (Celestisynth: 0.1)");

@@ -4,15 +4,19 @@ import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.swimmingtuna.pathtodivinity.PTD;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * {@code config/pathtodivinity-startup.toml}: values needed while other mods register their items,
+ * {@code config/ptd/pathtodivinity-startup.toml}: values needed while other mods register their items,
  * before Forge loads any config. Read once, directly from the file; changes need a restart.
  */
 public final class StartupConfig {
 
-    private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve("pathtodivinity-startup.toml");
+    private static final Path FILE = FMLPaths.CONFIGDIR.get().resolve(PTDServerConfig.FOLDER).resolve("pathtodivinity-startup.toml");
+    /** Where earlier development builds wrote it, before config files moved into config/ptd/. */
+    private static final Path OLD_FILE = FMLPaths.CONFIGDIR.get().resolve("pathtodivinity-startup.toml");
 
     public static final boolean CELESTISYNTH_TIER_ENABLED;
     public static final int CELESTISYNTH_TIER_LEVEL;
@@ -22,6 +26,14 @@ public final class StartupConfig {
     public static final int CELESTISYNTH_TIER_ENCHANTMENT_VALUE;
 
     static {
+        try {
+            Files.createDirectories(FILE.getParent());
+            if (Files.exists(OLD_FILE) && !Files.exists(FILE)) {
+                Files.move(OLD_FILE, FILE);
+            }
+        } catch (IOException e) {
+            PTD.LOGGER.warn("Could not prepare {}: {}", FILE, e.toString());
+        }
         CommentedFileConfig config = CommentedFileConfig.builder(FILE).preserveInsertionOrder().build();
         try {
             config.load();

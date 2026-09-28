@@ -21,7 +21,7 @@ public class CelestisynthItemTiersMixin {
 
     @Redirect(method = "<clinit>", at = @At(value = "INVOKE", target = "Lnet/minecraftforge/common/TierSortingRegistry;registerTier(Lnet/minecraft/world/item/Tier;Lnet/minecraft/resources/ResourceLocation;Ljava/util/List;Ljava/util/List;)Lnet/minecraft/world/item/Tier;"))
     private static Tier redirectRegisterTier(Tier tier, net.minecraft.resources.ResourceLocation name, List<Object> after, List<Object> before) {
-        // Runs while items register, before Forge configs load: values come from config/pathtodivinity-startup.toml.
+        // Runs while items register, before Forge configs load: values come from config/ptd/pathtodivinity-startup.toml.
         if (!StartupConfig.CELESTISYNTH_TIER_ENABLED) {
             return TierSortingRegistry.registerTier(tier, name, after, before);
         }
