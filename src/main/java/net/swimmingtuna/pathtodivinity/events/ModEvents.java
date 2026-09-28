@@ -362,6 +362,11 @@ public class ModEvents {
 
 
             tag.putInt("PTDCombatTimer", 200);
+            // Tag the attacker as well (the owner, for projectiles). Only the victim used to be tagged,
+            // so a player could hit something and /home or /spawn out before it hit back.
+            if (entitySource instanceof LivingEntity attacker && attacker != entity) {
+                attacker.getPersistentData().putInt("PTDCombatTimer", 200);
+            }
             if (entitySource instanceof LivingEntity livingEntity) {
                 if (PTDUtil.isBeyonderEntity(livingEntity) && directSource instanceof Projectile) {
                     event.setAmount(event.getAmount() * 0.6f);

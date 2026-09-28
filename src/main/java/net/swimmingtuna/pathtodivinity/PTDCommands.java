@@ -18,7 +18,9 @@ public class PTDCommands {
 
 
 
+    /** Registered at HIGHEST priority (see PTD) so /beyonder check is added before LOTM's; see BeyonderCheckCommand. */
     public static void onCommandRegistration(RegisterCommandsEvent event) {
         HealthValidateCommand.register(event.getDispatcher());
+        BeyonderCheckCommand.register(event.getDispatcher());
     }
 }
