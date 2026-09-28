@@ -1,20 +1,13 @@
 package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 
-import com.bobmowzie.mowziesmobs.server.entity.EntityHandler;
-import com.eeeab.eeeabsmobs.sever.init.EntityInit;
-import com.obscuria.aquamirae.registry.AquamiraeEntities;
-import fuzs.mutantmonsters.init.ModRegistry;
-import net.cursedwarrior.awakenedbosses.init.AwakenedBossesModEntities;
-import net.mcreator.borninchaosv.init.BornInChaosV1ModEntities;
-import net.mcreator.terramity.init.TerramityModEntities;
-import net.miauczel.legendary_monsters.entity.ModEntities;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import net.soulsweaponry.registry.EntityRegistry;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
+import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,13 +27,14 @@ public class BeyonderUtilMixin {
     )
     private static int modifyMaxAgeForUltraSniffer(int maxAge, LivingEvent.LivingTickEvent event) {
         LivingEntity livingEntity = event.getEntity();
-        if (livingEntity.getType() == TerramityModEntities.ULTRA_SNIFFER.get()) {
+        if (PTDEntities.ULTRA_SNIFFER.equals(PTDEntities.idOf(livingEntity))) {
             return 6000;
         }
         return maxAge;
     }
 
-    private static final Map<EntityType<?>, Integer> ENTITY_SEQUENCE_MAP = new HashMap<>();
+    // Keyed by registry id so that none of the optional mobs' mods are loaded along with BeyonderUtil
+    private static final Map<ResourceLocation, Integer> ENTITY_SEQUENCE_MAP = new HashMap<>();
 
     static {
         initializeEntitySequenceMap();
@@ -48,79 +42,79 @@ public class BeyonderUtilMixin {
 
     private static void initializeEntitySequenceMap() {
         // Sequence 9 entities
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Overgrown_colossus.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Warped_Fungussus.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.KOBOLEDIATOR.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(EntityHandler.UMVUTHI.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(AquamiraeEntities.MAW.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Skeletosaurus.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.NIGHTMARE_STALKER.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.GLUTTON_FISH.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(EntityHandler.WROUGHTNAUT.get(), 9);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.DIRE_HOUND_LEADER.get(), 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.OVERGROWN_COLOSSUS, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.WARPED_FUNGUSSUS, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.KOBOLEDIATOR, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.UMVUTHI, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MAW, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.SKELETOSAURUS, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.NIGHTMARE_STALKER, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.GLUTTON_FISH, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.WROUGHTNAUT, 9);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.DIRE_HOUND_LEADER, 9);
 
         // Sequence 8 entities
-        ENTITY_SEQUENCE_MAP.put(ModEntities.BlastCannon.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Frostbitten_Golem.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Endersent.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.DUSKROK.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(ModRegistry.MUTANT_SKELETON_ENTITY_TYPE.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(ModRegistry.MUTANT_ENDERMAN_ENTITY_TYPE.get(), 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.BLAST_CANNON, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.FROSTBITTEN_GOLEM, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.ENDERSENT, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.DUSKROK, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MUTANT_SKELETON, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MUTANT_ENDERMAN, 8);
         //ENTITY_SEQUENCE_MAP.put(AMEntityRegistry.WARPED_MOSCO.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(EntityType.ELDER_GUARDIAN, 8);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.SPIRITOF_CHAOS.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.MOTHER_SPIDER.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.HELLROK.get(), 8);
-        ENTITY_SEQUENCE_MAP.put(ModRegistry.MUTANT_ZOMBIE_ENTITY_TYPE.get(), 8);
+        ENTITY_SEQUENCE_MAP.put(EntityType.getKey(EntityType.ELDER_GUARDIAN), 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.SPIRITOF_CHAOS, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MOTHER_SPIDER, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.HELLROK, 8);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MUTANT_ZOMBIE, 8);
 
         // Sequence 7 entities
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Ancient_Guardian.get(), 7);
-        ENTITY_SEQUENCE_MAP.put(EntityInit.CORPSE_WARLOCK.get(), 7);
-        ENTITY_SEQUENCE_MAP.put(EntityHandler.FROSTMAW.get(), 7);
-        ENTITY_SEQUENCE_MAP.put(AquamiraeEntities.MAZE_MOTHER.get(), 7);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Withered_Abomination.get(), 7);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.ANCIENT_GUARDIAN, 7);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.CORPSE_WARLOCK, 7);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.FROSTMAW, 7);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MAZE_MOTHER, 7);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.WITHERED_ABOMINATION, 7);
 
         // Sequence 6 entities
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.NETHERITE_MONSTROSITY.get(), 6);
-        ENTITY_SEQUENCE_MAP.put(EntityType.WITHER, 6);
-        ENTITY_SEQUENCE_MAP.put(AwakenedBossesModEntities.HEROBRINE.get(), 6);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.LIFESTEALER.get(), 6);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Lava_eater.get(), 6);
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.SIR_PUMPKINHEAD.get(), 6);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.NETHERITE_MONSTROSITY, 6);
+        ENTITY_SEQUENCE_MAP.put(EntityType.getKey(EntityType.WITHER), 6);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.HEROBRINE, 6);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.LIFESTEALER, 6);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.LAVA_EATER, 6);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.SIR_PUMPKINHEAD, 6);
 
         // Sequence 5 entities
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.THE_HARBINGER.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(AquamiraeEntities.CAPTAIN_CORNELIA.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Posessed_Paladin.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.ACCURSED_LORD_BOSS.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.RETURNING_KNIGHT.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.ENDER_GUARDIAN.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.MOONKNIGHT.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.CHAOS_MONARCH.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.DRAUGR_BOSS.get(), 5);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.NIGHT_SHADE.get(), 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.THE_HARBINGER, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.CAPTAIN_CORNELIA, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.POSESSED_PALADIN, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.ACCURSED_LORD_BOSS, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.RETURNING_KNIGHT, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.ENDER_GUARDIAN, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MOONKNIGHT, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.CHAOS_MONARCH, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.DRAUGR_BOSS, 5);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.NIGHT_SHADE, 5);
 
         // Sequence 4 entities
-        ENTITY_SEQUENCE_MAP.put(ModEntities.Cloud_golem.get(), 4);
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.IGNIS.get(), 4);
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.SCYLLA.get(), 4);
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.MALEDICTUS.get(), 4);
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.GOB.get(), 4);
-        ENTITY_SEQUENCE_MAP.put(com.github.L_Ender.cataclysm.init.ModEntities.THE_LEVIATHAN.get(), 4);
-        ENTITY_SEQUENCE_MAP.put(EntityInit.NAMELESS_GUARDIAN.get(), 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.CLOUD_GOLEM, 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.IGNIS, 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.SCYLLA, 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.MALEDICTUS, 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.GOB, 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.THE_LEVIATHAN, 4);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.NAMELESS_GUARDIAN, 4);
 
         // Sequence 3 entities
-        ENTITY_SEQUENCE_MAP.put(BornInChaosV1ModEntities.LORD_PUMPKINHEAD.get(), 3);
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.TRIAL_GUARDIAN.get(), 3);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.LORD_PUMPKINHEAD, 3);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.TRIAL_GUARDIAN, 3);
 
         // Sequence 2 entities
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.SUPER_SNIFFER.get(), 2);
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.GUNDALF.get(), 2);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.DAY_STALKER.get(), 2);
-        ENTITY_SEQUENCE_MAP.put(EntityRegistry.NIGHT_PROWLER.get(), 2);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.SUPER_SNIFFER, 2);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.GUNDALF, 2);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.DAY_STALKER, 2);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.NIGHT_PROWLER, 2);
 
         // Sequence 1 entities
-        ENTITY_SEQUENCE_MAP.put(TerramityModEntities.ULTRA_SNIFFER.get(), 1);
+        ENTITY_SEQUENCE_MAP.put(PTDEntities.ULTRA_SNIFFER, 1);
     }
 
     @Inject(method = "getSequence", at = @At("HEAD"), cancellable = true)
@@ -135,7 +129,7 @@ public class BeyonderUtilMixin {
         if (MobAbilitySequenceContext.isSelectingAbilitiesFor(living)) {
             return;
         }
-        Integer customSequence = ENTITY_SEQUENCE_MAP.get(living.getType());
+        Integer customSequence = ENTITY_SEQUENCE_MAP.get(PTDEntities.idOf(living));
         if (customSequence != null) {
             cir.setReturnValue(customSequence);
             return;

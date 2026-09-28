@@ -1,4 +1,18 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "monsterexpansion"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "sleepy_hollows"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "sailor",
   "sequence": 4,

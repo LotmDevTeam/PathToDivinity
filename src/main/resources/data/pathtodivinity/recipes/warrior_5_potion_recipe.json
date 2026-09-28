@@ -1,4 +1,22 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "monsterexpansion"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "warrior",
   "sequence": 5,

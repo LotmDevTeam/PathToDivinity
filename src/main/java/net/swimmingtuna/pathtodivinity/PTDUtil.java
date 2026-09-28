@@ -1,17 +1,8 @@
 package net.swimmingtuna.pathtodivinity;
 
-import com.bobmowzie.mowziesmobs.server.entity.EntityHandler;
-import com.eeeab.eeeabsmobs.sever.init.EntityInit;
-import com.github.L_Ender.cataclysm.init.ModItems;
-import com.obscuria.aquamirae.registry.AquamiraeEntities;
-import fuzs.mutantmonsters.init.ModRegistry;
-import net.cursedwarrior.awakenedbosses.init.AwakenedBossesModEntities;
-import net.mcreator.borninchaosv.init.BornInChaosV1ModEntities;
-import net.mcreator.terramity.init.TerramityModEntities;
-import net.mcreator.terramity.init.TerramityModItems;
-import net.miauczel.legendary_monsters.entity.ModEntities;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,17 +10,17 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.soulsweaponry.registry.EntityRegistry;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
-import org.thecelestialworkshop.celestisynth.common.registry.CSItems;
+import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
+import net.swimmingtuna.pathtodivinity.compat.PTDItems;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class PTDUtil {
 
-    // Create a static set of all beyonder entity types for efficient lookup
-    private static final Set<EntityType<?>> BEYONDER_ENTITY_TYPES = new HashSet<>();
+    // Registry ids of all beyonder entity types, so optional mods never have to be loaded to check one
+    private static final Set<ResourceLocation> BEYONDER_ENTITY_TYPES = new HashSet<>();
 
     static {
         // Initialize the set with all beyonder entity types
@@ -38,90 +29,90 @@ public class PTDUtil {
 
     private static void initializeBeyonderEntityTypes() {
         // Sequence 9 entities
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Overgrown_colossus.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Warped_Fungussus.get());
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.KOBOLEDIATOR.get());
-        BEYONDER_ENTITY_TYPES.add(EntityHandler.UMVUTHI.get());
-        BEYONDER_ENTITY_TYPES.add(AquamiraeEntities.MAW.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Skeletosaurus.get());
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.NIGHTMARE_STALKER.get());
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.GLUTTON_FISH.get());
-        BEYONDER_ENTITY_TYPES.add(EntityHandler.WROUGHTNAUT.get());
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.DIRE_HOUND_LEADER.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.OVERGROWN_COLOSSUS);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.WARPED_FUNGUSSUS);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.KOBOLEDIATOR);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.UMVUTHI);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MAW);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.SKELETOSAURUS);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.NIGHTMARE_STALKER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.GLUTTON_FISH);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.WROUGHTNAUT);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.DIRE_HOUND_LEADER);
         //Witness too but it shouldn't destroy blocks
 
         // Sequence 8 entities
-        BEYONDER_ENTITY_TYPES.add(ModEntities.BlastCannon.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Frostbitten_Golem.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Endersent.get());
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.DUSKROK.get());
-        BEYONDER_ENTITY_TYPES.add(ModRegistry.MUTANT_SKELETON_ENTITY_TYPE.get());
-        BEYONDER_ENTITY_TYPES.add(ModRegistry.MUTANT_ENDERMAN_ENTITY_TYPE.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.BLAST_CANNON);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.FROSTBITTEN_GOLEM);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.ENDERSENT);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.DUSKROK);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MUTANT_SKELETON);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MUTANT_ENDERMAN);
         //BEYONDER_ENTITY_TYPES.add(AMEntityRegistry.WARPED_MOSCO.get());
-        BEYONDER_ENTITY_TYPES.add(EntityType.ELDER_GUARDIAN);
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.SPIRITOF_CHAOS.get());
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.MOTHER_SPIDER.get());
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.HELLROK.get());
-        BEYONDER_ENTITY_TYPES.add(ModRegistry.MUTANT_ZOMBIE_ENTITY_TYPE.get());
+        BEYONDER_ENTITY_TYPES.add(EntityType.getKey(EntityType.ELDER_GUARDIAN));
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.SPIRITOF_CHAOS);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MOTHER_SPIDER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.HELLROK);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MUTANT_ZOMBIE);
 
 
         // Sequence 7 entities
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Ancient_Guardian.get());
-        BEYONDER_ENTITY_TYPES.add(EntityInit.CORPSE_WARLOCK.get());
-        BEYONDER_ENTITY_TYPES.add(EntityHandler.FROSTMAW.get());
-        BEYONDER_ENTITY_TYPES.add(AquamiraeEntities.MAZE_MOTHER.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Withered_Abomination.get());
-        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.ASMANN.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.ANCIENT_GUARDIAN);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.CORPSE_WARLOCK);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.FROSTMAW);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MAZE_MOTHER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.WITHERED_ABOMINATION);
+        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.ASMANN.getId());
 
 
         // Sequence 6 entities
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.NETHERITE_MONSTROSITY.get());
-        BEYONDER_ENTITY_TYPES.add(EntityType.WITHER);
-        BEYONDER_ENTITY_TYPES.add(AwakenedBossesModEntities.HEROBRINE.get());
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.LIFESTEALER.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Lava_eater.get());
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.SIR_PUMPKINHEAD.get());
-        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.SHADOWLESS_DEMONIC_WOLF.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.NETHERITE_MONSTROSITY);
+        BEYONDER_ENTITY_TYPES.add(EntityType.getKey(EntityType.WITHER));
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.HEROBRINE);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.LIFESTEALER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.LAVA_EATER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.SIR_PUMPKINHEAD);
+        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.SHADOWLESS_DEMONIC_WOLF.getId());
 
         // Sequence 5 entities
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.THE_HARBINGER.get());
-        BEYONDER_ENTITY_TYPES.add(AquamiraeEntities.CAPTAIN_CORNELIA.get());
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Posessed_Paladin.get());
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.ACCURSED_LORD_BOSS.get()); //Decaying King
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.RETURNING_KNIGHT.get());
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.ENDER_GUARDIAN.get());
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.MOONKNIGHT.get()); //Fallen Icon
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.CHAOS_MONARCH.get()); //Monarch of Chaos
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.DRAUGR_BOSS.get()); //Old Champion's Remains
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.NIGHT_SHADE.get()); //Frenzied Shade
-        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.DRAGON.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.THE_HARBINGER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.CAPTAIN_CORNELIA);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.POSESSED_PALADIN);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.ACCURSED_LORD_BOSS); //Decaying King
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.RETURNING_KNIGHT);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.ENDER_GUARDIAN);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MOONKNIGHT); //Fallen Icon
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.CHAOS_MONARCH); //Monarch of Chaos
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.DRAUGR_BOSS); //Old Champion's Remains
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.NIGHT_SHADE); //Frenzied Shade
+        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.DRAGON.getId());
 
         // Sequence 4 entities
-        BEYONDER_ENTITY_TYPES.add(ModEntities.Cloud_golem.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.CLOUD_GOLEM);
         //BEYONDER_ENTITY_TYPES.add(AMEntityRegistry.VOID_WORM.get());
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.IGNIS.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.IGNIS);
 
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.SCYLLA.get()); //ADD TO SEQUENCE 4
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.MALEDICTUS.get()); //ADD TO SEQUENCE 4
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.SCYLLA); //ADD TO SEQUENCE 4
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MALEDICTUS); //ADD TO SEQUENCE 4
 
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.GOB.get());
-        BEYONDER_ENTITY_TYPES.add(com.github.L_Ender.cataclysm.init.ModEntities.THE_LEVIATHAN.get());
-        BEYONDER_ENTITY_TYPES.add(EntityInit.NAMELESS_GUARDIAN.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.GOB);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.THE_LEVIATHAN);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.NAMELESS_GUARDIAN);
 
         // Sequence 3 entities
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.MOONKNIGHT.get()); //Fallen Icon
-        BEYONDER_ENTITY_TYPES.add(BornInChaosV1ModEntities.LORD_PUMPKINHEAD.get());
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.TRIAL_GUARDIAN.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.MOONKNIGHT); //Fallen Icon
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.LORD_PUMPKINHEAD);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.TRIAL_GUARDIAN);
 
         // Sequence 2 entities
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.SUPER_SNIFFER.get());
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.GUNDALF.get());
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.DAY_STALKER.get());
-        BEYONDER_ENTITY_TYPES.add(EntityRegistry.NIGHT_PROWLER.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.SUPER_SNIFFER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.GUNDALF);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.DAY_STALKER);
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.NIGHT_PROWLER);
 
         // Sequence 1 entities
-        BEYONDER_ENTITY_TYPES.add(TerramityModEntities.ULTRA_SNIFFER.get());
-        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.INTERDIMENSIONAL_HUNTER.get());
+        BEYONDER_ENTITY_TYPES.add(PTDEntities.ULTRA_SNIFFER);
+        BEYONDER_ENTITY_TYPES.add(net.swimmingtuna.lotm.init.EntityInit.INTERDIMENSIONAL_HUNTER.getId());
     }
 
 
@@ -142,27 +133,27 @@ public class PTDUtil {
 
     // Main method that checks both Set and name-based conditions
     public static boolean isBeyonderEntity(Entity entity) {
-        if (BEYONDER_ENTITY_TYPES.contains(entity.getType())) {
+        if (BEYONDER_ENTITY_TYPES.contains(PTDEntities.idOf(entity))) {
             return true;
         }
         return matchesNameBasedConditions(entity);
     }
 
     public static boolean isBeyonderEntity(EntityType<?> entityType) {
-        return BEYONDER_ENTITY_TYPES.contains(entityType);
+        return BEYONDER_ENTITY_TYPES.contains(EntityType.getKey(entityType));
     }
 
 
     public static boolean isBannableItem(ItemStack itemStack) {
         return
 
-                itemStack.is(TerramityModItems.ULTRA_SNIFFER_FUR.get()) ||
-                        itemStack.is(TerramityModItems.POKER_CHIP_BRACELETS.get()) ||
-                        itemStack.is(TerramityModItems.FATEFUL_COIN.get()) ||
-                        itemStack.is(TerramityModItems.LUCKY_DICE.get()) ||
-                        itemStack.is(TerramityModItems.ULTRA_SNIFFER_FUR.get()) ||
+                PTDItems.is(itemStack, PTDItems.ULTRA_SNIFFER_FUR) ||
+                        PTDItems.is(itemStack, PTDItems.POKER_CHIP_BRACELETS) ||
+                        PTDItems.is(itemStack, PTDItems.FATEFUL_COIN) ||
+                        PTDItems.is(itemStack, PTDItems.LUCKY_DICE) ||
+                        PTDItems.is(itemStack, PTDItems.ULTRA_SNIFFER_FUR) ||
 
-                        itemStack.is(ModItems.CURSIUM_CHESTPLATE.get());
+                        PTDItems.is(itemStack, PTDItems.CURSIUM_CHESTPLATE);
         //DyrolianSword
 
     }
@@ -218,7 +209,7 @@ public class PTDUtil {
                     inventory.setItem(i, ItemStack.EMPTY);
                     player.drop(itemStack, false);
                     living.sendSystemMessage(Component.literal("Item dropped from inventory: " + itemStack.getHoverName().getString() + " (Requires Sequence 4 or higher)").withStyle(ChatFormatting.GOLD));
-                } else if (itemStack.is(TerramityModItems.MUSIC_SHEET_OF_UNTIMELY_DEATH.get())) {
+                } else if (PTDItems.is(itemStack, PTDItems.MUSIC_SHEET_OF_UNTIMELY_DEATH)) {
                     inventory.setItem(i, ItemStack.EMPTY);
                 }
             }
@@ -236,14 +227,14 @@ public class PTDUtil {
 
     public static boolean isBannableSequence5Item(ItemStack stack) {
         return
-                stack.is(CSItems.AQUAFLORA.get()) ||
-                        stack.is(CSItems.KERES.get()) ||
-                        stack.is(CSItems.BREEZEBREAKER.get()) ||
-                        stack.is(CSItems.SOLARIS.get()) ||
-                        stack.is(CSItems.CRESCENTIA.get()) ||
-                        stack.is(CSItems.POLTERGEIST.get()) ||
-                        stack.is(CSItems.AQUAFLORA.get()) ||
-                        stack.is(CSItems.RAINFALL_SERENITY.get()) ||
-                        stack.is(CSItems.FROSTBOUND.get());
+                PTDItems.is(stack, PTDItems.AQUAFLORA) ||
+                        PTDItems.is(stack, PTDItems.KERES) ||
+                        PTDItems.is(stack, PTDItems.BREEZEBREAKER) ||
+                        PTDItems.is(stack, PTDItems.SOLARIS) ||
+                        PTDItems.is(stack, PTDItems.CRESCENTIA) ||
+                        PTDItems.is(stack, PTDItems.POLTERGEIST) ||
+                        PTDItems.is(stack, PTDItems.AQUAFLORA) ||
+                        PTDItems.is(stack, PTDItems.RAINFALL_SERENITY) ||
+                        PTDItems.is(stack, PTDItems.FROSTBOUND);
     }
 }

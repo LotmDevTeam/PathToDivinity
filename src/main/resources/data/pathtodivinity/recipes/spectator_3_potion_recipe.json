@@ -1,4 +1,14 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "spectator",
   "sequence": 3,

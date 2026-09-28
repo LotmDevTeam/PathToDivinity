@@ -1,4 +1,22 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "bosses_of_mass_destruction"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "celestisynth"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "bard",
   "sequence": 7,

@@ -1,4 +1,26 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "awakened_bosses"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "monsterexpansion"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "bard",
   "sequence": 6,

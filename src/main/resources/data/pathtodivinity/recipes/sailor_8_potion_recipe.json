@@ -1,4 +1,10 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mutantmonsters"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "sailor",
   "sequence": 8,

@@ -1,4 +1,18 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mutantmonsters"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "warrior",
   "sequence": 8,
