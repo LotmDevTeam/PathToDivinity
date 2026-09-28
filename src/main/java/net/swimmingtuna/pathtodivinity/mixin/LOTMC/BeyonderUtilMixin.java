@@ -134,7 +134,8 @@ public class BeyonderUtilMixin {
             cir.setReturnValue(customSequence);
             return;
         }
-        String entityName = living.getName().getString().toLowerCase();
+        // Type-based, not living.getName(): a name tag would otherwise hand any mob a boss sequence.
+        String entityName = PTDEntities.typeSearchText(living);
         String className = living.getClass().getSimpleName();
 
         if (living instanceof Mob) {
@@ -142,7 +143,7 @@ public class BeyonderUtilMixin {
                 cir.setReturnValue(3);
                 return;
             }
-            if (entityName.equalsIgnoreCase("horseman")) {
+            if (PTDEntities.isHorseman(living)) {
                 cir.setReturnValue(4);
                 return;
             }

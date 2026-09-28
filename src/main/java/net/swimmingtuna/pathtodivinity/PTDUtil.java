@@ -100,7 +100,6 @@ public class PTDUtil {
         BEYONDER_ENTITY_TYPES.add(PTDEntities.NAMELESS_GUARDIAN);
 
         // Sequence 3 entities
-        BEYONDER_ENTITY_TYPES.add(PTDEntities.MOONKNIGHT); //Fallen Icon
         BEYONDER_ENTITY_TYPES.add(PTDEntities.LORD_PUMPKINHEAD);
         BEYONDER_ENTITY_TYPES.add(PTDEntities.TRIAL_GUARDIAN);
 
@@ -117,10 +116,11 @@ public class PTDUtil {
 
 
     private static boolean matchesNameBasedConditions(Entity entity) {
-        String entityName = entity.getName().getString().toLowerCase();
+        // Type-based, not entity.getName(): a custom name would let any name-tagged mob pass.
+        String entityName = PTDEntities.typeSearchText(entity);
         String className = entity.getClass().getSimpleName(); //Comments are equal to sequence
         if (entityName.contains("vessel")) return true; //3
-        if (entityName.equalsIgnoreCase("horseman")) return true;  //4
+        if (PTDEntities.isHorseman(entity)) return true;  //4
         if (entityName.contains("doomharbor")) return true; //7
         if (entityName.contains("terrible") || entityName.contains("puny")) return true; //8
         if (entityName.contains("plague_bringer")) return true; //7
@@ -151,7 +151,6 @@ public class PTDUtil {
                         PTDItems.is(itemStack, PTDItems.POKER_CHIP_BRACELETS) ||
                         PTDItems.is(itemStack, PTDItems.FATEFUL_COIN) ||
                         PTDItems.is(itemStack, PTDItems.LUCKY_DICE) ||
-                        PTDItems.is(itemStack, PTDItems.ULTRA_SNIFFER_FUR) ||
 
                         PTDItems.is(itemStack, PTDItems.CURSIUM_CHESTPLATE);
         //DyrolianSword
@@ -168,44 +167,19 @@ public class PTDUtil {
                     living.sendSystemMessage(Component.literal("Banned item removed: " + itemStack.getHoverName().getString()).withStyle(ChatFormatting.RED));
                 }
             }
-            if (slot.getType() == EquipmentSlot.Type.HAND) {
-                ItemStack itemStack = living.getItemBySlot(slot);
-                if (BeyonderUtil.getSequence(living) > 4) {
-                    if (isBannableSequence5Item(itemStack)) {
-                        if (living instanceof Player player) {
-                            boolean moved = false;
-                            if (player.getInventory().add(itemStack)) {
-                                moved = true;
-                            } else {
-                                for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                                    if (player.getInventory().getItem(i).isEmpty()) {
-                                        player.getInventory().setItem(i, itemStack);
-                                        moved = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (moved) {
-                                living.setItemSlot(slot, ItemStack.EMPTY);
-                                living.sendSystemMessage(Component.literal("Item moved to inventory: " + itemStack.getHoverName().getString() + " (Requires Sequence 4 or higher)").withStyle(ChatFormatting.YELLOW));
-                            } else {
-                                living.setItemSlot(slot, ItemStack.EMPTY);
-                                player.drop(itemStack, false);
-                                living.sendSystemMessage(Component.literal("Item dropped (inventory full): " + itemStack.getHoverName().getString() + " (Requires Sequence 4 or higher)").withStyle(ChatFormatting.GOLD));
-                            }
-                        }
-                    }
-                }
-            }
         }
         if (living instanceof Player player) {
+            // getContainerSize() covers the main inventory, armor and offhand, so held items are
+            // included. (Held Celestisynth weapons used to be moved into the inventory first, only
+            // to be dropped by this same loop straight after.)
+            boolean canUseSequence4Items = canUseSequence4Items(player);
             Inventory inventory = player.getInventory();
             for (int i = 0; i < inventory.getContainerSize(); i++) {
                 ItemStack itemStack = inventory.getItem(i);
                 if (isBannableItem(itemStack)) {
                     inventory.setItem(i, ItemStack.EMPTY);
                     living.sendSystemMessage(Component.literal("Banned item removed from inventory: " + itemStack.getHoverName().getString()).withStyle(ChatFormatting.RED));
-                } else if (BeyonderUtil.getSequence(living) > 4 && isBannableSequence5Item(itemStack)) {
+                } else if (!canUseSequence4Items && isBannableSequence5Item(itemStack)) {
                     inventory.setItem(i, ItemStack.EMPTY);
                     player.drop(itemStack, false);
                     living.sendSystemMessage(Component.literal("Item dropped from inventory: " + itemStack.getHoverName().getString() + " (Requires Sequence 4 or higher)").withStyle(ChatFormatting.GOLD));
@@ -213,16 +187,17 @@ public class PTDUtil {
                     inventory.setItem(i, ItemStack.EMPTY);
                 }
             }
-            ItemStack offhandStack = inventory.offhand.get(0);
-            if (isBannableItem(offhandStack)) {
-                inventory.offhand.set(0, ItemStack.EMPTY);
-                living.sendSystemMessage(Component.literal("Banned item removed from offhand: " + offhandStack.getHoverName().getString()).withStyle(ChatFormatting.RED));
-            } else if (BeyonderUtil.getSequence(living) > 4 && isBannableSequence5Item(offhandStack)) {
-                inventory.offhand.set(0, ItemStack.EMPTY);
-                player.drop(offhandStack, false);
-                living.sendSystemMessage(Component.literal("Item dropped from offhand: " + offhandStack.getHoverName().getString() + " (Requires Sequence 4 or higher)").withStyle(ChatFormatting.GOLD));
-            }
         }
+    }
+
+    /**
+     * Whether the player is a Beyonder of Sequence 4 or stronger (lower number = stronger).
+     * Players without a pathway have sequence -1, which the old {@code getSequence > 4} check
+     * treated as allowed, so non-Beyonders could use every restricted weapon.
+     */
+    public static boolean canUseSequence4Items(Player player) {
+        int sequence = BeyonderUtil.getSequence(player);
+        return sequence >= 0 && sequence <= 4;
     }
 
     public static boolean isBannableSequence5Item(ItemStack stack) {
@@ -233,7 +208,6 @@ public class PTDUtil {
                         PTDItems.is(stack, PTDItems.SOLARIS) ||
                         PTDItems.is(stack, PTDItems.CRESCENTIA) ||
                         PTDItems.is(stack, PTDItems.POLTERGEIST) ||
-                        PTDItems.is(stack, PTDItems.AQUAFLORA) ||
                         PTDItems.is(stack, PTDItems.RAINFALL_SERENITY) ||
                         PTDItems.is(stack, PTDItems.FROSTBOUND);
     }

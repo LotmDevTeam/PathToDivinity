@@ -17,6 +17,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -100,8 +101,9 @@ public class ModEvents {
 
             CompoundTag tag = player.getPersistentData();
             if (tag.getInt("PTDCombatTimer") > 0) {
-                String commandName = event.getParseResults().getReader().getString().split(" ")[0].toLowerCase();
-                if (commandName.equals("/home") || commandName.equals("/spawn")) {
+                // fullCommand already has the leading "/" stripped (commands typed in chat arrive without it)
+                String commandName = fullCommand.split(" ")[0];
+                if (commandName.equals("home") || commandName.equals("spawn")) {
                     event.setCanceled(true);
                     player.sendSystemMessage(Component.literal("You are in combat and cannot use /home or /spawn!"));
                 }
@@ -131,245 +133,55 @@ public class ModEvents {
                     living.sendSystemMessage(Component.literal("Piercing is banned").withStyle(ChatFormatting.RED));
                     EnchantmentHelper.setEnchantments(enchantments, mainHand);
                 }
+                // Scan by item rather than Inventory.contains(defaultInstance), which compares NBT and so
+                // missed any damaged or enchanted razor.
                 Item razor = PTDItems.get(PTDItems.MEHRUNES_RAZOR);
-                if (razor != null && player.getInventory().contains(razor.getDefaultInstance())) {
+                if (razor != null) {
+                    boolean removedRazor = false;
                     for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
                         ItemStack stack = player.getInventory().getItem(i);
                         if (stack.is(razor)) {
                             player.getInventory().setItem(i, ItemStack.EMPTY);
+                            removedRazor = true;
                         }
                     }
-                    player.containerMenu.broadcastChanges();
-                    player.sendSystemMessage(Component.literal("Mehrunes Razor cannot be used.").withStyle(ChatFormatting.RED));
+                    if (removedRazor) {
+                        player.containerMenu.broadcastChanges();
+                        player.sendSystemMessage(Component.literal("Mehrunes Razor cannot be used.").withStyle(ChatFormatting.RED));
+                    }
                 }
                 PTDUtil.removeBannedItem(living);
             }
 
+            // Health/damage multipliers are applied once in entityJoinEvent; this block only handles
+            // behaviour that has to be re-checked while the mob is alive.
             if (living.tickCount % 40 == 0) {
-                if (typeId.equals(PTDEntities.CHAOS_MONARCH)) {
-
-
-                } else if (typeId.equals(PTDEntities.DRAUGR_BOSS)) {
-
-
-                } else if (typeId.equals(PTDEntities.NIGHT_SHADE)) {
-
-
-                } else if (typeId.equals(PTDEntities.CLOUD_GOLEM)) {
-
-
-                } else if (typeId.equals(PTDEntities.THE_LEVIATHAN)) {
-
-
-                } else if (living.getName().getString().equalsIgnoreCase("horseman")) {
-
-
-                } else if (typeId.equals(PTDEntities.NAMELESS_GUARDIAN)) {
-
-
-                } else if (typeId.equals(PTDEntities.MOONKNIGHT)) {
-
-
-                } else if (typeId.equals(PTDEntities.LORD_PUMPKINHEAD)) {
-
-
-                } else if (typeId.equals(PTDEntities.TRIAL_GUARDIAN)) {
-
-
-                } else if (typeId.equals(PTDEntities.DAY_STALKER)) {
-                    if (living.tickCount % 4 == 0) {
-                        for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
-                            if (PTDEntities.NIGHT_PROWLER.equals(PTDEntities.idOf(mob))) {
-                                BeyonderUtil.forceAlly(mob, living);
-                            }
+                if (typeId.equals(PTDEntities.DAY_STALKER)) {
+                    for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
+                        if (PTDEntities.NIGHT_PROWLER.equals(PTDEntities.idOf(mob))) {
+                            BeyonderUtil.forceAlly(mob, living);
                         }
                     }
                     if (SoulsWeaponryCompat.isPhaseTwo(living)) {
-                        boolean x = tag.getBoolean("isPhaseTwo");
-                        tag.putBoolean("isPhaseTwo", false);
-                        if (!x) {
-                            multiplyMaxHealth(living, 2);
-                        }
-                        multiplyDamage(living, 2.6);
+                        applyPhaseTwoBuff(living, 2.0, 2.6);
                     }
-
-
                 } else if (typeId.equals(PTDEntities.NIGHT_PROWLER)) {
-                    if (living.tickCount % 4 == 0) {
-                        for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
-                            if (PTDEntities.DAY_STALKER.equals(PTDEntities.idOf(mob))) {
-                                BeyonderUtil.forceAlly(mob, living);
-                            }
+                    for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
+                        if (PTDEntities.DAY_STALKER.equals(PTDEntities.idOf(mob))) {
+                            BeyonderUtil.forceAlly(mob, living);
                         }
                     }
                     if (SoulsWeaponryCompat.isPhaseTwo(living)) {
-                        boolean x = tag.getBoolean("isPhaseTwo");
-                        multiplyDamage(living, 0.75);
-                        if (!x) {
-                            tag.putBoolean("isPhaseTwo", false);
-                            multiplyMaxHealth(living, 2);
-                        }
+                        applyPhaseTwoBuff(living, 2.0, 0.75);
                     }
-
-
-                } else if (typeId.equals(PTDEntities.ULTRA_SNIFFER)) {
-                    if (BeyonderUtil.getPathway(living) == null) {
-                        BeyonderClass[] pathways = {BeyonderClassInit.MONSTER.get(), BeyonderClassInit.WARRIOR.get(), BeyonderClassInit.SPECTATOR.get(), BeyonderClassInit.SAILOR.get()};
-                    }
-                } else if (typeId.equals(PTDEntities.WARPED_FUNGUSSUS)) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.4);
-                } else if (typeId.equals(PTDEntities.KOBOLEDIATOR)) {
-                    multiplyDamage(living, 1.2);
-                } else if (typeId.equals(PTDEntities.MAW)) {
-                    multiplyDamage(living, 1.5);
-                } else if (typeId.equals(PTDEntities.WROUGHTNAUT)) {
-                    multiplyDamage(living, 1.2);
-                } else if (typeId.equals(PTDEntities.DIRE_HOUND_LEADER)) {
-                    multiplyDamage(living, 1.5);
-
-                    // Sequence 8
-                } else if (typeId.equals(PTDEntities.DUSKROK)) {
-                    multiplyDamage(living, 1.3);
-                } else if (typeId.equals(PTDEntities.MUTANT_SKELETON)) {
-                    multiplyDamage(living, 1.2);
-                } else if (living.getName().getString().toLowerCase().contains("terrible") || living.getName().getString().toLowerCase().contains("puny")) {
-                    multiplyDamage(living, 1.3);
-                } else if (type == EntityType.ELDER_GUARDIAN) {
-                    multiplyDamage(living, 1.3);
-                } else if (typeId.equals(PTDEntities.MUTANT_ENDERMAN)) {
-                    multiplyDamage(living, 1.2);
-                } else if (living.getName().getString().toLowerCase().contains("aero_guardian")) {
-                    multiplyDamage(living, 1.6);
-                } else if (typeId.equals(PTDEntities.MOTHER_SPIDER)) {
-                    multiplyDamage(living, 2.0);
-                } else if (typeId.equals(PTDEntities.HELLROK)) {
-                    multiplyDamage(living, 1.3);
-                    living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 1, 40, false, false));
                 }
-
-                // Sequence 7
-                else if (living.getName().getString().toLowerCase().contains("doomharbor")) {
-                    multiplyDamage(living, 1.75);
-                } else if (typeId.equals(PTDEntities.FROSTMAW)) {
-                    multiplyDamage(living, 1.2);
-                } else if (typeId.equals(PTDEntities.MAZE_MOTHER)) {
-                    multiplyDamage(living, 1.6);
-                } else if (living.getName().getString().toLowerCase().contains("plague_bringer")) {
-                    multiplyDamage(living, 1.4);
-                }else if (living.getClass().getSimpleName().equals("LichEntity")) {
-                    multiplyDamage(living, 1.1);
-                } else if (living.getClass().getSimpleName().equals("GauntletEntity")) {
-                    multiplyDamage(living, 2.0);
-                }else if (living.getClass().getSimpleName().equals("ObsidilithEntity")) {
-                    multiplyDamage(living, 1.1);
-
-                    //Sequence 6
-                } else if (type == EntityType.WITHER) {
-                    multiplyDamage(living, 1.1);
-                } else if (living.getClass().getSimpleName().equals("VoidBlossomEntity")) {
-                    multiplyDamage(living, 1.3);
-                }else if (typeId.equals(PTDEntities.LIFESTEALER)) {
-                    multiplyDamage(living, 2.0);
-                    multiplyMaxHealth(living, 1.4);
-                }else if (typeId.equals(PTDEntities.SIR_PUMPKINHEAD)) {
-                    multiplyDamage(living, 2.8);
-                } else if (living.getName().getString().toLowerCase().contains("dyrolian")) {
-                    multiplyDamage(living, 1.2);
-                } else if (typeId.equals(PTDEntities.ENDERSENT)) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 4.0);
-
-                    // Sequence 5
-                } else if (typeId.equals(PTDEntities.CHAOS_MONARCH)) {
-                    multiplyDamage(living, 4.5);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.SHADOWLESS_DEMONIC_WOLF.get()) {
-                    multiplyMaxHealth(living, 3.0);
-                    multiplyDamage(living, 1.1);
-                } else if (typeId.equals(PTDEntities.CAPTAIN_CORNELIA)) {
-                    multiplyDamage(living, 1.6);
-                    multiplyMaxHealth(living, 1.3);
-                } else if (typeId.equals(PTDEntities.DRAUGR_BOSS)) {
-                    multiplyDamage(living, 1.2);
-
-
-                } else if (typeId.equals(PTDEntities.NIGHT_SHADE)) {
-                    multiplyDamage(living, 1.5);
-
-
-                } else if (typeId.equals(PTDEntities.ACCURSED_LORD_BOSS)) {
-                    multiplyDamage(living, 2.0);
-                } else if (typeId.equals(PTDEntities.RETURNING_KNIGHT)) {
-                    multiplyDamage(living, 1.6);
-                } else if (typeId.equals(PTDEntities.ENDER_GUARDIAN)) {
-                    multiplyDamage(living, 1.1);
-                    multiplyMaxHealth(living, 0.75);
-                } else if (typeId.equals(PTDEntities.NETHERITE_MONSTROSITY)) {
-                    multiplyDamage(living, 1.5);
-                    multiplyMaxHealth(living, 1.2);
-                }else if (typeId.equals(PTDEntities.POSESSED_PALADIN)) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.2);
-
-
-                    // Sequence 4
-                } else if (typeId.equals(PTDEntities.CLOUD_GOLEM)) {
-
-
-                } else if (typeId.equals(PTDEntities.THE_LEVIATHAN)) {
-
-
-                } else if (typeId.equals(PTDEntities.SCYLLA)) {
-                    multiplyDamage(living, 1);
-
-
-                } else if (typeId.equals(PTDEntities.GOB)) {
-                    multiplyDamage(living, 1.8);
-                    living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
-                }else if (living.getName().getString().equalsIgnoreCase("horseman")) {
-
-
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.DRAGON.get()) {
-                    multiplyDamage(living, 0.75f);
-                } else if (living.getName().getString().toLowerCase().contains("vessel")) {
-
-
-                    multiplyDamage(living, 2.5);
-                } else if (typeId.equals(PTDEntities.MOONKNIGHT)) {
-                    multiplyDamage(living, 2.0);
-
-
-                }else if (typeId.equals(PTDEntities.LORD_PUMPKINHEAD)) {
-                    multiplyDamage(living, 1.2);
-
-
-                } else if (typeId.equals(PTDEntities.TRIAL_GUARDIAN)) {
-
-
-
-                    // Sequence 2
-                } else if (typeId.equals(PTDEntities.SUPER_SNIFFER)) {
-                    multiplyDamage(living, 1.2);
-                } else if (typeId.equals(PTDEntities.DAY_STALKER)) {
-
-
-                } else if (typeId.equals(PTDEntities.NIGHT_PROWLER)) {
-
-
-                } else if (typeId.equals(PTDEntities.GUNDALF)) {
-                    multiplyDamage(living, 1.5);
-                }
-
-            }
-
-
-            else if (living.getName().getString().equalsIgnoreCase("horseman")) {
+            } else if (PTDEntities.isHorseman(living)) {
                 living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
             } else if (typeId.equals(PTDEntities.HEROBRINE)) {
                 living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
             } else if (typeId.equals(PTDEntities.UMVUTHI)) {
                 living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 1, false, false));
-            } else if (living.getName().getString().toLowerCase().contains("terrible_ten")) {
+            } else if (PTDEntities.typeSearchText(living).contains("terrible_ten")) {
                 living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
             } else if (typeId.equals(PTDEntities.SPIRITOF_CHAOS)) {
                 living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 2, false, false));
@@ -391,30 +203,36 @@ public class ModEvents {
                 living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 2, false, false));
             } else if (typeId.equals(PTDEntities.SCYLLA)) {
                 living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 2, false, false));
+            } else if (typeId.equals(PTDEntities.HELLROK)) {
+                // Was (MOVEMENT_SPEED, 1, 40): duration and amplifier swapped, i.e. one tick of Speed XLI.
+                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
+            } else if (typeId.equals(PTDEntities.GOB)) {
+                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
             }
             if (living instanceof Mob ultraSniffer && typeId.equals(PTDEntities.ULTRA_SNIFFER)) {
                 if (ultraSniffer.getTarget() == null) {
-                    for (Player player : ultraSniffer.level().getEntitiesOfClass(Player.class, ultraSniffer.getBoundingBox().inflate(50))) {
-                        if (!player.isCreative() && !player.isSpectator()) {
-                            ultraSniffer.setTarget(player);
-                        }
+                    Player target = nearestTargetablePlayer(ultraSniffer);
+                    if (target != null) {
+                        ultraSniffer.setTarget(target);
                     }
-                    float health = ultraSniffer.getHealth();
-                    if (Float.isNaN(health) || health < 0.0F) {
-                        ultraSniffer.setHealth(0.0F);
-                    }
-                    boolean isPhaseTwo = TerramityCompat.isUltraSnifferPhaseTwo(ultraSniffer);
-                    if (isPhaseTwo) {
-                        int fullHeal = ultraSniffer.getPersistentData().getInt("PtDFullHeal");
-                        if (fullHeal <= 100) {
-                            ultraSniffer.getPersistentData().putInt("PtDFullHeal", fullHeal + 1);
-                            ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
-                            ultraSniffer.getPersistentData().putInt("age", 0);
-                        }
-                    } else if (ultraSniffer.tickCount <= 100) {
+                }
+                // These used to sit inside the "no target" check above, so the phase-two heal only ran
+                // when the sniffer wasn't fighting anyone - i.e. practically never.
+                float health = ultraSniffer.getHealth();
+                if (Float.isNaN(health) || health < 0.0F) {
+                    ultraSniffer.setHealth(0.0F);
+                }
+                boolean isPhaseTwo = TerramityCompat.isUltraSnifferPhaseTwo(ultraSniffer);
+                if (isPhaseTwo) {
+                    int fullHeal = ultraSniffer.getPersistentData().getInt("PtDFullHeal");
+                    if (fullHeal <= 100) {
+                        ultraSniffer.getPersistentData().putInt("PtDFullHeal", fullHeal + 1);
                         ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
                         ultraSniffer.getPersistentData().putInt("age", 0);
                     }
+                } else if (ultraSniffer.tickCount <= 100) {
+                    ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
+                    ultraSniffer.getPersistentData().putInt("age", 0);
                 }
                 if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.SPECTATOR.get())) {
                     multiplyDamage(living, 0.8);
@@ -428,10 +246,9 @@ public class ModEvents {
                 }
             }
             if (living instanceof Mob superSnifferEntity && typeId.equals(PTDEntities.SUPER_SNIFFER) && superSnifferEntity.getTarget() == null) {
-                for (Player player : superSnifferEntity.level().getEntitiesOfClass(Player.class, superSnifferEntity.getBoundingBox().inflate(50))) {
-                    if (!player.isCreative() && !player.isSpectator()) {
-                        superSnifferEntity.setTarget(player);
-                    }
+                Player target = nearestTargetablePlayer(superSnifferEntity);
+                if (target != null) {
+                    superSnifferEntity.setTarget(target);
                 }
             }
             if (living instanceof Mob mob && PTDUtil.isBeyonderEntity(mob) && tickCount % 10 == 0) {
@@ -443,13 +260,40 @@ public class ModEvents {
                     AABB box = mob.getBoundingBox().inflate(1.0);
                     BlockPos.betweenClosedStream(box).forEach(pos -> {
                         BlockState state = level.getBlockState(pos);
-                        if (!state.isAir() && state.getDestroySpeed(level, pos) >= 0 && pos.getY() >= mob.getY() + 1 && mob.getTarget().getY() > mob.getEyeY() && state != Blocks.WATER.defaultBlockState() && state != Blocks.LAVA.defaultBlockState()) {
+                        if (!state.isAir() && state.getDestroySpeed(level, pos) >= 0 && pos.getY() >= mob.getY() + 1 && mob.getTarget().getY() > mob.getEyeY() && state.getFluidState().isEmpty()) {
                             level.destroyBlock(pos, true, mob);
                         }
                     });
                 }
             }
         }
+    }
+
+
+    /** Nearest player within 50 blocks who isn't in creative or spectator, or null. */
+    @Nullable
+    private static Player nearestTargetablePlayer(Mob mob) {
+        return mob.level().getNearestPlayer(mob.getX(), mob.getY(), mob.getZ(), 50, EntitySelector.NO_CREATIVE_OR_SPECTATOR);
+    }
+
+    /**
+     * One-time buff when a boss enters its second phase. multiplyMaxHealth/multiplyDamage can't be
+     * used here: they only ever apply once per mob, and entityJoinEvent has already used that up.
+     */
+    private static void applyPhaseTwoBuff(LivingEntity living, double healthMultiplier, double damageMultiplier) {
+        CompoundTag tag = living.getPersistentData();
+        if (tag.getBoolean("PTDPhaseTwoBuffed")) {
+            return;
+        }
+        tag.putBoolean("PTDPhaseTwoBuffed", true);
+        AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealthAttribute != null) {
+            float healthFraction = living.getHealth() / living.getMaxHealth();
+            maxHealthAttribute.setBaseValue(maxHealthAttribute.getBaseValue() * healthMultiplier * PTDConfig.COMMON.healthMultiplier.get());
+            living.setHealth(living.getMaxHealth() * healthFraction);
+        }
+        tag.putDouble("PTDDamageMultiplier", damageMultiplier * PTDConfig.COMMON.damageMultiplier.get());
+        LOTM.LOGGER.info("Applied phase two buff to {}", living.getName().getString());
     }
 
 
@@ -475,11 +319,11 @@ public class ModEvents {
     public static void livingDeathEvent(LivingDeathEvent event) {
         Entity entity = event.getEntity();
         if (!event.getEntity().level().isClientSide()) {
-            if (entity.getName().getString().contains("vessel")) {
+            if (PTDEntities.typeSearchText(entity).contains("vessel")) {
                 dropAt(entity, PTDItems.get(PTDItems.POCKET_UNIVERSE));
             } else if (PTDEntities.DUSKROK.equals(PTDEntities.idOf(entity))) {
                 dropAt(entity, Items.NETHERITE_SCRAP);
-            } else if (entity.getName().getString().equalsIgnoreCase("wither")) {
+            } else if (entity.getType() == EntityType.WITHER) {
                 dropAt(entity, PTDItems.get(PTDItems.LORD_SOUL_DARK));
                 dropAt(entity, PTDItems.get(PTDItems.SHARD_OF_UNCERTAINTY));
             }
@@ -565,6 +409,7 @@ public class ModEvents {
             if (entity instanceof LivingEntity living) {
                 EntityType<?> type = living.getType();
                 ResourceLocation typeId = EntityType.getKey(type);
+                String typeName = PTDEntities.typeSearchText(living);
                 if (typeId.equals(PTDEntities.KRAMPUS)) {
                     event.setCanceled(true);
                 }
@@ -612,7 +457,7 @@ public class ModEvents {
                 } else if (typeId.equals(PTDEntities.MUTANT_SKELETON)) {
                     multiplyMaxHealth(living, 1.5);
                     multiplyDamage(living, 1.2);
-                } else if (living.getName().getString().toLowerCase().contains("terrible") || living.getName().getString().toLowerCase().contains("puny")) { //Terrible Ten
+                } else if (typeName.contains("terrible") || typeName.contains("puny")) { //Terrible Ten
                     multiplyMaxHealth(living, 1.0);
                     multiplyDamage(living, 1.3);
                     //} else if (type == AMEntityRegistry.WARPED_MOSCO.get()) {
@@ -624,7 +469,7 @@ public class ModEvents {
                 } else if (typeId.equals(PTDEntities.MUTANT_ENDERMAN)) {
                     multiplyMaxHealth(living, 1.4);
                     multiplyDamage(living, 1.2);
-                } else if (living.getName().getString().toLowerCase().contains("aero_guardian")) { //Aero Guardian
+                } else if (typeName.contains("aero_guardian")) { //Aero Guardian
                     multiplyMaxHealth(living, 1.0);
                     multiplyDamage(living, 1.6);
                 } else if (typeId.equals(PTDEntities.SPIRITOF_CHAOS)) {
@@ -645,12 +490,9 @@ public class ModEvents {
                     multiplyMaxHealth(living, 1.5);
 
                     // Sequence 7
-                }else if (typeId.equals(PTDEntities.WARPED_FUNGUSSUS)) {
-                    multiplyMaxHealth(living, 1.8);
-                }
-                else if (typeId.equals(PTDEntities.ANCIENT_GUARDIAN)) {
+                } else if (typeId.equals(PTDEntities.ANCIENT_GUARDIAN)) {
                     multiplyMaxHealth(living, 1.3);
-                } else if (living.getName().getString().toLowerCase().contains("doomharbor")) { //Doomharbor Lich
+                } else if (typeName.contains("doomharbor")) { //Doomharbor Lich
                     multiplyMaxHealth(living, 1.0);
                     multiplyDamage(living, 1.75);
                 } else if (typeId.equals(PTDEntities.FROSTMAW)) {
@@ -659,7 +501,7 @@ public class ModEvents {
                 } else if (typeId.equals(PTDEntities.MAZE_MOTHER)) {
                     multiplyMaxHealth(living, 1.5);
                     multiplyDamage(living, 1.6);
-                } else if (living.getName().getString().toLowerCase().contains("plague_bringer")) { //Plague Bringer
+                } else if (typeName.contains("plague_bringer")) { //Plague Bringer
                     multiplyMaxHealth(living, 0.7);
                     multiplyDamage(living, 1.7);
                 } else if (entity.getClass().getSimpleName().equals("LichEntity")) { //Lich (Bosses of Mass Destruction)
@@ -698,8 +540,11 @@ public class ModEvents {
                     multiplyDamage(living, 4.0);
                 } else if (type == net.swimmingtuna.lotm.init.EntityInit.SHADOWLESS_DEMONIC_WOLF.get()) {
                     multiplyMaxHealth(living, 1.5);
+                    multiplyDamage(living, 1.1);
+                } else if (type == net.swimmingtuna.lotm.init.EntityInit.DRAGON.get()) {
+                    multiplyDamage(living, 0.75);
                 }
-                else if (living.getName().getString().toLowerCase().contains("dyrolian")) {
+                else if (typeName.contains("dyrolian")) {
                     multiplyDamage(living, 1.3);
                     multiplyMaxHealth(living, 0.5);
 
@@ -762,7 +607,7 @@ public class ModEvents {
                 } else if (typeId.equals(PTDEntities.GOB)) {
                     multiplyMaxHealth(living, 3.0);
                     multiplyDamage(living, 1.8);
-                } else if (living.getName().getString().equalsIgnoreCase("horseman")) { //Pumpkin Horseman
+                } else if (PTDEntities.isHorseman(living)) { //Pumpkin Horseman
                     multiplyMaxHealth(living, 1.5);
 
 
@@ -781,7 +626,7 @@ public class ModEvents {
 
 
                 // Sequence 3
-                else if (living.getName().getString().toLowerCase().contains("vessel")) { //Vessel of Calamity
+                else if (typeName.contains("vessel")) { //Vessel of Calamity
                     multiplyMaxHealth(living, 4.0);
                     multiplyDamage(living, 2.5);
                 } else if (typeId.equals(PTDEntities.MOONKNIGHT)) {
@@ -838,86 +683,57 @@ public class ModEvents {
         if (ModCompat.isLoaded(ModCompat.BORN_IN_CHAOS)) {
             BornInChaosCompat.disableKrampusSpawns(server);
         }
-        Commands commands = server.getCommands();
-        CommandSourceStack commandSource = server.createCommandSourceStack();
         try {
-            addBeyonderEntity(commands, commandSource, "soulsweapons:chaos_monarch", "lotm:monster 7");
-            addBeyonderEntity(commands, commandSource, "cataclysm:ender_guardian", "lotm:apprentice 7"); //11111111
-            addBeyonderEntity(commands, commandSource, "legendary_monsters:cloud_golem", "lotm:sailor 6");
-            addBeyonderEntity(commands, commandSource, "cataclysm:ancient_ancient_remnant", "lotm:apprentice 6");
-            addBeyonderEntity(commands, commandSource, "soulsweapons:returning_knight", "lotm:sailor 7"); //11111111
-            addBeyonderEntity(commands, commandSource, "aquamirae:captain_cornelia", "lotm:warrior 7"); //11111111
-            addBeyonderEntity(commands, commandSource, "cataclysm:the_leviathan", "lotm:monster 6"); //11111111
-            addBeyonderEntity(commands, commandSource, "sleepy_hollows:horseman", "lotm:spectator 6"); //11111111
-            addBeyonderEntity(commands, commandSource, "born_in_chaos_v1:lord_pumpkinhead", "lotm:warrior 5"); //11111111
-            addBeyonderEntity(commands, commandSource, "soulsweapons:moonknight", "lotm:spectator 5");  //11111111
-            addBeyonderEntity(commands, commandSource, "cataclysm:the_harbinger", "lotm:warrior 7");  //11111111
-            addBeyonderEntity(commands, commandSource, "terramity:gob", "lotm:monster 6");
-            addBeyonderEntity(commands, commandSource, "soulsweapons:draugr_boss", "lotm:warrior 8");//11111111
-            addBeyonderEntity(commands, commandSource, "legendary_monsters:posessed_paladin", "lotm:apprentice 7");  //11111111
-            addBeyonderEntity(commands, commandSource, "monsterexpansion:leivekilth", "lotm:sailor 5");  //11111111
-            addBeyonderEntity(commands, commandSource, "eeeabsmobs:realm_warden", "lotm:spectator 7");  //11111111
-            int random = (int) BeyonderUtil.getPositiveRandomInRange(5);
-            if (random == 0) {
-                addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:spectator 3");
-            } else if (random == 1) {
-                addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:warrior 3");
-            } else if (random == 2) {
-                addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:sailor 3");
-            } else if (random == 3) {
-                addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:apprentice 3");
-            } else {
-                addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:monster 3");
-            }
-
+            registerBeyonderEntities(server.getCommands(), server.createCommandSourceStack(), true);
         } catch (Exception e) {
             PTD.LOGGER.info("Failed to execute beyonderrecipe load command: {}", e.getMessage());
         }
     }
 
+    // Was an instance method on a class registered through @Mod.EventBusSubscriber, which only
+    // subscribes static methods - so this never ran.
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END && event.getServer().getTickCount() % 1200 == 0) {
             MinecraftServer server = event.getServer();
-            float foundSniffers = 0;
-            for (ServerLevel level : server.getAllLevels()) {
-                for (Entity entity : level.getAllEntities()) {
-                    if (PTDEntities.ULTRA_SNIFFER.equals(PTDEntities.idOf(entity))) {
-                        foundSniffers++;
+            int foundSniffers = 0;
+            if (ModCompat.isLoaded(PTDEntities.ULTRA_SNIFFER)) {
+                for (ServerLevel level : server.getAllLevels()) {
+                    for (Entity entity : level.getAllEntities()) {
+                        if (PTDEntities.ULTRA_SNIFFER.equals(PTDEntities.idOf(entity))) {
+                            foundSniffers++;
+                        }
                     }
                 }
             }
-            Commands commands = server.getCommands();
-            CommandSourceStack commandSource = server.createCommandSourceStack();
-            addBeyonderEntity(commands, commandSource, "soulsweapons:chaos_monarch", "lotm:monster 7");
-            addBeyonderEntity(commands, commandSource, "cataclysm:ender_guardian", "lotm:apprentice 7"); //11111111
-            addBeyonderEntity(commands, commandSource, "legendary_monsters:cloud_golem", "lotm:sailor 6");
-            addBeyonderEntity(commands, commandSource, "cataclysm:ancient_ancient_remnant", "lotm:apprentice 6");
-            addBeyonderEntity(commands, commandSource, "soulsweapons:returning_knight", "lotm:sailor 7"); //11111111
-            addBeyonderEntity(commands, commandSource, "aquamirae:captain_cornelia", "lotm:warrior 7"); //11111111
-            addBeyonderEntity(commands, commandSource, "cataclysm:the_leviathan", "lotm:monster 6"); //11111111
-            addBeyonderEntity(commands, commandSource, "sleepy_hollows:horseman", "lotm:spectator 6"); //11111111
-            addBeyonderEntity(commands, commandSource, "born_in_chaos_v1:lord_pumpkinhead", "lotm:warrior 5"); //11111111
-            addBeyonderEntity(commands, commandSource, "soulsweapons:moonknight", "lotm:spectator 5");  //11111111
-            addBeyonderEntity(commands, commandSource, "cataclysm:the_harbinger", "lotm:warrior 7");  //11111111
-            addBeyonderEntity(commands, commandSource, "terramity:gob", "lotm:monster 6");
-            addBeyonderEntity(commands, commandSource, "soulsweapons:draugr_boss", "lotm:warrior 8");//11111111
-            addBeyonderEntity(commands, commandSource, "legendary_monsters:posessed_paladin", "lotm:apprentice 7");  //11111111
-            addBeyonderEntity(commands, commandSource, "monsterexpansion:leivekilth", "lotm:sailor 5");  //11111111
-            addBeyonderEntity(commands, commandSource, "eeeabsmobs:realm_warden", "lotm:spectator 7");  //11111111
+            // Only re-roll the Ultra Sniffer's pathway while none is alive, so a fight in progress
+            // never has its pathway swapped. Output is suppressed so ops aren't spammed every minute.
+            registerBeyonderEntities(server.getCommands(), server.createCommandSourceStack().withSuppressedOutput(), foundSniffers == 0);
+        }
+    }
 
-            if (foundSniffers == 0) {
-                int random = (int) BeyonderUtil.getPositiveRandomInRange(4);
-                if (random == 0) {
-                    addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:spectator 3");
-                } else if (random == 1) {
-                    addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:warrior 3");
-                } else if (random == 2) {
-                    addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:sailor 3");
-                } else {
-                    addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", "lotm:monster 3");
-                }
-            }
+    private static void registerBeyonderEntities(Commands commands, CommandSourceStack commandSource, boolean rollUltraSnifferPathway) {
+        addBeyonderEntity(commands, commandSource, "soulsweapons:chaos_monarch", "lotm:monster 7");
+        addBeyonderEntity(commands, commandSource, "cataclysm:ender_guardian", "lotm:apprentice 7");
+        addBeyonderEntity(commands, commandSource, "legendary_monsters:cloud_golem", "lotm:sailor 6");
+        addBeyonderEntity(commands, commandSource, "cataclysm:ancient_remnant", "lotm:apprentice 6"); // was the non-existent "ancient_ancient_remnant"
+        addBeyonderEntity(commands, commandSource, "soulsweapons:returning_knight", "lotm:sailor 7");
+        addBeyonderEntity(commands, commandSource, "aquamirae:captain_cornelia", "lotm:warrior 7");
+        addBeyonderEntity(commands, commandSource, "cataclysm:the_leviathan", "lotm:monster 6");
+        addBeyonderEntity(commands, commandSource, "sleepy_hollows:horseman", "lotm:spectator 6");
+        addBeyonderEntity(commands, commandSource, "born_in_chaos_v1:lord_pumpkinhead", "lotm:warrior 5");
+        addBeyonderEntity(commands, commandSource, "soulsweapons:moonknight", "lotm:spectator 5");
+        addBeyonderEntity(commands, commandSource, "cataclysm:the_harbinger", "lotm:warrior 7");
+        addBeyonderEntity(commands, commandSource, "terramity:gob", "lotm:monster 6");
+        addBeyonderEntity(commands, commandSource, "soulsweapons:draugr_boss", "lotm:warrior 8");
+        addBeyonderEntity(commands, commandSource, "legendary_monsters:posessed_paladin", "lotm:apprentice 7");
+        addBeyonderEntity(commands, commandSource, "monsterexpansion:leivekilth", "lotm:sailor 5");
+        addBeyonderEntity(commands, commandSource, "eeeabsmobs:realm_warden", "lotm:spectator 7");
+        if (rollUltraSnifferPathway) {
+            // The periodic refresh used to leave apprentice out; both now roll the same five pathways.
+            String[] pathways = {"lotm:spectator", "lotm:warrior", "lotm:sailor", "lotm:apprentice", "lotm:monster"};
+            String pathway = pathways[(int) BeyonderUtil.getPositiveRandomInRange(pathways.length)];
+            addBeyonderEntity(commands, commandSource, "terramity:ultra_sniffer", pathway + " 3");
         }
     }
 
@@ -940,14 +756,13 @@ public class ModEvents {
     public static void multiplyMaxHealth(LivingEntity living, double multiplier) {
         if (!living.getPersistentData().getBoolean("maxHealthMultiplied")) {
             float multiplierAmount = (float) (multiplier * PTDConfig.COMMON.healthMultiplier.get());
-            float maxHealth = living.getMaxHealth();
             AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
-            if (maxHealthAttribute != null) {
-                if (maxHealth < 10000) {
-                    maxHealthAttribute.setBaseValue(maxHealth * multiplierAmount);
-                }
+            // Scale the base value: using getMaxHealth() baked any existing attribute modifiers into
+            // the base, and above the 10000 cap the base was left alone but health was still rescaled.
+            if (maxHealthAttribute != null && living.getMaxHealth() < 10000) {
+                maxHealthAttribute.setBaseValue(maxHealthAttribute.getBaseValue() * multiplierAmount);
+                living.setHealth(living.getMaxHealth());
             }
-            living.setHealth(maxHealth * multiplierAmount);
             living.getPersistentData().putBoolean("maxHealthMultiplied", true);
             LOTM.LOGGER.info("Multiplied {}'s health by {}", living.getName().getString(), multiplier);
         }
@@ -956,12 +771,12 @@ public class ModEvents {
     public static void multiplyMaxHealthUltraSniffer(LivingEntity living, double multiplier) {
         if (!living.getPersistentData().getBoolean("maxHealthMultiplied")) {
             float multiplierAmount = (float) (multiplier * PTDConfig.COMMON.healthMultiplier.get());
-            float maxHealth = living.getMaxHealth();
             AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
             if (maxHealthAttribute != null) {
-                maxHealthAttribute.setBaseValue(maxHealth * multiplierAmount + 1);
+                double newMaxHealth = maxHealthAttribute.getBaseValue() * multiplierAmount;
+                maxHealthAttribute.setBaseValue(newMaxHealth + 1);
+                living.setHealth((float) newMaxHealth);
             }
-            living.setHealth(maxHealth * multiplierAmount);
             living.getPersistentData().putBoolean("maxHealthMultiplied", true);
             LOTM.LOGGER.info("Multiplied {}'s health by {}", living.getName().getString(), multiplier);
         }
