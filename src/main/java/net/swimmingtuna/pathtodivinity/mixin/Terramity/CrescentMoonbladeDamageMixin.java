@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.CrescentMoonbladeProjectileProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = CrescentMoonbladeProjectileProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class CrescentMoonbladeDamageMixin {
             constant = @Constant(floatValue = 10.0F)
     )
     private static float modifyDamage(float damage) {
-        return damage * 1.8F;
+        return PTDBalance.CRESCENT_MOONBLADE_PROJECTILE_DAMAGE.apply(damage);
     }
 }

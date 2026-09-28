@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mutantmonsters"
+    }
+  ],
+  "match": {
+    "entity": "mutantmonsters:mutant_zombie"
+  },
+  "pathway": "lotm:corpse_collector",
+  "sequence": 8,
+  "ability_sequence": -1,
+  "health_multiplier": 1.5,
+  "boss": true
+}

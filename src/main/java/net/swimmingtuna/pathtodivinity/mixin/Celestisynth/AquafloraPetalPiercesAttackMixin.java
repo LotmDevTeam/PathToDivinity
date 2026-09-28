@@ -1,52 +1,19 @@
 package net.swimmingtuna.pathtodivinity.mixin.Celestisynth;
 
-
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.thecelestialworkshop.celestisynth.api.item.AttackHurtTypes;
 import org.thecelestialworkshop.celestisynth.common.attack.aquaflora.AquafloraPetalPiercesAttack;
-import org.thecelestialworkshop.celestisynth.common.entity.base.CSEffectEntity;
-import org.thecelestialworkshop.celestisynth.common.registry.CSSoundEvents;
-import org.thecelestialworkshop.celestisynth.common.registry.CSVisualTypes;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-import java.util.List;
-
+/**
+ * Sets the damage factor Celestisynth passes to attributeDependentAttack (0.1) from [balance.celestisynth].
+ */
 @Mixin(value = AquafloraPetalPiercesAttack.class, remap = false)
 public class AquafloraPetalPiercesAttackMixin {
-
-    @Inject(method = "tickAttack", at = @At("HEAD"), cancellable = true)
-    public void injectTickAttack(CallbackInfo ci) {
-        AquafloraPetalPiercesAttack self = (AquafloraPetalPiercesAttack)(Object)this;
-        Player player = self.getPlayer();
-        Level level = self.getLevel();
-
-        if (self.getTimerProgress() >= 0 && self.getTimerProgress() <= 15) {
-            player.playSound(CSSoundEvents.AIR_SWING.get(), 0.25F, 1.3F + level.random.nextFloat());
-            CSEffectEntity.createInstance(player, null, CSVisualTypes.AQUAFLORA_STAB.get(), -0.5 + level.random.nextDouble() + self.calculateXLook(player) * 3.0, -0.5 + level.random.nextDouble() + 2.0 + self.calculateYLook(player) * 3.0, -0.5 + level.random.nextDouble() + self.calculateZLook(player) * 3.0);
-            List<Entity> entities = self.iterateEntities(level, self.createAABB(player.blockPosition().offset((int)(self.calculateXLook(player) * 4.5), (int)(1.0 + self.calculateYLook(player) * 4.5), (int)(self.calculateZLook(player) * 4.5)), 2.0));
-            entities.addAll(self.iterateEntities(level, self.createAABB(player.blockPosition().offset((int)(self.calculateXLook(player) * 3.0), (int)(1.0 + self.calculateYLook(player) * 3.0), (int)(self.calculateZLook(player) * 3.0)), 2.0)));
-            entities.addAll(self.iterateEntities(level, self.createAABB(player.blockPosition().offset((int)(self.calculateXLook(player) * 1.5), (int)(1.0 + self.calculateYLook(player) * 1.5), (int)(self.calculateZLook(player) * 1.5)), 2.0)));
-
-            if (!entities.isEmpty()) {
-                player.playSound(CSSoundEvents.BLING.get(), 0.15F, 1.0F + level.random.nextFloat());
-            }
-
-            for (Entity entityBatch : entities) {
-                if (entityBatch instanceof LivingEntity target) {
-                    if (target != player && target.isAlive() && !player.isAlliedTo(target)) {
-                        self.attributeDependentAttack(player, target, self.getStack(), 0.275F, AttackHurtTypes.RAPID_NO_KB);
-                        self.createHitEffect(self.getStack(), level, player, target);
-                    }
-                }
-            }
-        }
-
-        ci.cancel();
+    /** Damage factor. */
+    @ModifyConstant(method = "tickAttack", constant = @Constant(floatValue = 0.1F))
+    private float pathtodivinity$damage(float original) {
+        return PTDBalance.AQUAFLORA_PETAL_PIERCES_DAMAGE.apply(original);
     }
 }

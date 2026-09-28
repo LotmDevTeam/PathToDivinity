@@ -1,5 +1,6 @@
 package net.swimmingtuna.pathtodivinity;
 
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.ChatFormatting;
@@ -29,7 +30,7 @@ public class SequenceLockCommand {
         dispatcher.register(Commands.literal("sequencelock")
                 // Evaluated on every use and on command-tree sync, so toggling the config takes effect
                 // immediately and the command stays hidden from tab-complete while the feature is off.
-                .requires(source -> source.hasPermission(2) && PTDConfig.COMMON.sequenceLockEnabled.get())
+                .requires(source -> source.hasPermission(2) && PTDServerConfig.SEQUENCE_LOCK_ENABLED.get())
                 .then(Commands.literal("unlock")
                         .executes(context -> unlock(context.getSource())))
                 .then(Commands.argument("sequence", IntegerArgumentType.integer(0, 9))

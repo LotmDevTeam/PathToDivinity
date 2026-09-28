@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    }
+  ],
+  "match": {
+    "entity": "born_in_chaos_v1:dire_hound_leader"
+  },
+  "pathway": "lotm:corpse_collector",
+  "sequence": 9,
+  "ability_sequence": -1,
+  "health_multiplier": 1.25,
+  "damage_multiplier": 1.5,
+  "boss": true
+}

@@ -1,4 +1,18 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "sleepy_hollows"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "warrior",
   "sequence": 4,

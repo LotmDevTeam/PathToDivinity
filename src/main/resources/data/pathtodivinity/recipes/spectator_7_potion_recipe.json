@@ -1,4 +1,10 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "spectator",
   "sequence": 7,

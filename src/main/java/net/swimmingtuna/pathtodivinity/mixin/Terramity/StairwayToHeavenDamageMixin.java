@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.StairwayToHeavenRightclickedProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = StairwayToHeavenRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class StairwayToHeavenDamageMixin {
             constant = @Constant(doubleValue = 0.4D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 2.0D;
+        return PTDBalance.STAIRWAY_TO_HEAVEN_DAMAGE.apply(damage);
     }
 }

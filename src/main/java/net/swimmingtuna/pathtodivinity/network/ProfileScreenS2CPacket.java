@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
-import net.swimmingtuna.pathtodivinity.PTDConfig;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.client.PTDClientScreenHandlers;
 import net.swimmingtuna.pathtodivinity.profile.PlayerProfileData;
 import net.swimmingtuna.pathtodivinity.profile.ProfileManager;
@@ -84,10 +84,10 @@ public class ProfileScreenS2CPacket {
         Component blocker = active == null ? null : ProfileManager.getSwitchBlocker(player);
 
         return new ProfileScreenS2CPacket(active, activeSummary, otherSummary, blocker, status, statusSuccess,
-                PTDConfig.COMMON.normalProfileRegresses.get(),
-                PTDConfig.COMMON.safemodeMaxSequence.get(),
-                PTDConfig.COMMON.safemodeAbilityDamage.get(),
-                PTDConfig.COMMON.profileSwitchCooldownMinutes.get());
+                PTDServerConfig.NORMAL_PROFILE_REGRESSES.get(),
+                PTDServerConfig.SAFEMODE_MAX_SEQUENCE.get(),
+                PTDServerConfig.SAFEMODE_ABILITY_DAMAGE.get(),
+                PTDServerConfig.PROFILE_SWITCH_COOLDOWN_MINUTES.get());
     }
 
     public ProfileScreenS2CPacket(FriendlyByteBuf buffer) {

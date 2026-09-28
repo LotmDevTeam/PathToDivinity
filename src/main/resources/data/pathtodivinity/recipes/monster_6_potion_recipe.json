@@ -1,4 +1,18 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "awakened_bosses"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "bosses_of_mass_destruction"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "monster",
   "sequence": 6,

@@ -4,13 +4,16 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import net.swimmingtuna.lotm.client.Configs;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.network.PTDNetwork;
 import org.slf4j.Logger;
 
@@ -33,22 +36,25 @@ public class PTD {
 
     public PTD() {
         MinecraftForge.EVENT_BUS.register(this);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PTDConfig.COMMON_SPEC);
-        MinecraftForge.EVENT_BUS.addListener(PTDCommands::onCommandRegistration);
+        PTDServerConfig.relocateLegacyCommonFile();
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, PTDServerConfig.FILE_NAME);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, PTDBalance.FILE_NAME);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(PTDServerConfig::onConfigLoading);
+        MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);
         PTDNetwork.register();
     }
 
     /**
-     * Re-sends the command tree to every online player when our config is edited in-game.
+     * Re-sends the command tree to every online player when the server config is edited in-game.
      *
-     * <p>{@code /sequencelock} is gated behind the "Sequence Lock Enabled" flag via a Brigadier
-     * {@code .requires} predicate, but the client only receives a filtered copy of the tree on login and on
+     * <p>{@code /sequencelock} and {@code /beyonderprofile} are gated behind config flags via Brigadier
+     * {@code .requires} predicates, but the client only receives a filtered copy of the tree on login and on
      * op changes. Without this, flipping the config while the world is open would leave the command missing
      * from tab-completion until the player relogged.
      */
     @SubscribeEvent
     public static void onConfigReload(ModConfigEvent.Reloading event) {
-        if (!MOD_ID.equals(event.getConfig().getModId()) || event.getConfig().getType() != ModConfig.Type.COMMON) {
+        if (event.getConfig().getSpec() != PTDServerConfig.SPEC) {
             return;
         }
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();

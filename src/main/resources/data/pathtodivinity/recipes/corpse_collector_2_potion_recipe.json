@@ -1,4 +1,14 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "corpse_collector",
   "sequence": 2,

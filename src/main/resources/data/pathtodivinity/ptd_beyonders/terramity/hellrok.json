@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:hellrok"
+  },
+  "pathway": "lotm:warrior",
+  "sequence": 8,
+  "ability_sequence": -1,
+  "health_multiplier": 1.3,
+  "damage_multiplier": 1.4,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:speed",
+      "amplifier": 1
+    }
+  ]
+}

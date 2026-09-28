@@ -1,4 +1,10 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "corpse_collector",
   "sequence": 8,

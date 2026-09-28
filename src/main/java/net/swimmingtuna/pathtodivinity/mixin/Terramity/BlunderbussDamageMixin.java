@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.BlunderbussRightclickedProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = BlunderbussRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class BlunderbussDamageMixin {
             constant = @Constant(doubleValue = 0.3D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 2.0D;
+        return PTDBalance.BLUNDERBUSS_DAMAGE.apply(damage);
     }
 }

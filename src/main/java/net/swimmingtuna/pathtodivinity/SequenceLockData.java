@@ -1,5 +1,6 @@
 package net.swimmingtuna.pathtodivinity;
 
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
@@ -64,7 +65,7 @@ public class SequenceLockData extends SavedData {
      * message they show the player.
      */
     public static int blockingLockFor(Player player, int potionSequence) {
-        if (!PTDConfig.COMMON.sequenceLockEnabled.get()) {
+        if (!PTDServerConfig.SEQUENCE_LOCK_ENABLED.get()) {
             return NO_LOCK;
         }
         MinecraftServer server = player.getServer();

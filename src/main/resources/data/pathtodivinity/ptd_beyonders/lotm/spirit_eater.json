@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "lotm:spirit_eater"
+  },
+  "health_multiplier": 2.5,
+  "damage_multiplier": 1.2
+}

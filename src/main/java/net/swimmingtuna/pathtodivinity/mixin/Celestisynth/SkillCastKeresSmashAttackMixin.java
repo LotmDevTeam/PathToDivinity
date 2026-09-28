@@ -1,85 +1,43 @@
 package net.swimmingtuna.pathtodivinity.mixin.Celestisynth;
 
-
-import net.minecraft.core.particles.SimpleParticleType;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.Mth;
-import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.AABB;
+import org.thecelestialworkshop.celestisynth.common.entity.skillcast.SkillCastKeresSmash;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.thecelestialworkshop.celestisynth.api.item.AttackHurtTypes;
-import org.thecelestialworkshop.celestisynth.common.entity.base.CSEffectEntity;
-import org.thecelestialworkshop.celestisynth.common.entity.helper.CSVisualType;
-import org.thecelestialworkshop.celestisynth.common.entity.skillcast.SkillCastKeresSmash;
-import org.thecelestialworkshop.celestisynth.common.registry.CSMobEffects;
-import org.thecelestialworkshop.celestisynth.common.registry.CSParticleTypes;
-import org.thecelestialworkshop.celestisynth.common.registry.CSSoundEvents;
-import org.thecelestialworkshop.celestisynth.common.registry.CSVisualTypes;
-import org.thecelestialworkshop.celestisynth.util.ParticleUtil;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Predicate;
-
+/**
+ * Keres Smash pulse strengths, hit damage and caster healing from [balance.celestisynth]. The rest is Celestisynth's own
+ * again, so the smash is removed when its caster dies (an earlier copy of the method skipped that).
+ */
 @Mixin(value = SkillCastKeresSmash.class)
 public class SkillCastKeresSmashAttackMixin {
-
-    @Inject(method = "tick", at = @At("HEAD"), cancellable = true, remap = true)
-    public void injectTick(CallbackInfo ci) {
-        SkillCastKeresSmash self = (SkillCastKeresSmash)(Object)this;
-
-        UUID ownerUuid = self.getOwnerUUID();
-        Player player = ownerUuid == null ? null : self.level().getPlayerByUUID(ownerUuid);
-        if (player != null) {
-            if (self.tickCount == 1) {
-                CSEffectEntity.createInstance(player, (Entity)null, (CSVisualType)CSVisualTypes.KERES_PULSE.get(), 0.0, 0.35, 0.0);
-                self.doSmashAttack(player, 3.0, 0.0, 2.5F);
-            }
-
-            if (self.tickCount == 6) {
-                CSEffectEntity.createInstance(player, (Entity)null, (CSVisualType)CSVisualTypes.KERES_PULSE_1.get(), 0.0, -0.35, 0.0);
-                self.doSmashAttack(player, 5.0, 1.5, 0.8F * 2.5F);
-            }
-
-            if (self.tickCount == 11) {
-                CSEffectEntity.createInstance(player, (Entity)null, (CSVisualType) CSVisualTypes.KERES_PULSE_2.get(), 0.0, -1.45, 0.0);
-                self.remove(Entity.RemovalReason.DISCARDED);
-                self.doSmashAttack(player, 7.0, 3.0, 0.6F * 2.5F);
-            }
-        }
-
-        ci.cancel();
+    @ModifyConstant(method = "tick", remap = true, constant = @Constant(floatValue = 1.0F, ordinal = 0))
+    private float pathtodivinity$firstPulse(float original) {
+        return PTDBalance.KERES_SMASH_FIRST_PULSE.apply(original);
     }
 
-    @Inject(method = "doSmashAttack", at = @At("HEAD"), cancellable = true, remap = false)
-    public void injectDoSmashAttack(Player owner, double radius, double out, float multiplier, CallbackInfo ci) {
-        SkillCastKeresSmash self = (SkillCastKeresSmash)(Object)this;
+    @ModifyConstant(method = "tick", remap = true, constant = @Constant(floatValue = 0.8F, ordinal = 0))
+    private float pathtodivinity$secondPulse(float original) {
+        return PTDBalance.KERES_SMASH_SECOND_PULSE.apply(original);
+    }
 
-        self.playSound((SoundEvent) CSSoundEvents.STEP.get(), 0.4F, 0.5F);
-        Predicate<LivingEntity> filter = (targetx) -> {
-            return targetx != owner && self.distanceToSqr(targetx) >= out;
-        };
-        self.shakeScreensForNearbyPlayers(owner, self.level(), radius, 5, 5, 0.015F);
+    @ModifyConstant(method = "tick", remap = true, constant = @Constant(floatValue = 0.6F, ordinal = 0))
+    private float pathtodivinity$thirdPulse(float original) {
+        return PTDBalance.KERES_SMASH_THIRD_PULSE.apply(original);
+    }
 
-        for(int i = 0; i < 360; i += 2) {
-            ParticleUtil.sendParticle(self.level(), (SimpleParticleType) CSParticleTypes.KERES_OMEN.get(), self.getX() + (double)Mth.sin((float)i) * radius, self.getY(), self.getZ() + (double)Mth.cos((float)i) * radius, 0.0, 0.5, 0.0);
-        }
+    @ModifyArg(method = "doSmashAttack", remap = false,
+            at = @At(value = "INVOKE", target = "Lorg/thecelestialworkshop/celestisynth/common/entity/skillcast/SkillCastKeresSmash;initiateAbilityAttack(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/LivingEntity;FLorg/thecelestialworkshop/celestisynth/api/item/AttackHurtTypes;)V", remap = false),
+            index = 2)
+    private float pathtodivinity$scaleHit(float damage) {
+        return PTDBalance.KERES_SMASH_HIT_MULTIPLIER.scale(damage);
+    }
 
-        List<LivingEntity> targets = self.level().getEntitiesOfClass(LivingEntity.class, (new AABB(-radius, 0.0, -radius, radius, 4.0, radius)).move(self.position())).stream().filter(filter).toList();
-
-        for (LivingEntity target : targets) {
-            target.addEffect(new MobEffectInstance((MobEffect) CSMobEffects.CURSEBANE.get(), 100, 1));
-            self.initiateAbilityAttack(owner, target, (self.damage * multiplier) * 0.4f, AttackHurtTypes.RAPID);
-            owner.heal(self.damage * multiplier / 8.0F);
-        }
-
-        ci.cancel();
+    @ModifyConstant(method = "doSmashAttack", remap = false, constant = @Constant(floatValue = 4.0F, ordinal = 0))
+    private float pathtodivinity$healDivisor(float original) {
+        return PTDBalance.KERES_SMASH_HEAL_DIVISOR.apply(original);
     }
 }

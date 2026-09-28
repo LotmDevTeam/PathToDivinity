@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
+  "match": {
+    "entity": "eeeabsmobs:nameless_guardian"
+  },
+  "pathway": "lotm:spectator",
+  "sequence": 4,
+  "ability_sequence": -1,
+  "health_multiplier": 1.7,
+  "damage_multiplier": 2.2,
+  "boss": true
+}

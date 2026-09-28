@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.AxeOfUnholyDivinityRightclickedProcedur
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = AxeOfUnholyDivinityRightclickedProcedure.class, remap = false)
@@ -15,6 +16,6 @@ public class AxeOfUnholyDivinityDamageMixin {
             remap = false
     )
     private static int modifyEffectDuration(int original) {
-        return 140;
+        return PTDBalance.AXE_OF_UNHOLY_DIVINITY_EFFECT_TICKS.apply(original);
     }
 }

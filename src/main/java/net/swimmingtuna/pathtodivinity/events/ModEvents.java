@@ -1,25 +1,5 @@
 package net.swimmingtuna.pathtodivinity.events;
 
-import com.bobmowzie.mowziesmobs.server.entity.EntityHandler;
-import com.eeeab.eeeabsmobs.sever.entity.effect.EntityGuardianLaser;
-import com.eeeab.eeeabsmobs.sever.init.EntityInit;
-import com.github.L_Ender.cataclysm.entity.effect.Sandstorm_Entity;
-import com.github.L_Ender.cataclysm.entity.effect.Void_Vortex_Entity;
-import com.github.L_Ender.cataclysm.entity.effect.Wave_Entity;
-import com.github.L_Ender.cataclysm.entity.projectile.*;
-import com.github.L_Ender.cataclysm.init.ModItems;
-import com.obscuria.aquamirae.registry.AquamiraeEntities;
-import fuzs.mutantmonsters.init.ModRegistry;
-import net.cursedwarrior.awakenedbosses.init.AwakenedBossesModEntities;
-import net.mcreator.borninchaosv.entity.PumpkinPistolProjectileEntity;
-import net.mcreator.borninchaosv.init.BornInChaosV1ModEntities;
-import net.mcreator.borninchaosv.init.BornInChaosV1ModGameRules;
-import net.mcreator.terramity.entity.DuskrokEntity;
-import net.mcreator.terramity.entity.SuperSnifferEntity;
-import net.mcreator.terramity.entity.UltraSnifferEntity;
-import net.mcreator.terramity.init.TerramityModEntities;
-import net.mcreator.terramity.init.TerramityModItems;
-import net.miauczel.legendary_monsters.entity.ModEntities;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
@@ -37,6 +17,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -67,46 +48,45 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.soulsweaponry.SoulsWeaponry;
-import net.soulsweaponry.entity.mobs.DayStalker;
-import net.soulsweaponry.entity.mobs.FreyrSwordEntity;
-import net.soulsweaponry.entity.mobs.NightProwler;
-import net.soulsweaponry.registry.EntityRegistry;
-import net.soulsweaponry.registry.ItemRegistry;
-import net.soulsweaponry.registry.WeaponRegistry;
 import net.swimmingtuna.lotm.LOTM;
+import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
-import net.swimmingtuna.pathtodivinity.PTDConfig;
+import net.swimmingtuna.pathtodivinity.combat.CombatTag;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
+import net.swimmingtuna.pathtodivinity.PTDTags;
 import net.swimmingtuna.pathtodivinity.PTDUtil;
+import net.swimmingtuna.pathtodivinity.behavior.ProfileBehaviors;
+import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
+import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
+import net.swimmingtuna.pathtodivinity.beyonders.BeyonderRegistrations;
+import net.swimmingtuna.pathtodivinity.compat.BornInChaosCompat;
+import net.swimmingtuna.pathtodivinity.compat.CataclysmCompat;
+import net.swimmingtuna.pathtodivinity.compat.EEEABMobsCompat;
+import net.swimmingtuna.pathtodivinity.compat.ModCompat;
+import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
+import net.swimmingtuna.pathtodivinity.compat.PTDItems;
+import net.swimmingtuna.pathtodivinity.compat.SoulsWeaponryCompat;
+import net.swimmingtuna.pathtodivinity.compat.TerramityCompat;
 import net.swimmingtuna.pathtodivinity.profile.AbilityDamageTracker;
-import org.thecelestialworkshop.celestisynth.common.entity.projectile.CrescentiaDragon;
-import org.thecelestialworkshop.celestisynth.common.entity.projectile.FrostboundShard;
-import org.thecelestialworkshop.celestisynth.common.entity.projectile.SolarisBomb;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Locale;
 import java.util.Map;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mod.EventBusSubscriber(modid = PTD.MOD_ID)
 public class ModEvents {
-
-    // Out-of-combat regeneration for Beyonder mobs. This exists so players cannot chip a boss
-    // down, run away, and come back to a still-wounded boss - not as a combat mechanic. It is
-    // deliberately gated on "no player anywhere near" rather than on mob.getTarget(): target
-    // state is unreliable (LOTM's own mobs drop target constantly, and onEntityChangeTarget
-    // below can leave a mob targetless on multiplayer servers), and gating on it let bosses
-    // heal mid-fight.
-    private static final int REGEN_INTERVAL_TICKS = 10;
-    private static final float REGEN_FRACTION = 0.005f;   // 0.5% max HP per interval = 1%/s
-    private static final int REGEN_LOCKOUT_TICKS = 600;   // 30s since last damage taken
-    private static final double REGEN_PLAYER_RADIUS = 32.0;
 
     @SubscribeEvent
     public static void commandEvent(CommandEvent event) {
@@ -120,22 +100,25 @@ public class ModEvents {
             if (fullCommand.startsWith("/")) {
                 fullCommand = fullCommand.substring(1);
             }
-            if (fullCommand.startsWith("ftbteams party create")
-                    || fullCommand.startsWith("ftbteams party join")
-                    || fullCommand.startsWith("ftbteams party invite")) {
-                event.setCanceled(true);
-                player.sendSystemMessage(Component.literal(
-                        "Teams are disabled on this pack — each player must progress their own pathway.")
-                        .withStyle(ChatFormatting.RED));
-                return;
+            for (String prefix : PTDServerConfig.BLOCKED_COMMAND_PREFIXES.get()) {
+                String normalizedPrefix = prefix.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
+                if (normalizedPrefix.startsWith("/")) {
+                    normalizedPrefix = normalizedPrefix.substring(1);
+                }
+                if (!normalizedPrefix.isEmpty() && fullCommand.startsWith(normalizedPrefix)) {
+                    event.setCanceled(true);
+                    player.sendSystemMessage(Component.literal(PTDServerConfig.BLOCKED_COMMAND_MESSAGE.get())
+                            .withStyle(ChatFormatting.RED));
+                    return;
+                }
             }
 
-            CompoundTag tag = player.getPersistentData();
-            if (tag.getInt("PTDCombatTimer") > 0) {
-                String commandName = event.getParseResults().getReader().getString().split(" ")[0].toLowerCase();
-                if (commandName.equals("/home") || commandName.equals("/spawn")) {
+            if (CombatTag.isInCombat(player)) {
+                // fullCommand already has the leading "/" stripped (commands typed in chat arrive without it)
+                String blocked = CombatTag.blockedCommand(fullCommand);
+                if (blocked != null) {
                     event.setCanceled(true);
-                    player.sendSystemMessage(Component.literal("You are in combat and cannot use /home or /spawn!"));
+                    player.sendSystemMessage(Component.literal(PTDServerConfig.COMBAT_MESSAGE.get().replace("%s", blocked)));
                 }
             }
         }
@@ -147,361 +130,44 @@ public class ModEvents {
         LivingEntity living = event.getEntity();
         if (!living.level().isClientSide()) {
             EntityType<?> type = living.getType();
-            // Resolved once per tick instead of re-deriving the display name from Component
-            // machinery at every name check below - see PTDUtil#nameTraits.
-            int traits = PTDUtil.nameTraits(living);
-            CompoundTag tag = living.getPersistentData();
-            int combatTimer = tag.getInt("PTDCombatTimer");
-            if (combatTimer >= 1) {
-                combatTimer--;
-                tag.putInt("PTDCombatTimer", combatTimer);
-            }
-
-            // Separate from PTDCombatTimer on purpose: that tag also gates /home, /spawn and
-            // profile switching, and those must keep their 10 second window.
-            int regenLockout = tag.getInt("PTDRegenLockout");
-            if (regenLockout >= 1) {
-                regenLockout--;
-                tag.putInt("PTDRegenLockout", regenLockout);
-            }
+            ResourceLocation typeId = EntityType.getKey(type);
+            CombatTag.tick(living);
 
             int tickCount = living.tickCount;
-            if (tickCount % 200 == 0 && living instanceof Player player) {
-                ItemStack mainHand = living.getMainHandItem();
-                if (mainHand.isEnchanted() && mainHand.getEnchantmentLevel(Enchantments.PIERCING) > 0) {
-                    Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(mainHand);
-                    enchantments.remove(Enchantments.PIERCING);
-                    living.sendSystemMessage(Component.literal("Piercing is banned").withStyle(ChatFormatting.RED));
-                    EnchantmentHelper.setEnchantments(enchantments, mainHand);
-                }
-                if (player.getInventory().contains(WeaponRegistry.MEHRUNES_RAZOR.get().getDefaultInstance())) {
-                    Item razor = WeaponRegistry.MEHRUNES_RAZOR.get();
-                    for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                        ItemStack stack = player.getInventory().getItem(i);
-                        if (stack.is(razor)) {
-                            player.getInventory().setItem(i, ItemStack.EMPTY);
-                        }
-                    }
-                    player.containerMenu.broadcastChanges();
-                    player.sendSystemMessage(Component.literal("Mehrunes Razor cannot be used.").withStyle(ChatFormatting.RED));
-                }
+            if (tickCount % PTDServerConfig.ITEM_SCAN_INTERVAL_TICKS.get() == 0 && living instanceof Player player) {
+                removeBannedEnchantments(player, living.getMainHandItem());
+                // Banned items (Mehrunes Razor included) come from #pathtodivinity:banned.
                 PTDUtil.removeBannedItem(living);
             }
 
-            if (living.tickCount % 40 == 0) {
-                if (type == EntityRegistry.CHAOS_MONARCH.get()) {
-
-
-                } else if (type == EntityRegistry.DRAUGR_BOSS.get()) {
-
-
-                } else if (type == EntityRegistry.NIGHT_SHADE.get()) {
-
-
-                } else if (type == ModEntities.Cloud_golem.get()) {
-
-
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.THE_LEVIATHAN.get()) {
-
-
-                } else if ((traits & PTDUtil.TRAIT_HORSEMAN) != 0) {
-
-
-                } else if (type == EntityInit.NAMELESS_GUARDIAN.get()) {
-
-
-                } else if (type == EntityRegistry.MOONKNIGHT.get()) {
-
-
-                } else if (type == BornInChaosV1ModEntities.LORD_PUMPKINHEAD.get()) {
-
-
-                } else if (type == TerramityModEntities.TRIAL_GUARDIAN.get()) {
-
-
-                } else if (type == EntityRegistry.DAY_STALKER.get()) {
-                    if (living.tickCount % 4 == 0) {
-                        for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
-                            if (mob.getType() == EntityRegistry.NIGHT_PROWLER.get()) {
-                                BeyonderUtil.forceAlly(mob, living);
-                            }
-                        }
-                    }
-                    if (living instanceof DayStalker dayStalker && dayStalker.isPhaseTwo()) {
-                        boolean x = tag.getBoolean("isPhaseTwo");
-                        tag.putBoolean("isPhaseTwo", false);
-                        if (!x) {
-                            multiplyMaxHealth(living, 2);
-                        }
-                        multiplyDamage(dayStalker, 2.6);
-                    }
-
-
-                } else if (type == EntityRegistry.NIGHT_PROWLER.get()) {
-                    if (living.tickCount % 4 == 0) {
-                        for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
-                            if (mob.getType() == EntityRegistry.DAY_STALKER.get()) {
-                                BeyonderUtil.forceAlly(mob, living);
-                            }
-                        }
-                    }
-                    if (living instanceof NightProwler nightProwler && nightProwler.isPhaseTwo()) {
-                        boolean x = tag.getBoolean("isPhaseTwo");
-                        multiplyDamage(nightProwler, 0.75);
-                        if (!x) {
-                            tag.putBoolean("isPhaseTwo", false);
-                            multiplyMaxHealth(living, 2);
-                        }
-                    }
-
-
-                } else if (type == TerramityModEntities.ULTRA_SNIFFER.get()) {
-                    if (BeyonderUtil.getPathway(living) == null) {
-                        BeyonderClass[] pathways = {BeyonderClassInit.MONSTER.get(), BeyonderClassInit.WARRIOR.get(), BeyonderClassInit.SPECTATOR.get(), BeyonderClassInit.SAILOR.get()};
-                    }
-                } else if (type == ModEntities.Warped_Fungussus.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.4);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.KOBOLEDIATOR.get()) {
-                    multiplyDamage(living, 1.2);
-                } else if (type == AquamiraeEntities.MAW.get()) {
-                    multiplyDamage(living, 1.5);
-                } else if (type == EntityHandler.WROUGHTNAUT.get()) {
-                    multiplyDamage(living, 1.2);
-                } else if (type == BornInChaosV1ModEntities.DIRE_HOUND_LEADER.get()) {
-                    multiplyDamage(living, 1.5);
-
-                    // Sequence 8
-                } else if (type == TerramityModEntities.DUSKROK.get()) {
-                    multiplyDamage(living, 1.3);
-                } else if (type == ModRegistry.MUTANT_SKELETON_ENTITY_TYPE.get()) {
-                    multiplyDamage(living, 1.2);
-                } else if ((traits & (PTDUtil.TRAIT_TERRIBLE | PTDUtil.TRAIT_PUNY)) != 0) {
-                    multiplyDamage(living, 1.3);
-                } else if (type == EntityType.ELDER_GUARDIAN) {
-                    multiplyDamage(living, 1.3);
-                } else if (type == ModRegistry.MUTANT_ENDERMAN_ENTITY_TYPE.get()) {
-                    multiplyDamage(living, 1.2);
-                } else if ((traits & PTDUtil.TRAIT_AERO_GUARDIAN) != 0) {
-                    multiplyDamage(living, 1.6);
-                } else if (type == BornInChaosV1ModEntities.MOTHER_SPIDER.get()) {
-                    multiplyDamage(living, 2.0);
-                } else if (type == TerramityModEntities.HELLROK.get()) {
-                    multiplyDamage(living, 1.3);
-                    living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 1, 40, false, false));
-                }
-
-                // Sequence 7
-                else if ((traits & PTDUtil.TRAIT_DOOMHARBOR) != 0) {
-                    multiplyDamage(living, 1.75);
-                } else if (type == EntityHandler.FROSTMAW.get()) {
-                    multiplyDamage(living, 1.2);
-                } else if (type == AquamiraeEntities.MAZE_MOTHER.get()) {
-                    multiplyDamage(living, 1.6);
-                } else if ((traits & PTDUtil.TRAIT_PLAGUE_BRINGER) != 0) {
-                    multiplyDamage(living, 1.4);
-                }else if ((traits & PTDUtil.TRAIT_LICH) != 0) {
-                    multiplyDamage(living, 1.1);
-                } else if ((traits & PTDUtil.TRAIT_GAUNTLET) != 0) {
-                    multiplyDamage(living, 2.0);
-                }else if ((traits & PTDUtil.TRAIT_OBSIDILITH) != 0) {
-                    multiplyDamage(living, 1.1);
-
-                    //Sequence 6
-                } else if (type == EntityType.WITHER) {
-                    multiplyDamage(living, 1.1);
-                } else if ((traits & PTDUtil.TRAIT_VOID_BLOSSOM) != 0) {
-                    multiplyDamage(living, 1.3);
-                }else if (type == BornInChaosV1ModEntities.LIFESTEALER.get()) {
-                    multiplyDamage(living, 2.0);
-                    multiplyMaxHealth(living, 1.4);
-                }else if (type == BornInChaosV1ModEntities.SIR_PUMPKINHEAD.get()) {
-                    multiplyDamage(living, 2.8);
-                } else if ((traits & PTDUtil.TRAIT_DYROLIAN) != 0) {
-                    multiplyDamage(living, 1.2);
-                } else if (type == ModEntities.Endersent.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 4.0);
-
-                    // Sequence 5
-                } else if (type == EntityRegistry.CHAOS_MONARCH.get()) {
-                    multiplyDamage(living, 4.5);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.SHADOWLESS_DEMONIC_WOLF.get()) {
-                    multiplyMaxHealth(living, 3.0);
-                    multiplyDamage(living, 1.1);
-                } else if (type == AquamiraeEntities.CAPTAIN_CORNELIA.get()) {
-                    multiplyDamage(living, 1.6);
-                    multiplyMaxHealth(living, 1.3);
-                } else if (type == EntityRegistry.DRAUGR_BOSS.get()) {
-                    multiplyDamage(living, 1.2);
-
-
-                } else if (type == EntityRegistry.NIGHT_SHADE.get()) {
-                    multiplyDamage(living, 1.5);
-
-
-                } else if (type == EntityRegistry.ACCURSED_LORD_BOSS.get()) {
-                    multiplyDamage(living, 2.0);
-                } else if (type == EntityRegistry.RETURNING_KNIGHT.get()) {
-                    multiplyDamage(living, 1.6);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.ENDER_GUARDIAN.get()) {
-                    multiplyDamage(living, 1.1);
-                    multiplyMaxHealth(living, 0.75);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.NETHERITE_MONSTROSITY.get()) {
-                    multiplyDamage(living, 1.5);
-                    multiplyMaxHealth(living, 1.2);
-                }else if (type == ModEntities.Posessed_Paladin.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.2);
-
-
-                    // Sequence 4
-                } else if (type == ModEntities.Cloud_golem.get()) {
-
-
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.THE_LEVIATHAN.get()) {
-
-
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.SCYLLA.get()) {
-                    multiplyDamage(living, 1);
-
-
-                } else if (type == TerramityModEntities.GOB.get()) {
-                    multiplyDamage(living, 1.8);
-                    living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
-                }else if ((traits & PTDUtil.TRAIT_HORSEMAN) != 0) {
-
-
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.DRAGON.get()) {
-                    multiplyDamage(living, 0.75f);
-                } else if ((traits & PTDUtil.TRAIT_VESSEL) != 0) {
-
-
-                    multiplyDamage(living, 2.5);
-                } else if (type == EntityRegistry.MOONKNIGHT.get()) {
-                    multiplyDamage(living, 2.0);
-
-
-                }else if (type == BornInChaosV1ModEntities.LORD_PUMPKINHEAD.get()) {
-                    multiplyDamage(living, 1.2);
-
-
-                } else if (type == TerramityModEntities.TRIAL_GUARDIAN.get()) {
-
-
-
-                    // Sequence 2
-                } else if (type == TerramityModEntities.SUPER_SNIFFER.get()) {
-                    multiplyDamage(living, 1.2);
-                } else if (type == EntityRegistry.DAY_STALKER.get()) {
-
-
-                } else if (type == EntityRegistry.NIGHT_PROWLER.get()) {
-
-
-                } else if (type == TerramityModEntities.GUNDALF.get()) {
-                    multiplyDamage(living, 1.5);
-                }
-
+            BeyonderProfile profile = BeyonderProfiles.find(living);
+            if (profile != null) {
+                ProfileBehaviors.onTick(living, profile);
             }
-
-
-            else if ((traits & PTDUtil.TRAIT_HORSEMAN) != 0) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
-            } else if (type == AwakenedBossesModEntities.HEROBRINE.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
-            } else if (type == EntityHandler.UMVUTHI.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 1, false, false));
-            } else if ((traits & PTDUtil.TRAIT_TERRIBLE_TEN) != 0) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, false, false));
-            } else if (type == BornInChaosV1ModEntities.SPIRITOF_CHAOS.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 2, false, false));
-            } else if (type == EntityRegistry.MOONKNIGHT.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 2, false, false));
-            } else if (type == BornInChaosV1ModEntities.LORD_PUMPKINHEAD.get()) {
-                if (living.tickCount % 3 == 0) {
-                    for (Mob mob : living.level().getEntitiesOfClass(Mob.class, living.getBoundingBox().inflate(25))) {
-                        if (!(mob instanceof PlayerMobEntity)) {
-                            BeyonderUtil.forceAlly(mob, living);
-                        }
-                    }
+            boolean regenTick = tickCount % PTDServerConfig.BOSS_REGEN_INTERVAL_TICKS.get() == 0;
+            boolean blockBreakTick = tickCount % PTDServerConfig.BOSS_BLOCK_BREAKING_INTERVAL_TICKS.get() == 0;
+            if ((regenTick || blockBreakTick) && living instanceof Mob mob && PTDUtil.isBeyonderEntity(mob)) {
+                // Out-of-combat regeneration, see [bosses] regen_enabled. Gated on "no player anywhere
+                // near" rather than mob.getTarget(): LOTM's own mobs drop their target constantly.
+                if (regenTick && PTDServerConfig.BOSS_REGEN_ENABLED.get() && !CombatTag.isRegenLocked(mob)
+                        && mob.getHealth() < mob.getMaxHealth() && mob.isAlive() && !Float.isNaN(mob.getHealth())
+                        && !isPlayerNearby(mob, PTDServerConfig.BOSS_REGEN_PLAYER_RADIUS.get())) {
+                    // heal() rather than setHealth(): it clamps to max health and fires LivingHealEvent,
+                    // so the heal can be cancelled and anti-heal effects apply.
+                    mob.heal((float) (mob.getMaxHealth() * PTDServerConfig.BOSS_REGEN_PERCENT.get() / 100.0));
                 }
-            } else if (type == EntityRegistry.DAY_STALKER.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 2, false, false));
-            } else if (type == EntityRegistry.NIGHT_PROWLER.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 2, false, false));
-            } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.MALEDICTUS.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 2, false, false));
-            } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.SCYLLA.get()) {
-                living.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 40, 2, false, false));
-            }
-            if (living instanceof UltraSnifferEntity ultraSniffer) {
-                if (ultraSniffer.getTarget() == null) {
-                    // Once a second rather than every tick: a 100 block cube entity query is not
-                    // cheap and at most a one second acquisition delay is imperceptible.
-                    if (tickCount % 20 == 0) {
-                        for (Player player : ultraSniffer.level().getEntitiesOfClass(Player.class, ultraSniffer.getBoundingBox().inflate(50))) {
-                            if (!player.isCreative() && !player.isSpectator()) {
-                                ultraSniffer.setTarget(player);
-                            }
-                        }
-                    }
-                    float health = ultraSniffer.getHealth();
-                    if (Float.isNaN(health) || health < 0.0F) {
-                        ultraSniffer.setHealth(0.0F);
-                    }
-                    boolean isPhaseTwo = ultraSniffer.getEntityData().get(UltraSnifferEntity.DATA_phase_two);
-                    if (isPhaseTwo) {
-                        int fullHeal = ultraSniffer.getPersistentData().getInt("PtDFullHeal");
-                        if (fullHeal < 3) {
-                            ultraSniffer.getPersistentData().putInt("PtDFullHeal", fullHeal + 1);
-                            ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
-                            ultraSniffer.getPersistentData().putInt("age", 0);
-                        }
-                    } else if (ultraSniffer.tickCount <= 100) {
-                        ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
-                        ultraSniffer.getPersistentData().putInt("age", 0);
-                    }
-                }
-                if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.SPECTATOR.get())) {
-                    multiplyDamage(living, 0.8);
-                } else if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.SAILOR.get())) {
-                    multiplyDamage(living, 0.9);
-                } else if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.MONSTER.get())) {
-                    if (!ultraSniffer.getPersistentData().getBoolean("PtDGaveLuck")) {
-                        ultraSniffer.getPersistentData().putDouble("luck", 5000);
-                        ultraSniffer.getPersistentData().putBoolean("PtDGaveLuck", true);
-                    }
-                }
-            }
-            if (living instanceof SuperSnifferEntity superSnifferEntity && superSnifferEntity.getTarget() == null && tickCount % 20 == 0) {
-                for (Player player : superSnifferEntity.level().getEntitiesOfClass(Player.class, superSnifferEntity.getBoundingBox().inflate(50))) {
-                    if (!player.isCreative() && !player.isSpectator()) {
-                        superSnifferEntity.setTarget(player);
-                    }
-                }
-            }
-            // Tick gate first: && short circuits, so isBeyonderEntity - which falls back to a
-            // name lookup for anything not in BEYONDER_ENTITY_TYPES - runs once every ten ticks
-            // rather than on every tick of every living entity on the server.
-            if (tickCount % REGEN_INTERVAL_TICKS == 0 && living instanceof Mob mob && PTDUtil.isBeyonderEntity(mob)) {
-                if (regenLockout == 0 && mob.getHealth() < mob.getMaxHealth() && mob.isAlive() && !Float.isNaN(mob.getHealth())) {
-                    boolean playerNearby = !mob.level().getEntitiesOfClass(Player.class,
-                            mob.getBoundingBox().inflate(REGEN_PLAYER_RADIUS),
-                            player -> player.isAlive() && !player.isCreative() && !player.isSpectator()).isEmpty();
-                    if (!playerNearby) {
-                        // heal() rather than setHealth(): it clamps to max health for us and fires
-                        // LivingHealEvent, so the heal can be cancelled and anti-heal effects apply.
-                        mob.heal(mob.getMaxHealth() * REGEN_FRACTION);
-                    }
-                }
-                if (mob.getTarget() != null && mob.getTarget() instanceof Player) {
+                // Follows LOTM's own "Mobs Destroy Blocks" option, and LOTM's per-block rules
+                // (hardness limit, faction claims) via BeyonderUtil.canDestroyBlock.
+                if (blockBreakTick && Configs.COMMON.shouldMobsDestroyBlocks.get()
+                        && mob.getTarget() instanceof Player target && target.getY() > mob.getEyeY()) {
                     Level level = mob.level();
+                    boolean drops = PTDServerConfig.BOSS_BLOCK_BREAKING_DROPS.get();
                     AABB box = mob.getBoundingBox().inflate(1.0);
                     BlockPos.betweenClosedStream(box).forEach(pos -> {
                         BlockState state = level.getBlockState(pos);
-                        if (!state.isAir() && state.getDestroySpeed(level, pos) >= 0 && pos.getY() >= mob.getY() + 1 && mob.getTarget().getY() > mob.getEyeY() && state != Blocks.WATER.defaultBlockState() && state != Blocks.LAVA.defaultBlockState()) {
-                            level.destroyBlock(pos, true, mob);
+                        if (!state.isAir() && pos.getY() >= mob.getY() + 1 && state.getFluidState().isEmpty()
+                                && !state.is(PTDTags.BOSS_UNBREAKABLE) && BeyonderUtil.canDestroyBlock(mob, pos)) {
+                            level.destroyBlock(pos, drops, mob);
                         }
                     });
                 }
@@ -510,13 +176,39 @@ public class ModEvents {
     }
 
 
+    private static boolean isPlayerNearby(Mob mob, double radius) {
+        return !mob.level().getEntitiesOfClass(Player.class, mob.getBoundingBox().inflate(radius),
+                player -> player.isAlive() && !player.isCreative() && !player.isSpectator()).isEmpty();
+    }
+
+    /** Strips the [items] banned_enchantments from a player's held item. */
+    private static void removeBannedEnchantments(Player player, ItemStack stack) {
+        if (!stack.isEnchanted()) {
+            return;
+        }
+        Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(stack);
+        boolean changed = false;
+        for (String id : PTDServerConfig.BANNED_ENCHANTMENTS.get()) {
+            ResourceLocation enchantmentId = ResourceLocation.tryParse(id);
+            Enchantment enchantment = enchantmentId == null ? null : ForgeRegistries.ENCHANTMENTS.getValue(enchantmentId);
+            if (enchantment != null && enchantments.remove(enchantment) != null) {
+                changed = true;
+                player.sendSystemMessage(Component.translatable(enchantment.getDescriptionId())
+                        .append(" is banned").withStyle(ChatFormatting.RED));
+            }
+        }
+        if (changed) {
+            EnchantmentHelper.setEnchantments(enchantments, stack);
+        }
+    }
+
     @SubscribeEvent
     public static void onEntityChangeTarget(LivingChangeTargetEvent event) {
         LivingEntity living = event.getEntity();
         CompoundTag tag = living.getPersistentData();
         BeyonderClass pathway = BeyonderUtil.getPathway(living);
         if (!living.level().isClientSide() && (event.getOriginalTarget() instanceof Player || event.getNewTarget() instanceof Player) && event.getOriginalTarget() != null && event.getNewTarget() != null) {
-            if (PTDUtil.isBeyonderEntity(living) && living instanceof Mob mob) {
+            if (PTDServerConfig.BOSS_TARGET_LOCK.get() && PTDUtil.isBeyonderEntity(living) && living instanceof Mob mob) {
                 float newTargetHealth = event.getNewTarget().getHealth();
                 float originalTargetHealth = event.getOriginalTarget().getHealth();
                 // Redirect back to the original target rather than cancelling. Cancelling leaves
@@ -537,37 +229,14 @@ public class ModEvents {
     public static void livingDeathEvent(LivingDeathEvent event) {
         Entity entity = event.getEntity();
         if (!event.getEntity().level().isClientSide()) {
-            if (entity.getName().getString().contains("vessel")) {
-                ItemStack stack = new ItemStack(TerramityModItems.POCKET_UNIVERSE.get());
-                ItemEntity itemEntity = new ItemEntity(entity.level(), entity.getX(), entity.getY(), entity.getZ(), stack);
-                itemEntity.setNoPickUpDelay();
-                itemEntity.teleportTo(entity.getX(), entity.getY(), entity.getZ());
-                itemEntity.setUnlimitedLifetime();
-                entity.level().addFreshEntity(itemEntity);
-            } else if (entity instanceof DuskrokEntity) {
-                ItemStack stack = new ItemStack(Items.NETHERITE_SCRAP);
-                ItemEntity itemEntity = new ItemEntity(entity.level(), entity.getX(), entity.getY(), entity.getZ(), stack);
-                itemEntity.setNoPickUpDelay();
-                itemEntity.teleportTo(entity.getX(), entity.getY(), entity.getZ());
-                itemEntity.setUnlimitedLifetime();
-                entity.level().addFreshEntity(itemEntity);
-            } else if (entity.getName().getString().equalsIgnoreCase("wither")) {
-                ItemStack lordSoul = new ItemStack(ItemRegistry.LORD_SOUL_DARK.get());
-                ItemEntity soulEntity = new ItemEntity(entity.level(), entity.getX(), entity.getY(), entity.getZ(), lordSoul);
-                soulEntity.setNoPickUpDelay();
-                soulEntity.teleportTo(entity.getX(), entity.getY(), entity.getZ());
-                soulEntity.setUnlimitedLifetime();
-                entity.level().addFreshEntity(soulEntity);
-                ItemStack shard = new ItemStack(ItemRegistry.SHARD_OF_UNCERTAINTY.get());
-                ItemEntity shardEntity = new ItemEntity(entity.level(), entity.getX(), entity.getY(), entity.getZ(), shard);
-                shardEntity.setNoPickUpDelay();
-                shardEntity.teleportTo(entity.getX(), entity.getY(), entity.getZ());
-                shardEntity.setUnlimitedLifetime();
-                entity.level().addFreshEntity(shardEntity);
+            if (entity instanceof LivingEntity living) {
+                BeyonderProfile profile = BeyonderProfiles.find(living);
+                if (profile != null) {
+                    ProfileBehaviors.onDeath(living, profile);
+                }
             }
         }
     }
-
 
     @SubscribeEvent
     public static void hurtEvent(LivingHurtEvent event) {
@@ -581,73 +250,15 @@ public class ModEvents {
             damageDealer = source.getDirectEntity();
         }
         if (!event.getEntity().level().isClientSide()) {
-            if (directSource instanceof SolarisBomb) {
-                event.setAmount(event.getAmount() * 5.0f);
-            } else if (directSource instanceof CrescentiaDragon) {
-                event.setAmount(event.getAmount() * 2.0f);
-            } else if (directSource instanceof FrostboundShard) {
-                event.setAmount(event.getAmount() * 6.5f);
-            }else if (directSource instanceof PumpkinPistolProjectileEntity projectile) {
-                if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                    event.setAmount(event.getAmount() * 7.0f);
-                }
-            } else if (directSource instanceof Tidal_Tentacle_Entity tidalTentacleEntity) {
-                if (tidalTentacleEntity.getCreatorEntity() != null && tidalTentacleEntity.getCreatorEntity() instanceof Player) {
-                    event.setAmount(event.getAmount() * 4.0f);
-                }
-            } else if (directSource instanceof Wither_Howitzer_Entity projectile) {
-                if (projectile.getOwner() != null && projectile.getOwner() instanceof Player player) {
-                    boolean hasVoidAssault = false;
-                    for (ItemStack itemStack : player.getInventory().items) {
-                        if (itemStack.getItem() == ModItems.VOID_ASSULT_SHOULDER_WEAPON.get()) {
-                            hasVoidAssault = true;
-                            break;
-                        }
-                    }
-                    if (hasVoidAssault) {
-                        event.setAmount(event.getAmount() * 1.7f);
-                    } else {
-                        event.setAmount(event.getAmount() * 1.3f);
-                    }
-                }
-            } else if (directSource instanceof Wither_Missile_Entity projectile) {
-                if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                    event.setAmount(event.getAmount() * 1.3f);
-                }
-            } else if (directSource instanceof Sandstorm_Entity projectile) {
-                if (projectile.getCaster() != null && projectile.getCaster() instanceof Player) {
-                    event.setAmount(event.getAmount() * 1.5f);
-                }
-            } else if (directSource instanceof Phantom_Halberd_Entity projectile) {
-                if (projectile.getCaster() != null && projectile.getCaster() instanceof Player) {
-                    event.setAmount(event.getAmount() * 1.5f);
-                }
-            } else if (directSource instanceof Wave_Entity projectile) {
-                if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                    event.setAmount(event.getAmount() * 1.5f);
-                }
-            } else if (directSource instanceof Void_Vortex_Entity projectile) {
-                if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                    event.setAmount(event.getAmount() * 2.0f);
-                }
-            } else if (directSource instanceof Cursed_Sandstorm_Entity projectile) {
-                if (projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
-                    event.setAmount(event.getAmount() * 1.5f);
-                }
-            } else if (directSource instanceof FreyrSwordEntity) {
-                event.setAmount(event.getAmount() * 1.8f);
-            } else if (directSource instanceof EntityGuardianLaser projectile) {
-                if (projectile.getOwner() != null && !(projectile.getOwner() instanceof Player)) {
-                    event.setAmount(event.getAmount() * 0.6f);
-                }
+            if (directSource != null) {
+                event.setAmount(event.getAmount() * projectileDamageMultiplier(directSource));
             }
 
 
-            tag.putInt("PTDCombatTimer", 200);
-            tag.putInt("PTDRegenLockout", REGEN_LOCKOUT_TICKS);
+            CombatTag.onHurt(event.getEntity(), source);
             if (entitySource instanceof LivingEntity livingEntity) {
                 if (PTDUtil.isBeyonderEntity(livingEntity) && directSource instanceof Projectile) {
-                    event.setAmount(event.getAmount() * 0.6f);
+                    event.setAmount((float) (event.getAmount() * PTDServerConfig.BOSS_PROJECTILE_DAMAGE_MULTIPLIER.get()));
                 }
             }
 
@@ -662,9 +273,33 @@ public class ModEvents {
             // SafemodeDamageSourceMixin tags the damage source as it is built, so this only fires for genuine
             // Beyonder ability damage - melee, arrows and damage dealt to mobs are all untouched.
             if (entity instanceof Player && AbilityDamageTracker.isSafemodeAbilityDamage(source)) {
-                event.setAmount((float) (event.getAmount() * PTDConfig.COMMON.safemodeAbilityDamage.get()));
+                event.setAmount((float) (event.getAmount() * PTDServerConfig.SAFEMODE_ABILITY_DAMAGE.get()));
             }
         }
+    }
+
+
+    /** Damage multiplier for weapon projectiles/effects from other mods, 1.0 when none applies. */
+    private static float projectileDamageMultiplier(Entity directSource) {
+        ResourceLocation sourceId = PTDEntities.idOf(directSource);
+        if (sourceId.equals(PTDEntities.SOLARIS_BOMB)) {
+            return PTDBalance.SOLARIS_BOMB_HIT_MULTIPLIER.scale(1.0f);
+        } else if (sourceId.equals(PTDEntities.CRESCENTIA_DRAGON)) {
+            return PTDBalance.CRESCENTIA_DRAGON_HIT_MULTIPLIER.scale(1.0f);
+        } else if (sourceId.equals(PTDEntities.FROSTBOUND_SHARD)) {
+            return PTDBalance.FROSTBOUND_SHARD_HIT_MULTIPLIER.scale(1.0f);
+        } else if (sourceId.equals(PTDEntities.PUMPKIN_PISTOL_PROJECTILE)) {
+            if (directSource instanceof Projectile projectile && projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
+                return PTDBalance.PUMPKIN_PISTOL_HIT_MULTIPLIER.scale(1.0f);
+            }
+        } else if (sourceId.equals(PTDEntities.FREYR_SWORD)) {
+            return PTDBalance.FREYR_SWORD_HIT_MULTIPLIER.scale(1.0f);
+        } else if (ModCompat.CATACLYSM.equals(sourceId.getNamespace())) {
+            return CataclysmCompat.projectileDamageMultiplier(directSource);
+        } else if (ModCompat.EEEABS_MOBS.equals(sourceId.getNamespace())) {
+            return EEEABMobsCompat.projectileDamageMultiplier(directSource);
+        }
+        return 1.0f;
     }
 
 
@@ -674,263 +309,12 @@ public class ModEvents {
             Entity entity = event.getEntity();
             if (entity instanceof LivingEntity living) {
                 EntityType<?> type = living.getType();
-
-                // Sequence 9
-                if (type == ModEntities.Overgrown_colossus.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.GEM_DEVOURING_WORM.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.3);
-                }
-                else if (type == ModEntities.Warped_Fungussus.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.4);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.KOBOLEDIATOR.get()) {
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.2);
-                } else if (type == EntityHandler.UMVUTHI.get()) {
-                    multiplyMaxHealth(living, 1.0);
-                } else if (type == AquamiraeEntities.MAW.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.5);
-                } else if (type == ModEntities.Skeletosaurus.get()) {
-                    multiplyMaxHealth(living, 1.2);
-                    multiplyDamage(living, 1.2);
-                } else if (type == BornInChaosV1ModEntities.NIGHTMARE_STALKER.get()) {
-                    multiplyMaxHealth(living, 1.2);
-                } else if (type == EntityHandler.WROUGHTNAUT.get()) {
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.2);
-                } else if (type == BornInChaosV1ModEntities.DIRE_HOUND_LEADER.get()) {
-                    multiplyMaxHealth(living, 1.25);
-                    multiplyDamage(living, 1.5);
-
-                    // Sequence 8
-                } else if (type == ModEntities.BlastCannon.get()) {
-                    multiplyMaxHealth(living, 1.25);
-                } else if (type == ModEntities.Frostbitten_Golem.get()) {
-                    multiplyMaxHealth(living, 1.3);
-                } else if (type == TerramityModEntities.DUSKROK.get()) {
-                    multiplyMaxHealth(living, 1.3);
-                    multiplyDamage(living, 1.3);
-                } else if (type == ModRegistry.MUTANT_SKELETON_ENTITY_TYPE.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.2);
-                } else if (living.getName().getString().toLowerCase().contains("terrible") || living.getName().getString().toLowerCase().contains("puny")) { //Terrible Ten
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.3);
-                    //} else if (type == AMEntityRegistry.WARPED_MOSCO.get()) {
-                    //    multiplyMaxHealth(living, 1.0);
-                    //    multiplyDamage(living, 1.3);
-                } else if (type == EntityType.ELDER_GUARDIAN) {
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.3);
-                } else if (type == ModRegistry.MUTANT_ENDERMAN_ENTITY_TYPE.get()) {
-                    multiplyMaxHealth(living, 1.4);
-                    multiplyDamage(living, 1.2);
-                } else if (living.getName().getString().toLowerCase().contains("aero_guardian")) { //Aero Guardian
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.6);
-                } else if (type == BornInChaosV1ModEntities.SPIRITOF_CHAOS.get()) {
-                    multiplyMaxHealth(living, 4.0);
-                } else if (type == BornInChaosV1ModEntities.MOTHER_SPIDER.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 2.0);
-                }else if (type == TerramityModEntities.HELLROK.get()) {
-                    multiplyMaxHealth(living, 1.3);
-                    multiplyDamage(living, 1.4);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.SPIRIT_EATER.get()) {
-                    multiplyMaxHealth(living, 2.5);
-                    multiplyDamage(living, 1.2);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.DEEP_SEA_MARLIN.get()) {
-                    multiplyMaxHealth(living, 1.3);
-                    multiplyDamage(living, 1.3);
-                } else if (type == ModRegistry.MUTANT_ZOMBIE_ENTITY_TYPE.get()) {
-                    multiplyMaxHealth(living, 1.5);
-
-                    // Sequence 7
-                }else if (type == ModEntities.Warped_Fungussus.get()) {
-                    multiplyMaxHealth(living, 1.8);
-                }
-                else if (type == ModEntities.Ancient_Guardian.get()) {
-                    multiplyMaxHealth(living, 1.3);
-                } else if (living.getName().getString().toLowerCase().contains("doomharbor")) { //Doomharbor Lich
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.75);
-                } else if (type == EntityHandler.FROSTMAW.get()) {
-                    multiplyMaxHealth(living, 1.2);
-                    multiplyDamage(living, 1.2);
-                } else if (type == AquamiraeEntities.MAZE_MOTHER.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.6);
-                } else if (living.getName().getString().toLowerCase().contains("plague_bringer")) { //Plague Bringer
-                    multiplyMaxHealth(living, 0.7);
-                    multiplyDamage(living, 1.7);
-                } else if (entity.getClass().getSimpleName().equals("LichEntity")) { //Lich (Bosses of Mass Destruction)
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.1);
-                } else if (type == ModEntities.Withered_Abomination.get()) {
-                    multiplyMaxHealth(living, 1.2);
-                } else if (entity.getClass().getSimpleName().equals("GauntletEntity")) { //Nether Gauntlet
-                    multiplyMaxHealth(living, 1.1);
-                    multiplyDamage(living, 2.0);
-                }else if (entity.getClass().getSimpleName().equals("ObsidilithEntity")) { //Obsidilith
-                    multiplyMaxHealth(living, 1.8);
-                    multiplyDamage(living, 1.2);
-
-                    //Sequence 6
-                } else if (type == EntityType.WITHER) {
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.1);
-                } else if (entity.getClass().getSimpleName().equals("VoidBlossomEntity")) { //Void Blossom
-                    multiplyMaxHealth(living, 1.2);
-                    multiplyDamage(living, 1.3);
-                } else if (type == AwakenedBossesModEntities.HEROBRINE.get()) {
-                    multiplyMaxHealth(living, 1.0);
-                    multiplyDamage(living, 1.2);
-                } else if (type == BornInChaosV1ModEntities.LIFESTEALER.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.5);
-                } else if (type == ModEntities.Lava_eater.get()) {
-                    multiplyMaxHealth(living, 1.7);
-                    multiplyDamage(living, 1.2);
-                } else if (type == BornInChaosV1ModEntities.SIR_PUMPKINHEAD.get()) {
-                    multiplyMaxHealth(living, 2.2);
-                    multiplyDamage(living, 2.8);
-                } else if (type == ModEntities.Endersent.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 4.0);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.SHADOWLESS_DEMONIC_WOLF.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                }
-                else if (living.getName().getString().toLowerCase().contains("dyrolian")) {
-                    multiplyDamage(living, 1.3);
-                    multiplyMaxHealth(living, 0.5);
-
-                    // Sequence 5
-                } else if (type == EntityRegistry.CHAOS_MONARCH.get()) {
-                    multiplyMaxHealth(living, 1.8);
-                    multiplyDamage(living, 4.5);
-
-
-                    living.getPersistentData().putDouble("luck", 500);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.NETHERITE_MONSTROSITY.get()) {
-                    multiplyDamage(living, 1.5);
-                    multiplyMaxHealth(living, 1.2);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.THE_HARBINGER.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.8);
-                }  else if (type == AquamiraeEntities.CAPTAIN_CORNELIA.get()) {
-                    multiplyMaxHealth(living, 1.3);
-                    multiplyDamage(living, 1.3);
-                } else if (type == EntityRegistry.DRAUGR_BOSS.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living, 1.2);
-
-
-                } else if (type == EntityRegistry.NIGHT_SHADE.get()) {
-                    multiplyMaxHealth(living, 2.5);
-                    multiplyDamage(living, 1.5);
-
-
-                } else if (type == EntityRegistry.ACCURSED_LORD_BOSS.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.7);
-                } else if (type == EntityRegistry.RETURNING_KNIGHT.get()) {
-                    multiplyMaxHealth(living, 1.6);
-                    multiplyDamage(living, 1.6);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.ENDER_GUARDIAN.get()) {
-                    multiplyMaxHealth(living, 1.7);
-                    multiplyDamage(living, 1.6);
-                } else if (type == ModEntities.Posessed_Paladin.get()) {
-                    multiplyMaxHealth(living, 2.0);
-                    multiplyDamage(living, 1.2);
-
-                    // Sequence 4
-                }else if (type == com.github.L_Ender.cataclysm.init.ModEntities.IGNIS.get()) {
-                    multiplyMaxHealth(living, 1.2);
-                } else if (type == ModEntities.Cloud_golem.get()) {
-                    multiplyMaxHealth(living, 2.0);
-
-
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.THE_LEVIATHAN.get()) {
-                    multiplyMaxHealth(living, 1.0);
-
-
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.SCYLLA.get()) {
-                    multiplyMaxHealth(living, 4.0);
-                    multiplyDamage(living, 2.0);
-
-
-                } else if (type == TerramityModEntities.GOB.get()) {
-                    multiplyMaxHealth(living, 3.0);
-                    multiplyDamage(living, 1.8);
-                } else if (living.getName().getString().equalsIgnoreCase("horseman")) { //Pumpkin Horseman
-                    multiplyMaxHealth(living, 1.5);
-
-
-                }else if (type == EntityInit.NAMELESS_GUARDIAN.get()) {
-                    multiplyMaxHealth(living, 1.7);
-                    multiplyDamage(living, 2.2);
-
-
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.MALEDICTUS.get()) {
-                    multiplyMaxHealth(living, 4.0);
-                    multiplyDamage(living, 2.5);
-                } else if (type == com.github.L_Ender.cataclysm.init.ModEntities.ANCIENT_REMNANT.get()) {
-                    multiplyMaxHealth(living, 4.0);
-                    multiplyDamage(living, 1.1);
-                }
-
-
-                // Sequence 3
-                else if (living.getName().getString().toLowerCase().contains("vessel")) { //Vessel of Calamity
-                    multiplyMaxHealth(living, 4.0);
-                    multiplyDamage(living, 2.5);
-                } else if (type == EntityRegistry.MOONKNIGHT.get()) {
-                    multiplyMaxHealth(living, 4.0);
-                    multiplyDamage(living, 2.0);
-
-
-                }  else if (type == BornInChaosV1ModEntities.LORD_PUMPKINHEAD.get()) {
-                    multiplyMaxHealth(living, 5.0);
-                    multiplyDamage(living, 1.2);
-
-
-                } else if (type == TerramityModEntities.TRIAL_GUARDIAN.get()) {
-                    multiplyMaxHealth(living, 4.0);
-
-
-                    // Sequence 2
-                } else if (type == TerramityModEntities.SUPER_SNIFFER.get()) {
-                    multiplyMaxHealth(living, 6.0);
-                    multiplyDamage(living, 1.2);
-                } else if (type == EntityRegistry.DAY_STALKER.get()) {
-                    multiplyMaxHealth(living, 4.0);
-                    multiplyDamage(living, 1.1);
-
-                } else if (type == EntityRegistry.NIGHT_PROWLER.get()) {
-                    multiplyMaxHealth(living, 3.0);
-                    multiplyDamage(living, 0.4);
-
-                } else if (type == TerramityModEntities.GUNDALF.get()) {
-                    multiplyMaxHealth(living, 6.0);
-                    multiplyDamage(living, 1.5);
-
-                    // Sequence 1
-                } else if (type == TerramityModEntities.ULTRA_SNIFFER.get()) {
-                    multiplyMaxHealthUltraSniffer(living, 10.0);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.INTERDIMENSIONAL_HUNTER.get()) {
-                    multiplyMaxHealth(living, 2.5);
-                    multiplyDamage(living, 1);
-                }  else if (type == net.swimmingtuna.lotm.init.EntityInit.WANDERING.get()) {
-                    multiplyMaxHealth(living, 1.5);
-                    multiplyDamage(living,0.3);
-                } else if (type == net.swimmingtuna.lotm.init.EntityInit.PLANESWALKER_PHOENIX.get()) {
-                    multiplyDamage(living, 0.3);
+                BeyonderProfile profile = BeyonderProfiles.find(living);
+                if (profile != null) {
+                    ProfileBehaviors.onJoin(living, profile);
                 }
             } else if (entity instanceof ItemEntity item) {
-                if (item.getItem().is(TerramityModItems.MUSIC_SHEET_OF_UNTIMELY_DEATH.get())) {
+                if (item.getItem().is(PTDTags.DESTROYED)) {
                     event.setCanceled(true);
                 }
             }
@@ -940,87 +324,23 @@ public class ModEvents {
     @SubscribeEvent
     public static void serverStartEvent(ServerStartingEvent event) {
         MinecraftServer server = event.getServer();
-        server.getGameRules().getRule(BornInChaosV1ModGameRules.KRAMPUS_SPAWN).set(false, server);
-        Commands commands = server.getCommands();
-        CommandSourceStack commandSource = server.createCommandSourceStack();
-        try {
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:chaos_monarch lotm:monster 7");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:ender_guardian lotm:apprentice 7"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add legendary_monsters:cloud_golem lotm:sailor 6");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:ancient_ancient_remnant lotm:apprentice 6");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:returning_knight lotm:sailor 7"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add aquamirae:captain_cornelia lotm:warrior 7"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:the_leviathan lotm:monster 6"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add sleepy_hollows:horseman lotm:spectator 6"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add born_in_chaos_v1:lord_pumpkinhead lotm:warrior 5"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:moonknight lotm:spectator 5");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:the_harbinger lotm:warrior 7");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:gob lotm:monster 6");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:draugr_boss lotm:warrior 8");//11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add legendary_monsters:posessed_paladin lotm:apprentice 7");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add monsterexpansion:leivekilth lotm:sailor 5");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add eeeabsmobs:realm_warden lotm:spectator 7");  //11111111
-            int random = (int) BeyonderUtil.getPositiveRandomInRange(5);
-            if (random == 0) {
-                commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:spectator 3");
-            } else if (random == 1) {
-                commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:warrior 3");
-            } else if (random == 2) {
-                commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:sailor 3");
-            } else if (random == 3) {
-                commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:apprentice 3");
-            } else {
-                commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:monster 3");
-            }
-
-        } catch (Exception e) {
-            PTD.LOGGER.info("Failed to execute beyonderrecipe load command: {}", e.getMessage());
+        // Only ever switches the gamerule off; with disable_krampus = false the gamerule is left to the admin.
+        if (PTDServerConfig.DISABLE_KRAMPUS.get() && ModCompat.isLoaded(ModCompat.BORN_IN_CHAOS)) {
+            BornInChaosCompat.disableKrampusSpawns(server);
         }
     }
 
+    /** Registers bosses' pathways with LOTM from their profiles; levels exist by now, unlike at ServerStarting. */
     @SubscribeEvent
-    public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.getServer().getTickCount() % 1200 == 0) {
-            MinecraftServer server = event.getServer();
-            float foundSniffers = 0;
-            for (ServerLevel level : server.getAllLevels()) {
-                for (Entity entity : level.getAllEntities()) {
-                    if (entity.getType() == TerramityModEntities.ULTRA_SNIFFER.get()) {
-                        foundSniffers++;
-                    }
-                }
-            }
-            Commands commands = server.getCommands();
-            CommandSourceStack commandSource = server.createCommandSourceStack();
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:chaos_monarch lotm:monster 7");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:ender_guardian lotm:apprentice 7"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add legendary_monsters:cloud_golem lotm:sailor 6");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:ancient_ancient_remnant lotm:apprentice 6");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:returning_knight lotm:sailor 7"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add aquamirae:captain_cornelia lotm:warrior 7"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:the_leviathan lotm:monster 6"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add sleepy_hollows:horseman lotm:spectator 6"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add born_in_chaos_v1:lord_pumpkinhead lotm:warrior 5"); //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:moonknight lotm:spectator 5");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add cataclysm:the_harbinger lotm:warrior 7");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:gob lotm:monster 6");
-            commands.performPrefixedCommand(commandSource, "beyonderentity add soulsweapons:draugr_boss lotm:warrior 8");//11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add legendary_monsters:posessed_paladin lotm:apprentice 7");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add monsterexpansion:leivekilth lotm:sailor 5");  //11111111
-            commands.performPrefixedCommand(commandSource, "beyonderentity add eeeabsmobs:realm_warden lotm:spectator 7");  //11111111
+    public static void onServerStarted(ServerStartedEvent event) {
+        BeyonderRegistrations.apply(event.getServer(), true);
+    }
 
-            if (foundSniffers == 0) {
-                int random = (int) BeyonderUtil.getPositiveRandomInRange(4);
-                if (random == 0) {
-                    commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:spectator 3");
-                } else if (random == 1) {
-                    commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:warrior 3");
-                } else if (random == 2) {
-                    commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:sailor 3");
-                } else {
-                    commands.performPrefixedCommand(commandSource, "beyonderentity add terramity:ultra_sniffer lotm:monster 3");
-                }
-            }
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        int interval = PTDServerConfig.BEYONDER_REFRESH_INTERVAL_TICKS.get();
+        if (event.phase == TickEvent.Phase.END && interval > 0 && event.getServer().getTickCount() % interval == 0) {
+            BeyonderRegistrations.apply(event.getServer(), false);
         }
     }
 
@@ -1033,42 +353,4 @@ public class ModEvents {
         return packageName.toLowerCase().contains(modId.toLowerCase());
     }
 
-    public static void multiplyMaxHealth(LivingEntity living, double multiplier) {
-        if (!living.getPersistentData().getBoolean("maxHealthMultiplied")) {
-            float multiplierAmount = (float) (multiplier * PTDConfig.COMMON.healthMultiplier.get());
-            float maxHealth = living.getMaxHealth();
-            AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
-            if (maxHealthAttribute != null) {
-                if (maxHealth < 10000) {
-                    maxHealthAttribute.setBaseValue(maxHealth * multiplierAmount);
-                }
-            }
-            living.setHealth(maxHealth * multiplierAmount);
-            living.getPersistentData().putBoolean("maxHealthMultiplied", true);
-            LOTM.LOGGER.info("Multiplied {}'s health by {}", living.getName().getString(), multiplier);
-        }
-    }
-
-    public static void multiplyMaxHealthUltraSniffer(LivingEntity living, double multiplier) {
-        if (!living.getPersistentData().getBoolean("maxHealthMultiplied")) {
-            float multiplierAmount = (float) (multiplier * PTDConfig.COMMON.healthMultiplier.get());
-            float maxHealth = living.getMaxHealth();
-            AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
-            if (maxHealthAttribute != null) {
-                maxHealthAttribute.setBaseValue(maxHealth * multiplierAmount + 1);
-            }
-            living.setHealth(maxHealth * multiplierAmount);
-            living.getPersistentData().putBoolean("maxHealthMultiplied", true);
-            LOTM.LOGGER.info("Multiplied {}'s health by {}", living.getName().getString(), multiplier);
-        }
-    }
-
-    private static void multiplyDamage(LivingEntity entity, double multiplier) {
-        if (!entity.getPersistentData().getBoolean("damageMultiplied")) {
-            CompoundTag tag = entity.getPersistentData();
-            tag.putDouble("PTDDamageMultiplier", multiplier * PTDConfig.COMMON.damageMultiplier.get());
-            entity.getPersistentData().putBoolean("damageMultiplied", true);
-            LOTM.LOGGER.info("Multiplied {}'s damage by {}", entity.getName().getString(), multiplier);
-        }
-    }
 }

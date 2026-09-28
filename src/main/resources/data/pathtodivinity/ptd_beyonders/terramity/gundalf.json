@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:gundalf"
+  },
+  "pathway": "lotm:apprentice",
+  "sequence": 2,
+  "ability_sequence": -1,
+  "health_multiplier": 6.0,
+  "damage_multiplier": 1.5,
+  "boss": true
+}

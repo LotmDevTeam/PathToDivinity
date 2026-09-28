@@ -12,7 +12,8 @@ import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
 import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.world.worlddata.Sequence0Data;
 import net.swimmingtuna.pathtodivinity.PTD;
-import net.swimmingtuna.pathtodivinity.PTDConfig;
+import net.swimmingtuna.pathtodivinity.combat.CombatTag;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.network.PTDNetwork;
 import net.swimmingtuna.pathtodivinity.network.ProfileScreenS2CPacket;
 
@@ -28,16 +29,14 @@ public final class ProfileManager {
     }
 
     public static boolean isEnabled() {
-        return PTDConfig.COMMON.profilesEnabled.get();
+        return PTDServerConfig.PROFILES_ENABLED.get();
     }
 
     @Nullable
     public static ProfileType getActiveProfile(Player player) {
-        if (!isEnabled()) {
-            return null;
-        }
+        // Server first: the profile options are server config, only readable while a server runs.
         MinecraftServer server = player.getServer();
-        if (server == null) {
+        if (server == null || !isEnabled()) {
             return null;
         }
         return PlayerProfileData.get(server).getActiveProfile(player.getUUID());
@@ -77,7 +76,7 @@ public final class ProfileManager {
     @Nullable
     public static Integer getSequenceCap(Player player) {
         return getActiveProfile(player) == ProfileType.SAFEMODE
-                ? PTDConfig.COMMON.safemodeMaxSequence.get()
+                ? PTDServerConfig.SAFEMODE_MAX_SEQUENCE.get()
                 : null;
     }
 
@@ -187,7 +186,7 @@ public final class ProfileManager {
     @Nullable
     private static Component findSwitchBlocker(ServerPlayer player, PlayerProfileData data, UUID uuid,
                                                MinecraftServer server) {
-        int combatTimer = player.getPersistentData().getInt("PTDCombatTimer");
+        int combatTimer = CombatTag.remainingTicks(player);
         if (combatTimer > 0) {
             return Component.literal("You cannot switch profiles while in combat. Wait "
                     + Math.max(1, combatTimer / 20) + " more second(s).");
@@ -237,7 +236,7 @@ public final class ProfileManager {
     }
 
     private static long getRemainingCooldownTicks(PlayerProfileData data, UUID uuid, MinecraftServer server) {
-        int cooldownMinutes = PTDConfig.COMMON.profileSwitchCooldownMinutes.get();
+        int cooldownMinutes = PTDServerConfig.PROFILE_SWITCH_COOLDOWN_MINUTES.get();
         if (cooldownMinutes <= 0) {
             return 0L;
         }
@@ -260,7 +259,7 @@ public final class ProfileManager {
             data.clearLastSwitchGameTime(uuid);
             return 0;
         }
-        long required = (long) PTDConfig.COMMON.profileSwitchCooldownMinutes.get() * TICKS_PER_MINUTE;
+        long required = (long) PTDServerConfig.PROFILE_SWITCH_COOLDOWN_MINUTES.get() * TICKS_PER_MINUTE;
         long remaining = Math.min(minutes * TICKS_PER_MINUTE, required);
         data.setLastSwitchGameTime(uuid, server.overworld().getGameTime() - (required - remaining));
         return (int) (remaining / TICKS_PER_MINUTE);

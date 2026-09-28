@@ -1,4 +1,22 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "aquamirae"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "awakened_bosses"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "spectator",
   "sequence": 6,

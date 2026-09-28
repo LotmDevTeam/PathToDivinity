@@ -1,0 +1,7 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "lotm:asmann"
+  },
+  "boss": true
+}

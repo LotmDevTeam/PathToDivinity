@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    }
+  ],
+  "match": {
+    "entity": "cataclysm:the_leviathan"
+  },
+  "pathway": "lotm:monster",
+  "sequence": 4,
+  "ability_sequence": 6,
+  "health_multiplier": 1.0,
+  "boss": true
+}

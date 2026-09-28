@@ -1,4 +1,14 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "monster",
   "sequence": 2,

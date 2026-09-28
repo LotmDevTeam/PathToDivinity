@@ -7,12 +7,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 @Mixin(value = ObscureAPIAttributes.class, remap = false)
 public class ObscureAPIAttributesMixin {
 
     @Inject(method = "criticalHitAndMagicResistanceEvent", at = @At("HEAD"), cancellable = true, remap = false)
     private static void disableEvent(LivingHurtEvent event, CallbackInfo ci) {
-        ci.cancel();
+        if (PTDBalance.DISABLE_CRIT_AND_MAGIC_RESISTANCE.isOn()) {
+            ci.cancel();
+        }
     }
 }

@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "match": {
+    "name_contains": "aero_guardian"
+  },
+  "pathway": "lotm:sailor",
+  "sequence": 8,
+  "ability_sequence": -1,
+  "health_multiplier": 1.0,
+  "damage_multiplier": 1.6,
+  "boss": true
+}

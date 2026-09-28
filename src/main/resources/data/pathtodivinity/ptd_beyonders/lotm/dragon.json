@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "lotm:dragon"
+  },
+  "damage_multiplier": 0.75,
+  "boss": true
+}

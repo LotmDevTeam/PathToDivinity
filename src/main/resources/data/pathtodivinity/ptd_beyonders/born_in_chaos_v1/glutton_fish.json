@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    }
+  ],
+  "match": {
+    "entity": "born_in_chaos_v1:glutton_fish"
+  },
+  "pathway": "lotm:sailor",
+  "sequence": 9,
+  "ability_sequence": -1,
+  "boss": true
+}

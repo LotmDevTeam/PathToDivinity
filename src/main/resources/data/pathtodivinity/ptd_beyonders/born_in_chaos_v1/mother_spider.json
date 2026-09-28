@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    }
+  ],
+  "match": {
+    "entity": "born_in_chaos_v1:mother_spider"
+  },
+  "pathway": "lotm:secrets_supplicant",
+  "sequence": 8,
+  "ability_sequence": -1,
+  "health_multiplier": 2.0,
+  "damage_multiplier": 2.0,
+  "boss": true
+}

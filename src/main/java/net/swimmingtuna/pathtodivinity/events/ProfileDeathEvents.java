@@ -23,7 +23,7 @@ import net.swimmingtuna.lotm.init.ItemInit;
 import net.swimmingtuna.lotm.item.BeyonderPotions.BeyonderCharacteristic;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
-import net.swimmingtuna.pathtodivinity.PTDConfig;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.profile.PlayerProfileData;
 import net.swimmingtuna.pathtodivinity.profile.ProfileManager;
 import net.swimmingtuna.pathtodivinity.profile.ProfileType;
@@ -143,7 +143,7 @@ public class ProfileDeathEvents {
             return;
         }
 
-        if (!PTDConfig.COMMON.normalProfileRegresses.get()) {
+        if (!PTDServerConfig.NORMAL_PROFILE_REGRESSES.get()) {
             return;
         }
         // Still inside the grace window from a previous death. Leave both stamps alone so they keep counting
@@ -152,7 +152,7 @@ public class ProfileDeathEvents {
         // the death that set it, which the LOTM key does not; the LOTM key still honours a timer granted by
         // some other route, such as an ability that hands out immunity. At 0 the operator has asked for no
         // post-death immunity at all, so neither is consulted.
-        int graceMinutes = PTDConfig.COMMON.regressionGraceMinutes.get();
+        int graceMinutes = PTDServerConfig.REGRESSION_GRACE_MINUTES.get();
         if (graceMinutes > 0
                 && (ProfileManager.getRemainingRegressionGraceTicks(
                         victim.getServer(), victim.getUUID(), graceMinutes) > 0

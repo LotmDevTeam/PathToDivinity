@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:skeletosaurus"
+  },
+  "pathway": "lotm:corpse_collector",
+  "sequence": 9,
+  "ability_sequence": -1,
+  "health_multiplier": 1.2,
+  "damage_multiplier": 1.2,
+  "boss": true
+}

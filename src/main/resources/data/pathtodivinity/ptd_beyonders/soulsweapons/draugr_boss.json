@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:draugr_boss"
+  },
+  "pathway": "lotm:warrior",
+  "sequence": 5,
+  "ability_sequence": 8,
+  "health_multiplier": 1.5,
+  "damage_multiplier": 1.2,
+  "boss": true
+}

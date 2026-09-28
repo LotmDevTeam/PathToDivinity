@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:posessed_paladin"
+  },
+  "pathway": "lotm:apprentice",
+  "sequence": 5,
+  "ability_sequence": 7,
+  "health_multiplier": 2.0,
+  "damage_multiplier": 1.2,
+  "boss": true
+}

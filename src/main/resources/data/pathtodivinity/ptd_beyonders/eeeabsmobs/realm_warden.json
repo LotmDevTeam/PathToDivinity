@@ -1,0 +1,14 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
+  "match": {
+    "entity": "eeeabsmobs:realm_warden"
+  },
+  "pathway": "lotm:spectator",
+  "ability_sequence": 7
+}

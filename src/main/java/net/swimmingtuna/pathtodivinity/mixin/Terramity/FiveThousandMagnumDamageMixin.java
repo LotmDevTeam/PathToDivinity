@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.FiveThousandMagnumRightclickedProcedure
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = FiveThousandMagnumRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class FiveThousandMagnumDamageMixin {
             constant = @Constant(doubleValue = 2.5D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 3.0D;
+        return PTDBalance.FIVE_THOUSAND_MAGNUM_DAMAGE.apply(damage);
     }
 }

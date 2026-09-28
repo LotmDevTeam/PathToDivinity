@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.HeroSwordProjectileProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = HeroSwordProjectileProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class HerosSwordDamageMixin {
             constant = @Constant(floatValue = 15.0F)
     )
     private static float modifyDamage(float damage) {
-        return damage * 8.0F;
+        return PTDBalance.HEROS_SWORD_PROJECTILE_DAMAGE.apply(damage);
     }
 }

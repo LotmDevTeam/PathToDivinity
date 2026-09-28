@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    }
+  ],
+  "match": {
+    "entity": "cataclysm:scylla"
+  },
+  "pathway": "lotm:sailor",
+  "sequence": 4,
+  "ability_sequence": -1,
+  "health_multiplier": 4.0,
+  "damage_multiplier": 2.0,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:regeneration",
+      "amplifier": 2
+    }
+  ]
+}

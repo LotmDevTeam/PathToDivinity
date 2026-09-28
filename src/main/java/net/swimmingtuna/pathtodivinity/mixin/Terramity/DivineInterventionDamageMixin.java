@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.DivineInterventionRightclickedProcedure
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = DivineInterventionRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class DivineInterventionDamageMixin {
             constant = @Constant(doubleValue = 1.7D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 1.6D;
+        return PTDBalance.DIVINE_INTERVENTION_DAMAGE.apply(damage);
     }
 }

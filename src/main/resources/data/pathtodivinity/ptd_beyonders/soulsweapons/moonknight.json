@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "match": {
+    "entity": "soulsweapons:moonknight"
+  },
+  "pathway": "lotm:spectator",
+  "sequence": 5,
+  "ability_sequence": 5,
+  "health_multiplier": 4.0,
+  "damage_multiplier": 2.0,
+  "boss": true,
+  "effects": [
+    {
+      "effect": "minecraft:speed",
+      "amplifier": 2
+    }
+  ]
+}

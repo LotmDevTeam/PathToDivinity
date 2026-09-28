@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "match": {
+    "entity": "terramity:ultra_sniffer"
+  },
+  "pathway": [
+    "lotm:spectator",
+    "lotm:warrior",
+    "lotm:sailor",
+    "lotm:apprentice",
+    "lotm:monster"
+  ],
+  "reroll": "when_none_alive",
+  "sequence": 1,
+  "ability_sequence": 3,
+  "health_multiplier": 10.0,
+  "boss": true,
+  "special": "pathtodivinity:ultra_sniffer"
+}

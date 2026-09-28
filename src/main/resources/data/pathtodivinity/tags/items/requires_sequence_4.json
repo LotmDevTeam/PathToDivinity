@@ -1,0 +1,37 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "celestisynth:aquaflora",
+      "required": false
+    },
+    {
+      "id": "celestisynth:breezebreaker",
+      "required": false
+    },
+    {
+      "id": "celestisynth:crescentia",
+      "required": false
+    },
+    {
+      "id": "celestisynth:frostbound",
+      "required": false
+    },
+    {
+      "id": "celestisynth:keres",
+      "required": false
+    },
+    {
+      "id": "celestisynth:poltergeist",
+      "required": false
+    },
+    {
+      "id": "celestisynth:rainfall_serenity",
+      "required": false
+    },
+    {
+      "id": "celestisynth:solaris",
+      "required": false
+    }
+  ]
+}

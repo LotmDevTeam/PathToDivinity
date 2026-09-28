@@ -1,5 +1,6 @@
 package net.swimmingtuna.pathtodivinity;
 
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -17,7 +18,7 @@ public class BeyonderProfileCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("beyonderprofile")
-                .requires(source -> PTDConfig.COMMON.profilesEnabled.get())
+                .requires(source -> PTDServerConfig.PROFILES_ENABLED.get())
                 .then(Commands.argument("player", EntityArgument.player())
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("cooldown")
@@ -58,7 +59,7 @@ public class BeyonderProfileCommand {
 
     private static int setCooldown(CommandSourceStack source, ServerPlayer target, int minutes) {
         String name = target.getGameProfile().getName();
-        int configured = PTDConfig.COMMON.profileSwitchCooldownMinutes.get();
+        int configured = PTDServerConfig.PROFILE_SWITCH_COOLDOWN_MINUTES.get();
 
         if (minutes > 0 && configured <= 0) {
             source.sendFailure(Component.literal("The profile switch cooldown is disabled in the config, "

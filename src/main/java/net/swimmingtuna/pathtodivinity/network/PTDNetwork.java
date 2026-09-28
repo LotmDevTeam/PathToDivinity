@@ -7,20 +7,22 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.swimmingtuna.pathtodivinity.PTD;
+import net.swimmingtuna.pathtodivinity.beyonders.ProfileSyncPacket;
 
 /**
  * This mod's packet channel.
  *
  * <p>The server owns every rule, so the client is sent finished pictures to draw and sends back nothing but
  * which profile the player clicked: the profile screen's contents, and the roster of who is on which profile
- * that name tags are marked from.
+ * that name tags are marked from. It also carries the datapack boss profiles to clients (see
+ * {@link ProfileSyncPacket}).
  *
  * <p>Bump {@link #PROTOCOL_VERSION} whenever the packet set changes, so a mismatched client is refused at
  * connect rather than mis-decoding an id that has shifted.
  */
 public final class PTDNetwork {
 
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "3";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(PTD.MOD_ID, "main"),
@@ -50,6 +52,13 @@ public final class PTDNetwork {
                 .decoder(ProfileVisibilityS2CPacket::new)
                 .encoder(ProfileVisibilityS2CPacket::encode)
                 .consumerMainThread(ProfileVisibilityS2CPacket::handle)
+                .add();
+
+        // Enqueues its own work, so it is consumed on the network thread.
+        CHANNEL.messageBuilder(ProfileSyncPacket.class, nextId++, NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(ProfileSyncPacket::decode)
+                .encoder(ProfileSyncPacket::encode)
+                .consumerNetworkThread(ProfileSyncPacket::handle)
                 .add();
     }
 

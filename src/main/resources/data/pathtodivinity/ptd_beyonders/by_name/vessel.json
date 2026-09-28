@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "match": {
+    "name_contains": "vessel"
+  },
+  "pathway": "lotm:monster",
+  "sequence": 3,
+  "ability_sequence": -1,
+  "health_multiplier": 4.0,
+  "damage_multiplier": 2.5,
+  "boss": true,
+  "drops": [
+    {
+      "item": "terramity:pocket_universe"
+    }
+  ]
+}

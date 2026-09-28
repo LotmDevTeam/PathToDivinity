@@ -1,4 +1,18 @@
 {
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "bosses_of_mass_destruction"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
   "type": "lotm:potion_cauldron",
   "pathway": "monster",
   "sequence": 9,

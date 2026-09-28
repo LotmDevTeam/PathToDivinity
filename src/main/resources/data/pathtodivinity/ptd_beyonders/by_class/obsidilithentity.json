@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "match": {
+    "class_name": "ObsidilithEntity"
+  },
+  "health_multiplier": 1.8,
+  "damage_multiplier": 1.2
+}

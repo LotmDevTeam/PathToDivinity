@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    }
+  ],
+  "match": {
+    "entity": "cataclysm:ignis"
+  },
+  "pathway": "lotm:warrior",
+  "sequence": 4,
+  "ability_sequence": -1,
+  "health_multiplier": 1.2,
+  "boss": true
+}

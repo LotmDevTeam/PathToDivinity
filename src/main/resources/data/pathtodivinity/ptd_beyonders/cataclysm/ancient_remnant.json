@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "cataclysm"
+    }
+  ],
+  "match": {
+    "entity": "cataclysm:ancient_remnant"
+  },
+  "pathway": "lotm:apprentice",
+  "ability_sequence": 6,
+  "health_multiplier": 4.0,
+  "damage_multiplier": 1.1
+}

@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.NihilityRightclickedProcedure;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = NihilityRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class NihilityDamageMixin {
             constant = @Constant(doubleValue = 0.425D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 1.1D;
+        return PTDBalance.NIHILITY_DAMAGE.apply(damage);
     }
 }

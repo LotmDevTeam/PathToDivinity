@@ -4,6 +4,7 @@ import net.mcreator.terramity.procedures.AdvancedAutomaticRifleRightclickedProce
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
 @Mixin(value = AdvancedAutomaticRifleRightclickedProcedure.class, remap = false)
@@ -14,6 +15,6 @@ public class AdvancedAutomaticRifleDamageMixin {
             constant = @Constant(doubleValue = 0.45D)
     )
     private static double modifyDamage(double damage) {
-        return damage * 0.7D;
+        return PTDBalance.ADVANCED_AUTOMATIC_RIFLE_DAMAGE.apply(damage);
     }
 }

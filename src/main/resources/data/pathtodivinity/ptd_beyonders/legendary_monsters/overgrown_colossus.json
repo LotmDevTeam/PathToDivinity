@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "match": {
+    "entity": "legendary_monsters:overgrown_colossus"
+  },
+  "pathway": "lotm:warrior",
+  "sequence": 9,
+  "ability_sequence": -1,
+  "health_multiplier": 1.5,
+  "boss": true
+}

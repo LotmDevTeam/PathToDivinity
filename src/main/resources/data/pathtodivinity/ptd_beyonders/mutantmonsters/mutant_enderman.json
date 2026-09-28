@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "conditions": [
+    {
+      "type": "forge:mod_loaded",
+      "modid": "mutantmonsters"
+    }
+  ],
+  "match": {
+    "entity": "mutantmonsters:mutant_enderman"
+  },
+  "pathway": "lotm:apprentice",
+  "sequence": 8,
+  "ability_sequence": -1,
+  "health_multiplier": 1.4,
+  "damage_multiplier": 1.2,
+  "boss": true
+}

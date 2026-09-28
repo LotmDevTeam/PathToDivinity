@@ -1,0 +1,20 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "minecraft:wither"
+  },
+  "pathway": "lotm:corpse_collector",
+  "sequence": 6,
+  "ability_sequence": -1,
+  "health_multiplier": 1.0,
+  "damage_multiplier": 1.1,
+  "boss": true,
+  "drops": [
+    {
+      "item": "soulsweapons:lord_soul_dark"
+    },
+    {
+      "item": "soulsweapons:shard_of_uncertainty"
+    }
+  ]
+}

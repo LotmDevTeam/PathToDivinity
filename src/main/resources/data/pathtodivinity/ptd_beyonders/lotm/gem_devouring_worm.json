@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "match": {
+    "entity": "lotm:gem_devouring_worm"
+  },
+  "health_multiplier": 2.0,
+  "damage_multiplier": 1.3
+}
