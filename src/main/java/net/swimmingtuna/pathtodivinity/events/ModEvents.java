@@ -53,12 +53,14 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.swimmingtuna.lotm.LOTM;
+import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
-import net.swimmingtuna.pathtodivinity.PTDConfig;
+import net.swimmingtuna.pathtodivinity.combat.CombatTag;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.PTDUtil;
 import net.swimmingtuna.pathtodivinity.compat.BornInChaosCompat;
 import net.swimmingtuna.pathtodivinity.compat.CataclysmCompat;
@@ -71,6 +73,7 @@ import net.swimmingtuna.pathtodivinity.compat.TerramityCompat;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -89,23 +92,25 @@ public class ModEvents {
             if (fullCommand.startsWith("/")) {
                 fullCommand = fullCommand.substring(1);
             }
-            if (fullCommand.startsWith("ftbteams party create")
-                    || fullCommand.startsWith("ftbteams party join")
-                    || fullCommand.startsWith("ftbteams party invite")) {
-                event.setCanceled(true);
-                player.sendSystemMessage(Component.literal(
-                        "Teams are disabled on this pack — each player must progress their own pathway.")
-                        .withStyle(ChatFormatting.RED));
-                return;
+            for (String prefix : PTDServerConfig.BLOCKED_COMMAND_PREFIXES.get()) {
+                String normalizedPrefix = prefix.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").trim();
+                if (normalizedPrefix.startsWith("/")) {
+                    normalizedPrefix = normalizedPrefix.substring(1);
+                }
+                if (!normalizedPrefix.isEmpty() && fullCommand.startsWith(normalizedPrefix)) {
+                    event.setCanceled(true);
+                    player.sendSystemMessage(Component.literal(PTDServerConfig.BLOCKED_COMMAND_MESSAGE.get())
+                            .withStyle(ChatFormatting.RED));
+                    return;
+                }
             }
 
-            CompoundTag tag = player.getPersistentData();
-            if (tag.getInt("PTDCombatTimer") > 0) {
+            if (CombatTag.isInCombat(player)) {
                 // fullCommand already has the leading "/" stripped (commands typed in chat arrive without it)
-                String commandName = fullCommand.split(" ")[0];
-                if (commandName.equals("home") || commandName.equals("spawn")) {
+                String blocked = CombatTag.blockedCommand(fullCommand);
+                if (blocked != null) {
                     event.setCanceled(true);
-                    player.sendSystemMessage(Component.literal("You are in combat and cannot use /home or /spawn!"));
+                    player.sendSystemMessage(Component.literal(PTDServerConfig.COMBAT_MESSAGE.get().replace("%s", blocked)));
                 }
             }
         }
@@ -118,21 +123,12 @@ public class ModEvents {
         if (!living.level().isClientSide()) {
             EntityType<?> type = living.getType();
             ResourceLocation typeId = EntityType.getKey(type);
-            CompoundTag tag = living.getPersistentData();
-            int combatTimer = tag.getInt("PTDCombatTimer");
-            if (combatTimer >= 1) {
-                tag.putInt("PTDCombatTimer", combatTimer - 1);
-            }
+            CombatTag.tick(living);
+            boolean inCombat = CombatTag.isInCombat(living);
 
             int tickCount = living.tickCount;
-            if (tickCount % 200 == 0 && living instanceof Player player) {
-                ItemStack mainHand = living.getMainHandItem();
-                if (mainHand.isEnchanted() && mainHand.getEnchantmentLevel(Enchantments.PIERCING) > 0) {
-                    Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(mainHand);
-                    enchantments.remove(Enchantments.PIERCING);
-                    living.sendSystemMessage(Component.literal("Piercing is banned").withStyle(ChatFormatting.RED));
-                    EnchantmentHelper.setEnchantments(enchantments, mainHand);
-                }
+            if (tickCount % PTDServerConfig.ITEM_SCAN_INTERVAL_TICKS.get() == 0 && living instanceof Player player) {
+                removeBannedEnchantments(player, living.getMainHandItem());
                 // Scan by item rather than Inventory.contains(defaultInstance), which compares NBT and so
                 // missed any damaged or enchanted razor.
                 Item razor = PTDItems.get(PTDItems.MEHRUNES_RAZOR);
@@ -251,17 +247,26 @@ public class ModEvents {
                     superSnifferEntity.setTarget(target);
                 }
             }
-            if (living instanceof Mob mob && PTDUtil.isBeyonderEntity(mob) && tickCount % 10 == 0) {
-                if (mob.getTarget() == null && combatTimer == 0 && mob.getHealth() < mob.getMaxHealth() && mob.isAlive() && !Float.isNaN(mob.getHealth())) {
-                    mob.setHealth(Math.min(mob.getMaxHealth(), mob.getHealth() + (mob.getMaxHealth() * 0.02f)));
+            boolean regenTick = tickCount % PTDServerConfig.BOSS_REGEN_INTERVAL_TICKS.get() == 0;
+            boolean blockBreakTick = tickCount % PTDServerConfig.BOSS_BLOCK_BREAKING_INTERVAL_TICKS.get() == 0;
+            if ((regenTick || blockBreakTick) && living instanceof Mob mob && PTDUtil.isBeyonderEntity(mob)) {
+                if (regenTick && PTDServerConfig.BOSS_REGEN_ENABLED.get() && mob.getTarget() == null && !inCombat
+                        && mob.getHealth() < mob.getMaxHealth() && mob.isAlive() && !Float.isNaN(mob.getHealth())) {
+                    float healAmount = (float) (mob.getMaxHealth() * PTDServerConfig.BOSS_REGEN_PERCENT.get() / 100.0);
+                    mob.setHealth(Math.min(mob.getMaxHealth(), mob.getHealth() + healAmount));
                 }
-                if (mob.getTarget() != null && mob.getTarget() instanceof Player) {
+                // Follows LOTM's own "Mobs Destroy Blocks" option, and LOTM's per-block rules
+                // (hardness limit, faction claims) via BeyonderUtil.canDestroyBlock.
+                if (blockBreakTick && Configs.COMMON.shouldMobsDestroyBlocks.get()
+                        && mob.getTarget() instanceof Player target && target.getY() > mob.getEyeY()) {
                     Level level = mob.level();
+                    boolean drops = PTDServerConfig.BOSS_BLOCK_BREAKING_DROPS.get();
                     AABB box = mob.getBoundingBox().inflate(1.0);
                     BlockPos.betweenClosedStream(box).forEach(pos -> {
                         BlockState state = level.getBlockState(pos);
-                        if (!state.isAir() && state.getDestroySpeed(level, pos) >= 0 && pos.getY() >= mob.getY() + 1 && mob.getTarget().getY() > mob.getEyeY() && state.getFluidState().isEmpty()) {
-                            level.destroyBlock(pos, true, mob);
+                        if (!state.isAir() && pos.getY() >= mob.getY() + 1 && state.getFluidState().isEmpty()
+                                && BeyonderUtil.canDestroyBlock(mob, pos)) {
+                            level.destroyBlock(pos, drops, mob);
                         }
                     });
                 }
@@ -269,6 +274,27 @@ public class ModEvents {
         }
     }
 
+
+    /** Strips the [items] banned_enchantments from a player's held item. */
+    private static void removeBannedEnchantments(Player player, ItemStack stack) {
+        if (!stack.isEnchanted()) {
+            return;
+        }
+        Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(stack);
+        boolean changed = false;
+        for (String id : PTDServerConfig.BANNED_ENCHANTMENTS.get()) {
+            ResourceLocation enchantmentId = ResourceLocation.tryParse(id);
+            Enchantment enchantment = enchantmentId == null ? null : ForgeRegistries.ENCHANTMENTS.getValue(enchantmentId);
+            if (enchantment != null && enchantments.remove(enchantment) != null) {
+                changed = true;
+                player.sendSystemMessage(Component.translatable(enchantment.getDescriptionId())
+                        .append(" is banned").withStyle(ChatFormatting.RED));
+            }
+        }
+        if (changed) {
+            EnchantmentHelper.setEnchantments(enchantments, stack);
+        }
+    }
 
     /** Nearest player within 50 blocks who isn't in creative or spectator, or null. */
     @Nullable
@@ -289,10 +315,10 @@ public class ModEvents {
         AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
         if (maxHealthAttribute != null) {
             float healthFraction = living.getHealth() / living.getMaxHealth();
-            maxHealthAttribute.setBaseValue(maxHealthAttribute.getBaseValue() * healthMultiplier * PTDConfig.COMMON.healthMultiplier.get());
+            maxHealthAttribute.setBaseValue(maxHealthAttribute.getBaseValue() * healthMultiplier * PTDServerConfig.HEALTH_MULTIPLIER.get());
             living.setHealth(living.getMaxHealth() * healthFraction);
         }
-        tag.putDouble("PTDDamageMultiplier", damageMultiplier * PTDConfig.COMMON.damageMultiplier.get());
+        tag.putDouble("PTDDamageMultiplier", damageMultiplier * PTDServerConfig.DAMAGE_MULTIPLIER.get());
         LOTM.LOGGER.info("Applied phase two buff to {}", living.getName().getString());
     }
 
@@ -303,7 +329,7 @@ public class ModEvents {
         CompoundTag tag = living.getPersistentData();
         BeyonderClass pathway = BeyonderUtil.getPathway(living);
         if (!living.level().isClientSide() && (event.getOriginalTarget() instanceof Player || event.getNewTarget() instanceof Player) && event.getOriginalTarget() != null && event.getNewTarget() != null) {
-            if (PTDUtil.isBeyonderEntity(living) && living instanceof Mob mob) {
+            if (PTDServerConfig.BOSS_TARGET_LOCK.get() && PTDUtil.isBeyonderEntity(living) && living instanceof Mob mob) {
                 float newTargetHealth = event.getNewTarget().getHealth();
                 float originalTargetHealth = event.getOriginalTarget().getHealth();
                 if (newTargetHealth > originalTargetHealth) {
@@ -361,15 +387,10 @@ public class ModEvents {
             }
 
 
-            tag.putInt("PTDCombatTimer", 200);
-            // Tag the attacker as well (the owner, for projectiles). Only the victim used to be tagged,
-            // so a player could hit something and /home or /spawn out before it hit back.
-            if (entitySource instanceof LivingEntity attacker && attacker != entity) {
-                attacker.getPersistentData().putInt("PTDCombatTimer", 200);
-            }
+            CombatTag.onHurt(event.getEntity(), source);
             if (entitySource instanceof LivingEntity livingEntity) {
                 if (PTDUtil.isBeyonderEntity(livingEntity) && directSource instanceof Projectile) {
-                    event.setAmount(event.getAmount() * 0.6f);
+                    event.setAmount((float) (event.getAmount() * PTDServerConfig.BOSS_PROJECTILE_DAMAGE_MULTIPLIER.get()));
                 }
             }
 
@@ -415,10 +436,8 @@ public class ModEvents {
                 EntityType<?> type = living.getType();
                 ResourceLocation typeId = EntityType.getKey(type);
                 String typeName = PTDEntities.typeSearchText(living);
-                if (typeId.equals(PTDEntities.KRAMPUS)) {
-                    event.setCanceled(true);
-                }
-                if (typeId.equals(PTDEntities.KRAMPUS_HENCHMAN)) {
+                if (PTDServerConfig.DISABLE_KRAMPUS.get()
+                        && (typeId.equals(PTDEntities.KRAMPUS) || typeId.equals(PTDEntities.KRAMPUS_HENCHMAN))) {
                     event.setCanceled(true);
                 }
                 // Sequence 9
@@ -685,7 +704,8 @@ public class ModEvents {
     @SubscribeEvent
     public static void serverStartEvent(ServerStartingEvent event) {
         MinecraftServer server = event.getServer();
-        if (ModCompat.isLoaded(ModCompat.BORN_IN_CHAOS)) {
+        // Only ever switches the gamerule off; with disable_krampus = false the gamerule is left to the admin.
+        if (PTDServerConfig.DISABLE_KRAMPUS.get() && ModCompat.isLoaded(ModCompat.BORN_IN_CHAOS)) {
             BornInChaosCompat.disableKrampusSpawns(server);
         }
         try {
@@ -699,7 +719,8 @@ public class ModEvents {
     // subscribes static methods - so this never ran.
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.getServer().getTickCount() % 1200 == 0) {
+        int interval = PTDServerConfig.BEYONDER_REFRESH_INTERVAL_TICKS.get();
+        if (event.phase == TickEvent.Phase.END && interval > 0 && event.getServer().getTickCount() % interval == 0) {
             MinecraftServer server = event.getServer();
             int foundSniffers = 0;
             if (ModCompat.isLoaded(PTDEntities.ULTRA_SNIFFER)) {
@@ -760,7 +781,7 @@ public class ModEvents {
 
     public static void multiplyMaxHealth(LivingEntity living, double multiplier) {
         if (!living.getPersistentData().getBoolean("maxHealthMultiplied")) {
-            float multiplierAmount = (float) (multiplier * PTDConfig.COMMON.healthMultiplier.get());
+            float multiplierAmount = (float) (multiplier * PTDServerConfig.HEALTH_MULTIPLIER.get());
             AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
             // Scale the base value: using getMaxHealth() baked any existing attribute modifiers into
             // the base, and above the 10000 cap the base was left alone but health was still rescaled.
@@ -775,7 +796,7 @@ public class ModEvents {
 
     public static void multiplyMaxHealthUltraSniffer(LivingEntity living, double multiplier) {
         if (!living.getPersistentData().getBoolean("maxHealthMultiplied")) {
-            float multiplierAmount = (float) (multiplier * PTDConfig.COMMON.healthMultiplier.get());
+            float multiplierAmount = (float) (multiplier * PTDServerConfig.HEALTH_MULTIPLIER.get());
             AttributeInstance maxHealthAttribute = living.getAttribute(Attributes.MAX_HEALTH);
             if (maxHealthAttribute != null) {
                 double newMaxHealth = maxHealthAttribute.getBaseValue() * multiplierAmount;
@@ -790,7 +811,7 @@ public class ModEvents {
     private static void multiplyDamage(LivingEntity entity, double multiplier) {
         if (!entity.getPersistentData().getBoolean("damageMultiplied")) {
             CompoundTag tag = entity.getPersistentData();
-            tag.putDouble("PTDDamageMultiplier", multiplier * PTDConfig.COMMON.damageMultiplier.get());
+            tag.putDouble("PTDDamageMultiplier", multiplier * PTDServerConfig.DAMAGE_MULTIPLIER.get());
             entity.getPersistentData().putBoolean("damageMultiplied", true);
             LOTM.LOGGER.info("Multiplied {}'s damage by {}", entity.getName().getString(), multiplier);
         }

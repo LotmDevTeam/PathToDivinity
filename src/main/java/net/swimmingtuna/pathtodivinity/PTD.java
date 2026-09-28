@@ -6,7 +6,8 @@ import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.swimmingtuna.lotm.client.Configs;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import org.slf4j.Logger;
 
 import java.util.function.Supplier;
@@ -28,7 +29,8 @@ public class PTD {
 
     public PTD() {
         MinecraftForge.EVENT_BUS.register(this);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, PTDConfig.COMMON_SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, "pathtodivinity-server.toml");
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(PTDServerConfig::onConfigLoading);
         MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);
     }
 }

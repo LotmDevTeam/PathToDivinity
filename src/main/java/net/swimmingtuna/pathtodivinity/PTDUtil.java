@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
 import net.swimmingtuna.pathtodivinity.compat.PTDItems;
+import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -164,6 +165,7 @@ public class PTDUtil {
                 ItemStack itemStack = living.getItemBySlot(slot);
                 if (isBannableItem(itemStack)) {
                     living.setItemSlot(slot, ItemStack.EMPTY);
+                    disposeOfBannedItem(living, itemStack);
                     living.sendSystemMessage(Component.literal("Banned item removed: " + itemStack.getHoverName().getString()).withStyle(ChatFormatting.RED));
                 }
             }
@@ -178,6 +180,7 @@ public class PTDUtil {
                 ItemStack itemStack = inventory.getItem(i);
                 if (isBannableItem(itemStack)) {
                     inventory.setItem(i, ItemStack.EMPTY);
+                    disposeOfBannedItem(player, itemStack);
                     living.sendSystemMessage(Component.literal("Banned item removed from inventory: " + itemStack.getHoverName().getString()).withStyle(ChatFormatting.RED));
                 } else if (!canUseSequence4Items && isBannableSequence5Item(itemStack)) {
                     inventory.setItem(i, ItemStack.EMPTY);
@@ -187,6 +190,16 @@ public class PTDUtil {
                     inventory.setItem(i, ItemStack.EMPTY);
                 }
             }
+        }
+    }
+
+    /**
+     * Applies [items] banned_item_action to an item already taken off {@code living}. Only players
+     * can have it dropped; a mob's banned gear is always deleted so it can't be farmed.
+     */
+    private static void disposeOfBannedItem(LivingEntity living, ItemStack removed) {
+        if (living instanceof Player player && PTDServerConfig.BANNED_ITEM_ACTION.get() == PTDServerConfig.BannedItemAction.DROP) {
+            player.drop(removed, false);
         }
     }
 
