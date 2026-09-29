@@ -18,7 +18,9 @@ import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import net.swimmingtuna.pathtodivinity.PTD;
+import net.swimmingtuna.pathtodivinity.PTDMixinPlugin;
 import net.swimmingtuna.pathtodivinity.PTDUtil;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
@@ -27,6 +29,7 @@ import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Behaviour that must hold however the internals change. Run with
@@ -112,6 +115,21 @@ public class PTDGameTests {
         // The FakePlayer is shared by the level: leave it as it was.
         holder.removeCurrentClass();
         player.setGameMode(GameType.SURVIVAL);
+        helper.succeed();
+    }
+
+    /**
+     * Every selected mixin applies to its target. Most targets load lazily, so a mixin whose injection point
+     * a mod update removed would otherwise only crash a player's game (as LOTM 2.5.3 did to
+     * LotmJoinModifiersMixin); audit() loads them all now.
+     */
+    @GameTest(template = EMPTY)
+    public static void everyMixinApplies(GameTestHelper helper) {
+        MixinEnvironment.getCurrentEnvironment().audit();
+        helper.assertTrue(PTDMixinPlugin.selectedMixinCount() > 0, "the mixin plugin recorded no mixins");
+        PTD.LOGGER.info("Mixin audit: {} selected mixins", PTDMixinPlugin.selectedMixinCount());
+        Set<String> missing = PTDMixinPlugin.unappliedMixins();
+        helper.assertTrue(missing.isEmpty(), "mixins that did not apply: " + missing);
         helper.succeed();
     }
 }

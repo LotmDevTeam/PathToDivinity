@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Skips mixins into mods that are not installed, so every integration except LOTM is optional.
@@ -63,6 +64,11 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
     );
 
     private static final Set<String> BACKPORTED_METHODS = Set.of("parse", "fromNamespaceAndPath", "withDefaultNamespace");
+
+    // "mixin -> target" pairs Mixin was told to apply, and those that did. A GameTest forces every target to
+    // load and compares the two, so a mixin broken by a mod update fails the tests instead of a player's game.
+    private static final Set<String> SELECTED = ConcurrentHashMap.newKeySet();
+    private static final Set<String> APPLIED = ConcurrentHashMap.newKeySet();
 
     private final Map<String, Boolean> integrationEnabled = new HashMap<>();
     private final Set<String> disabledMixins = new HashSet<>();
@@ -131,6 +137,7 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
         }
         String modId = requiredModId(mixinClassName);
         if (modId == null || isModPresent(modId)) {
+            SELECTED.add(mixinClassName + " -> " + targetClassName);
             return true;
         }
         LOGGER.debug("Skipping mixin {}: optional mod '{}' is not installed", mixinClassName, modId);
@@ -189,6 +196,7 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        APPLIED.add(mixinClassName + " -> " + targetClassName);
         if (mixinClassName.endsWith(".ResourceLocationBackportMixin")) {
             // Mixin only adds private static methods; the backported factories must be public.
             for (MethodNode method : targetClass.methods) {
@@ -197,5 +205,17 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
                 }
             }
         }
+    }
+
+    /** How many mixin/target pairs were selected; lets the GameTest tell "all applied" from "saw none". */
+    public static int selectedMixinCount() {
+        return SELECTED.size();
+    }
+
+    /** Selected mixins that have not applied (yet); only meaningful after every target class has loaded. */
+    public static Set<String> unappliedMixins() {
+        Set<String> missing = new HashSet<>(SELECTED);
+        missing.removeAll(APPLIED);
+        return missing;
     }
 }

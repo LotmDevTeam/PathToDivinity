@@ -162,7 +162,7 @@ dependencies {
     //Legendary Monsters
     add(optionalMod, fg.deobf("curse.maven:legendarymonsters-944035:8312236"))
     //LOTMC
-    implementation fg.deobf("curse.maven:lord-of-the-mysteries-craft-1095869:8612406")
+    implementation fg.deobf("curse.maven:lord-of-the-mysteries-craft-1095869:8851279")
     //Marium's Soulslike Weaponry
     add(optionalMod, fg.deobf("curse.maven:soulsweapons-632066:7321885"))
     //Mowzie's Mobs
