@@ -27,3 +27,9 @@ run2
 
 # GameTest server runs (./gradlew runGameTestServer) use their own world
 run-gametest*
+
+# NeoForge dev runs (see build.gradle)
+run-neo*
+
+# Local LOTMCraft NeoForge build (gradle.properties lotm_jar)
+libs/

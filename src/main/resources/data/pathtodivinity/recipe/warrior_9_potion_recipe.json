@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "aquamirae"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "warrior",
+  "sequence": 9,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "mowziesmobs:sol_visage"
+    },
+    {
+      "item": "mowziesmobs:wrought_axe"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "aquamirae:fin"
+    },
+    {
+      "item": "born_in_chaos_v1:nightmare_claw"
+    },
+    {
+      "item": "born_in_chaos_v1:fangofthe_hound_leader"
+    }
+  ]
+}

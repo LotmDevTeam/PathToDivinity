@@ -2,12 +2,12 @@ package net.swimmingtuna.pathtodivinity.network;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.swimmingtuna.pathtodivinity.profile.ProfileManager;
 import net.swimmingtuna.pathtodivinity.profile.ProfileType;
-
-import java.util.function.Supplier;
 
 /**
  * A player clicking a profile on the screen.
@@ -16,7 +16,11 @@ import java.util.function.Supplier;
  * Sequence 0/1/2 slots — is checked here, on the server, because a packet is a claim about what the player
  * clicked and never about what they are allowed to do.
  */
-public class ProfileActionC2SPacket {
+public class ProfileActionC2SPacket implements CustomPacketPayload {
+
+    public static final Type<ProfileActionC2SPacket> TYPE = PTDNetwork.type("profile_action");
+    public static final StreamCodec<FriendlyByteBuf, ProfileActionC2SPacket> STREAM_CODEC =
+            StreamCodec.ofMember(ProfileActionC2SPacket::encode, ProfileActionC2SPacket::new);
 
     private final ProfileType target;
 
@@ -32,23 +36,23 @@ public class ProfileActionC2SPacket {
         buffer.writeByte(this.target.ordinal());
     }
 
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> {
-            ServerPlayer player = ctx.getSender();
-            if (player == null || !ProfileManager.isEnabled()) {
-                return;
-            }
+    @Override
+    public Type<ProfileActionC2SPacket> type() {
+        return TYPE;
+    }
 
-            Component refusal = ProfileManager.switchTo(player, this.target);
-            Component status = refusal != null
-                    ? refusal
-                    : Component.literal("You are now playing your " + this.target.getDisplayName() + " profile.");
+    public void handle(IPayloadContext context) {
+        if (!(context.player() instanceof ServerPlayer player) || !ProfileManager.isEnabled()) {
+            return;
+        }
 
-            // Re-send the whole state rather than telling the client what changed: the switch may have moved
-            // the player's pathway, cooldown and stored profile all at once.
-            ProfileManager.openScreen(player, status, refusal == null);
-        });
-        ctx.setPacketHandled(true);
+        Component refusal = ProfileManager.switchTo(player, this.target);
+        Component status = refusal != null
+                ? refusal
+                : Component.literal("You are now playing your " + this.target.getDisplayName() + " profile.");
+
+        // Re-send the whole state rather than telling the client what changed: the switch may have moved
+        // the player's pathway, cooldown and stored profile all at once.
+        ProfileManager.openScreen(player, status, refusal == null);
     }
 }

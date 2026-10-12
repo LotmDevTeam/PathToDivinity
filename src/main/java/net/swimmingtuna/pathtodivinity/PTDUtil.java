@@ -28,7 +28,7 @@ public class PTDUtil {
 
     public static void removeBannedItem(LivingEntity living) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == EquipmentSlot.Type.ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
+            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
                 ItemStack itemStack = living.getItemBySlot(slot);
                 if (isBannableItem(itemStack)) {
                     living.setItemSlot(slot, ItemStack.EMPTY);

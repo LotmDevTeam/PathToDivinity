@@ -1,0 +1,37 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "bard",
+  "sequence": 5,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "soulsweapons:chaos_crown"
+    },
+    {
+      "item": "soulsweapons:essence_of_eventide"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "lotm:heartwood_of_a_flame_treant"
+    },
+    {
+      "item": "minecraft:beacon"
+    },
+    {
+      "item": "legendary_monsters:corrupted_soul"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "celestisynth"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "bard",
+  "sequence": 3,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "celestisynth:solaris"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "lotm:dream_dragon_brain"
+    },
+    {
+      "item": "cataclysm:cursium_ingot"
+    }
+  ]
+}

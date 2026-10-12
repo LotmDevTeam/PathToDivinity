@@ -1,0 +1,45 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "warrior",
+  "sequence": 5,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "cataclysm:witherite_ingot"
+    },
+    {
+      "item": "lotm:heartwood_of_a_flame_treant"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "legendary_monsters:corrupted_soul"
+    },
+    {
+      "item": "born_in_chaos_v1:dark_atrium"
+    },
+    {
+      "item": "soulsweapons:darkin_blade"
+    }
+  ]
+}

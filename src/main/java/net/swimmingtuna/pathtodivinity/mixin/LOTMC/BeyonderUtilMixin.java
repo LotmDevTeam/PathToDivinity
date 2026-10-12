@@ -1,34 +1,22 @@
 package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraftforge.event.entity.living.LivingEvent;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
-import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 
+/**
+ * The Forge version also lengthened Terramity's Ultra Sniffer's lifespan in {@code ageHandlerTick};
+ * Terramity has no NeoForge release, so that injection was dropped.
+ */
 @Mixin(value = BeyonderUtil.class, remap = false)
 public class BeyonderUtilMixin {
-
-    @ModifyVariable(
-            method = "ageHandlerTick",
-            at = @At(value = "LOAD", ordinal = 0),
-            name = "maxAge"
-    )
-    private static int modifyMaxAgeForUltraSniffer(int maxAge, LivingEvent.LivingTickEvent event) {
-        LivingEntity livingEntity = event.getEntity();
-        if (PTDEntities.ULTRA_SNIFFER.equals(PTDEntities.idOf(livingEntity))) {
-            return 6000;
-        }
-        return maxAge;
-    }
 
     @Inject(method = "getSequence", at = @At("HEAD"), cancellable = true)
     private static void injectCustomSequences(LivingEntity living, CallbackInfoReturnable<Integer> cir) {

@@ -1,7 +1,7 @@
 package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.swimmingtuna.lotm.LOTM;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.caps.BeyonderHolder;
@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class BeyonderHolderRespawnGuardMixin {
 
     @Inject(
-            method = "onPlayerRespawn(Lnet/minecraftforge/event/entity/player/PlayerEvent$PlayerRespawnEvent;)V",
+            method = "onPlayerRespawn(Lnet/neoforged/neoforge/event/entity/player/PlayerEvent$PlayerRespawnEvent;)V",
             at = @At("HEAD"),
             cancellable = true,
             remap = false

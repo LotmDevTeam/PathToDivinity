@@ -1,6 +1,7 @@
 package net.swimmingtuna.pathtodivinity;
 
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
@@ -26,17 +27,17 @@ public class SequenceLockData extends SavedData {
 
     public static SequenceLockData get(MinecraftServer server) {
         return server.overworld().getDataStorage()
-                .computeIfAbsent(SequenceLockData::load, SequenceLockData::new, FILE_ID);
+                .computeIfAbsent(new SavedData.Factory<>(SequenceLockData::new, SequenceLockData::load, null), FILE_ID);
     }
 
-    private static SequenceLockData load(CompoundTag tag) {
+    private static SequenceLockData load(CompoundTag tag, HolderLookup.Provider registries) {
         SequenceLockData data = new SequenceLockData();
         data.lockedSequence = tag.contains(KEY) ? tag.getInt(KEY) : NO_LOCK;
         return data;
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.putInt(KEY, this.lockedSequence);
         return tag;
     }

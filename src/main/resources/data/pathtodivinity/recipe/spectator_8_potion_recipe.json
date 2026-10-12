@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "eeeabsmobs"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "mutantmonsters"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "spectator",
+  "sequence": 8,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "lotm:deep_sea_marlins_blood"
+    },
+    {
+      "item": "eeeabsmobs:chain_gear"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "born_in_chaos_v1:spider_mandible"
+    },
+    {
+      "item": "mutantmonsters:endersoul_hand"
+    },
+    {
+      "item": "born_in_chaos_v1:seedof_chaos"
+    }
+  ]
+}

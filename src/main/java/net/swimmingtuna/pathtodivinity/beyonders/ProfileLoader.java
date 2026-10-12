@@ -5,6 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.resources.Resource;
@@ -12,12 +15,12 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.conditions.ICondition;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.TagsUpdatedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.conditions.ConditionalOps;
+import net.neoforged.neoforge.common.conditions.ICondition;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.TagsUpdatedEvent;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.behavior.PhaseDetectors;
 import net.swimmingtuna.pathtodivinity.behavior.SpecialHandlers;
@@ -30,24 +33,25 @@ import java.util.Map;
 /**
  * Loads boss profiles from {@code data/<namespace>/ptd_beyonders/**.json} on server start and on
  * {@code /reload}. A later datapack with the same file path replaces a profile; {@code "disabled": true}
- * removes one. A bad file is logged and skipped, never fatal.
+ * removes one; {@code "neoforge:conditions"} gate one on e.g. a mod being loaded. A bad file is logged and
+ * skipped, never fatal.
  */
-@Mod.EventBusSubscriber(modid = PTD.MOD_ID)
+@EventBusSubscriber(modid = PTD.MOD_ID)
 public class ProfileLoader extends SimpleJsonResourceReloadListener {
 
     public static final String FOLDER = "ptd_beyonders";
     private static final Gson GSON = new GsonBuilder().create();
 
-    private final ICondition.IContext conditionContext;
+    private final ConditionalOps<JsonElement> conditionOps;
 
-    private ProfileLoader(ICondition.IContext conditionContext) {
+    private ProfileLoader(RegistryAccess registryAccess, ICondition.IContext conditionContext) {
         super(GSON, FOLDER);
-        this.conditionContext = conditionContext;
+        this.conditionOps = new ConditionalOps<>(RegistryOps.create(JsonOps.INSTANCE, registryAccess), conditionContext);
     }
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener(new ProfileLoader(event.getConditionContext()));
+        event.addListener(new ProfileLoader(event.getRegistryAccess(), event.getConditionContext()));
     }
 
     /** Tag-matched profiles can only be resolved once the new tags are bound. */
@@ -74,12 +78,15 @@ public class ProfileLoader extends SimpleJsonResourceReloadListener {
             String packId = resourceManager.getResource(file).map(Resource::sourcePackId).orElse("unknown");
             try {
                 JsonObject json = GsonHelper.convertToJsonObject(entry.getValue(), "profile");
-                if (!CraftingHelper.processConditions(json, "conditions", conditionContext)
+                if (!ICondition.conditionsMatched(conditionOps, json)
                         || GsonHelper.getAsBoolean(json, "disabled", false)) {
                     skipped++;
                     continue;
                 }
                 List<String> warnings = new ArrayList<>();
+                if (json.has("conditions")) {
+                    warnings.add("\"conditions\" is the Forge key and is ignored on NeoForge; use \"neoforge:conditions\"");
+                }
                 BeyonderProfile profile = BeyonderProfile.parse(id, packId, packOrder.getOrDefault(packId, -1), json, warnings);
                 if (profile.special() != null && !SpecialHandlers.exists(profile.special())) {
                     warnings.add("unknown special \"" + profile.special() + "\" ignored");

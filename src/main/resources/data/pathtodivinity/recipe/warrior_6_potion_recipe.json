@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "awakened_bosses"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "warrior",
+  "sequence": 6,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "awakened_bosses:herobrine_nugget"
+    },
+    {
+      "item": "legendary_monsters:chorus_crystal"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "legendary_monsters:lava_eaters_skin"
+    },
+    {
+      "item": "born_in_chaos_v1:soul_cutlass"
+    },
+    {
+      "item": "minecraft:nether_star"
+    }
+  ]
+}

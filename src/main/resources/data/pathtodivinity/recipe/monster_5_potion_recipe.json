@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "monster",
+  "sequence": 5,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "soulsweapons:chaos_crown"
+    },
+    {
+      "item": "lotm:heartwood_of_a_flame_treant"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "cataclysm:gauntlet_of_guard"
+    },
+    {
+      "item": "legendary_monsters:eye_crystal"
+    },
+    {
+      "item": "soulsweapons:darkin_blade"
+    }
+  ]
+}

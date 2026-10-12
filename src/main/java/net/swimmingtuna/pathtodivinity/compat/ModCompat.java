@@ -1,11 +1,15 @@
 package net.swimmingtuna.pathtodivinity.compat;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 
 /**
  * Mod ids of every optional integration. LOTM is the only hard dependency; everything else may be
  * absent at runtime.
+ *
+ * <p>Awakened Bosses, Celestisynth, EEEAB's Mobs, Marium's Soulslike Weaponry, Obscure API and Terramity
+ * have no 1.21.1 NeoForge release, so the code PtD had for them did not survive the port. Their boss
+ * profiles are still in the datapack, gated by {@code neoforge:mod_loaded}.
  *
  * <p>Rules for keeping a mod optional:
  * <ul>
@@ -21,16 +25,11 @@ import net.minecraftforge.fml.ModList;
 public final class ModCompat {
 
     public static final String AQUAMIRAE = "aquamirae";
-    public static final String AWAKENED_BOSSES = "awakened_bosses";
     public static final String BORN_IN_CHAOS = "born_in_chaos_v1";
     public static final String CATACLYSM = "cataclysm";
-    public static final String CELESTISYNTH = "celestisynth";
-    public static final String EEEABS_MOBS = "eeeabsmobs";
     public static final String LEGENDARY_MONSTERS = "legendary_monsters";
     public static final String MOWZIES_MOBS = "mowziesmobs";
     public static final String MUTANT_MONSTERS = "mutantmonsters";
-    public static final String SOULS_WEAPONRY = "soulsweapons";
-    public static final String TERRAMITY = "terramity";
 
     private ModCompat() {
     }
@@ -39,7 +38,7 @@ public final class ModCompat {
         return ModList.get().isLoaded(modId);
     }
 
-    /** Whether the mod owning the given registry id is loaded, e.g. {@code terramity:gob}. */
+    /** Whether the mod owning the given registry id is loaded, e.g. {@code cataclysm:ignis}. */
     public static boolean isLoaded(ResourceLocation id) {
         return isLoaded(id.getNamespace());
     }

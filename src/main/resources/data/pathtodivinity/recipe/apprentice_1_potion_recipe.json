@@ -1,0 +1,24 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "apprentice",
+  "sequence": 1,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "lotm:interdimensional_hunter_brain"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "terramity:music_sheet_of_the_legendary_super_sniffer"
+    }
+  ]
+}

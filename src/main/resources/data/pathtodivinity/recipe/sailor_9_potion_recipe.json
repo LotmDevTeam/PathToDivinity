@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "aquamirae"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "sailor",
+  "sequence": 9,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "cataclysm:kobolediator_skull"
+    },
+    {
+      "item": "mowziesmobs:sol_visage"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "aquamirae:fin"
+    },
+    {
+      "item": "aquamirae:jellyfish_jelly"
+    },
+    {
+      "item": "lotm:spirit_world_soil"
+    }
+  ]
+}

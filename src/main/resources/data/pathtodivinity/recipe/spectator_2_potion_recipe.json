@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "soulsweapons"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "spectator",
+  "sequence": 2,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "lotm:planeswalker_phoenix_eye"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "soulsweapons:lord_soul_night_prowler"
+    },
+    {
+      "item": "minecraft:spyglass"
+    }
+  ]
+}

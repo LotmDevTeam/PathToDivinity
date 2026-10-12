@@ -1,5 +1,6 @@
 package net.swimmingtuna.pathtodivinity.profile;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -33,7 +34,7 @@ public class PlayerProfileData extends SavedData {
          * When this player last lost a sequence to a player kill, as overworld game time.
          *
          * <p>Kept here rather than in the player's persistent data, where LOTM's own
-         * {@code sequenceRegressionProtectionTimer} lives: Forge carries only the {@code PlayerPersisted}
+         * {@code sequenceRegressionProtectionTimer} lives: NeoForge carries only the {@code PlayerPersisted}
          * subtag across a respawn, so a stamp written there is erased by the very death that sets it and the
          * grace window never spans anything.
          */
@@ -42,10 +43,10 @@ public class PlayerProfileData extends SavedData {
 
     public static PlayerProfileData get(MinecraftServer server) {
         return server.overworld().getDataStorage()
-                .computeIfAbsent(PlayerProfileData::load, PlayerProfileData::new, FILE_ID);
+                .computeIfAbsent(new SavedData.Factory<>(PlayerProfileData::new, PlayerProfileData::load, null), FILE_ID);
     }
 
-    private static PlayerProfileData load(CompoundTag tag) {
+    private static PlayerProfileData load(CompoundTag tag, HolderLookup.Provider registries) {
         PlayerProfileData data = new PlayerProfileData();
         ListTag players = tag.getList(KEY_PLAYERS, Tag.TAG_COMPOUND);
         for (int i = 0; i < players.size(); i++) {
@@ -73,7 +74,7 @@ public class PlayerProfileData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         ListTag players = new ListTag();
         for (Map.Entry<UUID, Entry> mapEntry : this.entries.entrySet()) {
             Entry entry = mapEntry.getValue();

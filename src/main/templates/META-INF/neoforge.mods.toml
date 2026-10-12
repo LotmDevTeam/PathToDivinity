@@ -1,0 +1,88 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+description='''${mod_description}'''
+
+[[mixins]]
+config="pathtodivinity.mixins.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="${neo_version_range}"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="lotm"
+    type="required"
+    versionRange="[0.1,)"
+    ordering="NONE"
+    side="BOTH"
+
+# Optional integrations. Everything below may be absent: their mixins are skipped by PTDMixinPlugin,
+# their entities/items are matched by registry id, and their recipes are gated by neoforge:mod_loaded.
+# Mods without a 1.21.1 NeoForge release (Awakened Bosses, Celestisynth, EEEAB's Mobs, Marium's Soulslike
+# Weaponry, Terramity, ...) are not listed; their boss profiles stay in the datapack and never match.
+[[dependencies.${mod_id}]]
+    modId="aquamirae"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="born_in_chaos_v1"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="cataclysm"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="legendary_monsters"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="monsterexpansion"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="mowziesmobs"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="mutantmonsters"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.${mod_id}]]
+    modId="terrablender"
+    type="optional"
+    versionRange="[0,)"
+    ordering="NONE"
+    side="BOTH"

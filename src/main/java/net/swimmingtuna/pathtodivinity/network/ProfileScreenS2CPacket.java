@@ -1,12 +1,13 @@
 package net.swimmingtuna.pathtodivinity.network;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.client.PTDClientScreenHandlers;
 import net.swimmingtuna.pathtodivinity.profile.PlayerProfileData;
@@ -15,7 +16,6 @@ import net.swimmingtuna.pathtodivinity.profile.ProfileSnapshot;
 import net.swimmingtuna.pathtodivinity.profile.ProfileType;
 
 import javax.annotation.Nullable;
-import java.util.function.Supplier;
 
 /**
  * Everything the profile screen draws, assembled server-side.
@@ -27,7 +27,11 @@ import java.util.function.Supplier;
  * <p>Sent both to open the screen and to refresh it after an attempted switch, with {@link #status} carrying
  * the outcome.
  */
-public class ProfileScreenS2CPacket {
+public class ProfileScreenS2CPacket implements CustomPacketPayload {
+
+    public static final Type<ProfileScreenS2CPacket> TYPE = PTDNetwork.type("profile_screen");
+    public static final StreamCodec<RegistryFriendlyByteBuf, ProfileScreenS2CPacket> STREAM_CODEC =
+            StreamCodec.ofMember(ProfileScreenS2CPacket::encode, ProfileScreenS2CPacket::new);
 
     /** Marks "this player has not chosen a profile yet" on the wire, where {@code null} cannot be written. */
     private static final byte NO_PROFILE = -1;
@@ -90,13 +94,13 @@ public class ProfileScreenS2CPacket {
                 PTDServerConfig.PROFILE_SWITCH_COOLDOWN_MINUTES.get());
     }
 
-    public ProfileScreenS2CPacket(FriendlyByteBuf buffer) {
+    public ProfileScreenS2CPacket(RegistryFriendlyByteBuf buffer) {
         byte activeId = buffer.readByte();
         this.active = activeId == NO_PROFILE ? null : ProfileType.values()[activeId];
         this.activeSummary = buffer.readUtf();
         this.otherSummary = buffer.readUtf();
-        this.blocker = buffer.readBoolean() ? buffer.readComponent() : null;
-        this.status = buffer.readBoolean() ? buffer.readComponent() : null;
+        this.blocker = buffer.readBoolean() ? ComponentSerialization.TRUSTED_STREAM_CODEC.decode(buffer) : null;
+        this.status = buffer.readBoolean() ? ComponentSerialization.TRUSTED_STREAM_CODEC.decode(buffer) : null;
         this.statusSuccess = buffer.readBoolean();
         this.normalRegresses = buffer.readBoolean();
         this.safemodeMaxSequence = buffer.readVarInt();
@@ -104,17 +108,17 @@ public class ProfileScreenS2CPacket {
         this.cooldownMinutes = buffer.readVarInt();
     }
 
-    public void encode(FriendlyByteBuf buffer) {
+    public void encode(RegistryFriendlyByteBuf buffer) {
         buffer.writeByte(this.active == null ? NO_PROFILE : (byte) this.active.ordinal());
         buffer.writeUtf(this.activeSummary);
         buffer.writeUtf(this.otherSummary);
         buffer.writeBoolean(this.blocker != null);
         if (this.blocker != null) {
-            buffer.writeComponent(this.blocker);
+            ComponentSerialization.TRUSTED_STREAM_CODEC.encode(buffer, this.blocker);
         }
         buffer.writeBoolean(this.status != null);
         if (this.status != null) {
-            buffer.writeComponent(this.status);
+            ComponentSerialization.TRUSTED_STREAM_CODEC.encode(buffer, this.status);
         }
         buffer.writeBoolean(this.statusSuccess);
         buffer.writeBoolean(this.normalRegresses);
@@ -123,11 +127,14 @@ public class ProfileScreenS2CPacket {
         buffer.writeVarInt(this.cooldownMinutes);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
-                () -> () -> PTDClientScreenHandlers.openProfileScreen(this)));
-        ctx.setPacketHandled(true);
+    @Override
+    public Type<ProfileScreenS2CPacket> type() {
+        return TYPE;
+    }
+
+    /** Only ever runs on the client: the payload is registered play-to-client. */
+    public void handle(IPayloadContext context) {
+        PTDClientScreenHandlers.openProfileScreen(this);
     }
 
     @Nullable

@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "awakened_bosses"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "bosses_of_mass_destruction"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "monster",
+  "sequence": 6,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "lotm:shadowless_demonic_wolf_heart"
+    },
+    {
+      "item": "awakened_bosses:herobrine_nugget"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "minecraft:nether_star"
+    },
+    {
+      "item": "bosses_of_mass_destruction:void_thorn"
+    },
+    {
+      "item": "born_in_chaos_v1:lifestealer_bone"
+    }
+  ]
+}

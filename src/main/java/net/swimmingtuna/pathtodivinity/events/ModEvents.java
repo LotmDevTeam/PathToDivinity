@@ -29,9 +29,8 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -39,20 +38,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.CommandEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.neoforged.neoforge.event.CommandEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.swimmingtuna.lotm.LOTM;
 import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
@@ -70,22 +69,20 @@ import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderRegistrations;
 import net.swimmingtuna.pathtodivinity.compat.BornInChaosCompat;
 import net.swimmingtuna.pathtodivinity.compat.CataclysmCompat;
-import net.swimmingtuna.pathtodivinity.compat.EEEABMobsCompat;
 import net.swimmingtuna.pathtodivinity.compat.ModCompat;
 import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
-import net.swimmingtuna.pathtodivinity.compat.PTDItems;
-import net.swimmingtuna.pathtodivinity.compat.SoulsWeaponryCompat;
-import net.swimmingtuna.pathtodivinity.compat.TerramityCompat;
 import net.swimmingtuna.pathtodivinity.profile.AbilityDamageTracker;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 
 
-@Mod.EventBusSubscriber(modid = PTD.MOD_ID)
+@EventBusSubscriber(modid = PTD.MOD_ID)
 public class ModEvents {
 
     @SubscribeEvent
@@ -126,9 +123,8 @@ public class ModEvents {
 
 
     @SubscribeEvent
-    public static void handleLivingTick(LivingEvent.LivingTickEvent event) {
-        LivingEntity living = event.getEntity();
-        if (!living.level().isClientSide()) {
+    public static void handleLivingTick(EntityTickEvent.Pre event) {
+        if (event.getEntity() instanceof LivingEntity living && !living.level().isClientSide()) {
             EntityType<?> type = living.getType();
             ResourceLocation typeId = EntityType.getKey(type);
             CombatTag.tick(living);
@@ -186,20 +182,28 @@ public class ModEvents {
         if (!stack.isEnchanted()) {
             return;
         }
-        Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(stack);
-        boolean changed = false;
+        Set<ResourceLocation> banned = new HashSet<>();
         for (String id : PTDServerConfig.BANNED_ENCHANTMENTS.get()) {
             ResourceLocation enchantmentId = ResourceLocation.tryParse(id);
-            Enchantment enchantment = enchantmentId == null ? null : ForgeRegistries.ENCHANTMENTS.getValue(enchantmentId);
-            if (enchantment != null && enchantments.remove(enchantment) != null) {
-                changed = true;
-                player.sendSystemMessage(Component.translatable(enchantment.getDescriptionId())
-                        .append(" is banned").withStyle(ChatFormatting.RED));
+            if (enchantmentId != null) {
+                banned.add(enchantmentId);
             }
         }
-        if (changed) {
-            EnchantmentHelper.setEnchantments(enchantments, stack);
+        ItemEnchantments enchantments = stack.getTagEnchantments();
+        boolean hasBanned = enchantments.keySet().stream()
+                .anyMatch(holder -> holder.unwrapKey().map(key -> banned.contains(key.location())).orElse(false));
+        if (!hasBanned) {
+            return;
         }
+        // Enchantments are data-driven since 1.21, so they are matched by registry id rather than by instance.
+        EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.removeIf(holder -> {
+            if (holder.unwrapKey().map(key -> banned.contains(key.location())).orElse(false)) {
+                player.sendSystemMessage(holder.value().description().copy()
+                        .append(" is banned").withStyle(ChatFormatting.RED));
+                return true;
+            }
+            return false;
+        }));
     }
 
     @SubscribeEvent
@@ -207,19 +211,21 @@ public class ModEvents {
         LivingEntity living = event.getEntity();
         CompoundTag tag = living.getPersistentData();
         BeyonderClass pathway = BeyonderUtil.getPathway(living);
-        if (!living.level().isClientSide() && (event.getOriginalTarget() instanceof Player || event.getNewTarget() instanceof Player) && event.getOriginalTarget() != null && event.getNewTarget() != null) {
+        LivingEntity originalTarget = event.getOriginalAboutToBeSetTarget();
+        LivingEntity newTarget = event.getNewAboutToBeSetTarget();
+        if (!living.level().isClientSide() && (originalTarget instanceof Player || newTarget instanceof Player) && originalTarget != null && newTarget != null) {
             if (PTDServerConfig.BOSS_TARGET_LOCK.get() && PTDUtil.isBeyonderEntity(living) && living instanceof Mob mob) {
-                float newTargetHealth = event.getNewTarget().getHealth();
-                float originalTargetHealth = event.getOriginalTarget().getHealth();
+                float newTargetHealth = newTarget.getHealth();
+                float originalTargetHealth = originalTarget.getHealth();
                 // Redirect back to the original target rather than cancelling. Cancelling leaves
                 // mob.target untouched while the AI goal that asked for the switch believes it
                 // succeeded; the goal then fails canContinueToUse and calls setTarget(null), which
                 // this handler allows through. On a multiplayer server that thrash left bosses
                 // permanently targetless - they stopped fighting and started regenerating.
                 if (newTargetHealth > originalTargetHealth) {
-                    event.setNewTarget(event.getOriginalTarget());
-                } else if (event.getNewTarget().distanceTo(living) > event.getOriginalTarget().distanceTo(living) && event.getNewTarget().getHealth() > event.getOriginalTarget().getHealth()) {
-                    event.setNewTarget(event.getOriginalTarget());
+                    event.setNewAboutToBeSetTarget(originalTarget);
+                } else if (newTarget.distanceTo(living) > originalTarget.distanceTo(living) && newTarget.getHealth() > originalTarget.getHealth()) {
+                    event.setNewAboutToBeSetTarget(originalTarget);
                 }
             }
         }
@@ -238,8 +244,9 @@ public class ModEvents {
         }
     }
 
+    /** Before armor and other reductions, where Forge's LivingHurtEvent used to fire. */
     @SubscribeEvent
-    public static void hurtEvent(LivingHurtEvent event) {
+    public static void hurtEvent(LivingIncomingDamageEvent event) {
         Entity entity = event.getEntity();
         CompoundTag tag = entity.getPersistentData();
         DamageSource source = event.getSource();
@@ -282,22 +289,12 @@ public class ModEvents {
     /** Damage multiplier for weapon projectiles/effects from other mods, 1.0 when none applies. */
     private static float projectileDamageMultiplier(Entity directSource) {
         ResourceLocation sourceId = PTDEntities.idOf(directSource);
-        if (sourceId.equals(PTDEntities.SOLARIS_BOMB)) {
-            return PTDBalance.SOLARIS_BOMB_HIT_MULTIPLIER.scale(1.0f);
-        } else if (sourceId.equals(PTDEntities.CRESCENTIA_DRAGON)) {
-            return PTDBalance.CRESCENTIA_DRAGON_HIT_MULTIPLIER.scale(1.0f);
-        } else if (sourceId.equals(PTDEntities.FROSTBOUND_SHARD)) {
-            return PTDBalance.FROSTBOUND_SHARD_HIT_MULTIPLIER.scale(1.0f);
-        } else if (sourceId.equals(PTDEntities.PUMPKIN_PISTOL_PROJECTILE)) {
+        if (sourceId.equals(PTDEntities.PUMPKIN_PISTOL_PROJECTILE)) {
             if (directSource instanceof Projectile projectile && projectile.getOwner() != null && projectile.getOwner() instanceof Player) {
                 return PTDBalance.PUMPKIN_PISTOL_HIT_MULTIPLIER.scale(1.0f);
             }
-        } else if (sourceId.equals(PTDEntities.FREYR_SWORD)) {
-            return PTDBalance.FREYR_SWORD_HIT_MULTIPLIER.scale(1.0f);
         } else if (ModCompat.CATACLYSM.equals(sourceId.getNamespace())) {
             return CataclysmCompat.projectileDamageMultiplier(directSource);
-        } else if (ModCompat.EEEABS_MOBS.equals(sourceId.getNamespace())) {
-            return EEEABMobsCompat.projectileDamageMultiplier(directSource);
         }
         return 1.0f;
     }
@@ -337,16 +334,16 @@ public class ModEvents {
     }
 
     @SubscribeEvent
-    public static void onServerTick(TickEvent.ServerTickEvent event) {
+    public static void onServerTick(ServerTickEvent.Post event) {
         int interval = PTDServerConfig.BEYONDER_REFRESH_INTERVAL_TICKS.get();
-        if (event.phase == TickEvent.Phase.END && interval > 0 && event.getServer().getTickCount() % interval == 0) {
+        if (interval > 0 && event.getServer().getTickCount() % interval == 0) {
             BeyonderRegistrations.apply(event.getServer(), false);
         }
     }
 
     public static boolean isEntityFromMod(Entity entity, String modId) {
-        ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
-        if (entityId != null && entityId.getNamespace().equals(modId)) {
+        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        if (entityId.getNamespace().equals(modId)) {
             return true;
         }
         String packageName = entity.getClass().getPackage().getName();

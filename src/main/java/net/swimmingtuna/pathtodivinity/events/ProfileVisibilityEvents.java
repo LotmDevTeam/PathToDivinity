@@ -1,9 +1,9 @@
 package net.swimmingtuna.pathtodivinity.events;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.profile.ProfileManager;
 import net.swimmingtuna.pathtodivinity.profile.ProfileVisibility;
@@ -14,7 +14,7 @@ import net.swimmingtuna.pathtodivinity.profile.ProfileVisibility;
  * <p>Profile changes broadcast themselves from {@link ProfileManager}; these two only cover a player
  * arriving with a roster to catch up on, and leaving with an entry to clear.
  */
-@Mod.EventBusSubscriber(modid = PTD.MOD_ID)
+@EventBusSubscriber(modid = PTD.MOD_ID)
 public class ProfileVisibilityEvents {
 
     @SubscribeEvent

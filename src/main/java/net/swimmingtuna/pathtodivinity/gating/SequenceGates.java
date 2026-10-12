@@ -31,7 +31,7 @@ public final class SequenceGates {
     private static TagKey<Item>[] createTags() {
         TagKey<Item>[] tags = new TagKey[10];
         for (int sequence = 0; sequence < tags.length; sequence++) {
-            tags[sequence] = TagKey.create(Registries.ITEM, new ResourceLocation(PTD.MOD_ID, "requires_sequence_" + sequence));
+            tags[sequence] = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(PTD.MOD_ID, "requires_sequence_" + sequence));
         }
         return tags;
     }

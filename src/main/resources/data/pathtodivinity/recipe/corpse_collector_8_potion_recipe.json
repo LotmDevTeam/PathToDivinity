@@ -1,0 +1,33 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "eeeabsmobs"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "corpse_collector",
+  "sequence": 8,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "eeeabsmobs:chain_gear"
+    },
+    {
+      "item": "lotm:deep_sea_marlins_blood"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "lotm:spirit_eater_stomach_pouch"
+    },
+    {
+      "item": "minecraft:netherite_scrap"
+    },
+    {
+      "item": "minecraft:prismarine_shard"
+    }
+  ]
+}

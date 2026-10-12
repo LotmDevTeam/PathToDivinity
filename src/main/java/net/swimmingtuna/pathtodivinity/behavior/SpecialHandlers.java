@@ -11,7 +11,6 @@ import net.swimmingtuna.lotm.LOTM;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
-import net.swimmingtuna.pathtodivinity.compat.TerramityCompat;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,8 +32,8 @@ public final class SpecialHandlers {
     }
 
     private static final Map<ResourceLocation, SpecialHandler> HANDLERS = Map.of(
-            new ResourceLocation(PTD.MOD_ID, "ultra_sniffer"), new UltraSniffer(),
-            new ResourceLocation(PTD.MOD_ID, "super_sniffer"), new SuperSniffer());
+            ResourceLocation.fromNamespaceAndPath(PTD.MOD_ID, "ultra_sniffer"), new UltraSniffer(),
+            ResourceLocation.fromNamespaceAndPath(PTD.MOD_ID, "super_sniffer"), new SuperSniffer());
 
     private SpecialHandlers() {
     }
@@ -74,9 +73,9 @@ public final class SpecialHandlers {
     }
 
     /**
-     * Terramity's Ultra Sniffer: hunts the nearest player, is fully healed while spawning and for the
-     * first 3 ticks of its second phase, and is tuned per LOTM pathway (its pathway is rolled from the
-     * profile's pool).
+     * Terramity's Ultra Sniffer: hunts the nearest player, is fully healed while spawning, and is tuned per
+     * LOTM pathway (its pathway is rolled from the profile's pool). Terramity has no NeoForge release, so the
+     * Forge version's full heal at the start of its second phase has nothing to read the phase from.
      */
     static final class UltraSniffer implements SpecialHandler {
         @Override
@@ -110,14 +109,7 @@ public final class SpecialHandlers {
             if (Float.isNaN(health) || health < 0.0F) {
                 ultraSniffer.setHealth(0.0F);
             }
-            if (TerramityCompat.isUltraSnifferPhaseTwo(ultraSniffer)) {
-                int fullHeal = ultraSniffer.getPersistentData().getInt("PtDFullHeal");
-                if (fullHeal < 3) {
-                    ultraSniffer.getPersistentData().putInt("PtDFullHeal", fullHeal + 1);
-                    ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
-                    ultraSniffer.getPersistentData().putInt("age", 0);
-                }
-            } else if (ultraSniffer.tickCount <= 100) {
+            if (ultraSniffer.tickCount <= 100) {
                 ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
                 ultraSniffer.getPersistentData().putInt("age", 0);
             }

@@ -1,11 +1,11 @@
 package net.swimmingtuna.pathtodivinity.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.swimmingtuna.pathtodivinity.PTD;
 
 import java.io.IOException;
@@ -26,54 +26,54 @@ public final class PTDServerConfig {
     public static final String FOLDER = "ptd";
     public static final String FILE_NAME = FOLDER + "/pathtodivinity-server.toml";
 
-    public static final ForgeConfigSpec SPEC;
+    public static final ModConfigSpec SPEC;
 
     // [combat]
-    public static final ForgeConfigSpec.BooleanValue COMBAT_LOCKS_COMMANDS;
-    public static final ForgeConfigSpec.IntValue COMBAT_DURATION_TICKS;
-    public static final ForgeConfigSpec.BooleanValue COMBAT_TAG_ATTACKER;
-    public static final ForgeConfigSpec.BooleanValue COMBAT_TAG_ON_ENVIRONMENTAL_DAMAGE;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> COMBAT_BLOCKED_COMMANDS;
-    public static final ForgeConfigSpec.ConfigValue<String> COMBAT_MESSAGE;
+    public static final ModConfigSpec.BooleanValue COMBAT_LOCKS_COMMANDS;
+    public static final ModConfigSpec.IntValue COMBAT_DURATION_TICKS;
+    public static final ModConfigSpec.BooleanValue COMBAT_TAG_ATTACKER;
+    public static final ModConfigSpec.BooleanValue COMBAT_TAG_ON_ENVIRONMENTAL_DAMAGE;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> COMBAT_BLOCKED_COMMANDS;
+    public static final ModConfigSpec.ConfigValue<String> COMBAT_MESSAGE;
 
     // [commands]
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> BLOCKED_COMMAND_PREFIXES;
-    public static final ForgeConfigSpec.ConfigValue<String> BLOCKED_COMMAND_MESSAGE;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BLOCKED_COMMAND_PREFIXES;
+    public static final ModConfigSpec.ConfigValue<String> BLOCKED_COMMAND_MESSAGE;
 
     // [items]
-    public static final ForgeConfigSpec.IntValue ITEM_SCAN_INTERVAL_TICKS;
-    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> BANNED_ENCHANTMENTS;
-    public static final ForgeConfigSpec.EnumValue<BannedItemAction> BANNED_ITEM_ACTION;
+    public static final ModConfigSpec.IntValue ITEM_SCAN_INTERVAL_TICKS;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNED_ENCHANTMENTS;
+    public static final ModConfigSpec.EnumValue<BannedItemAction> BANNED_ITEM_ACTION;
 
     // [bosses]
-    public static final ForgeConfigSpec.BooleanValue BOSS_REGEN_ENABLED;
-    public static final ForgeConfigSpec.DoubleValue BOSS_REGEN_PERCENT;
-    public static final ForgeConfigSpec.IntValue BOSS_REGEN_INTERVAL_TICKS;
-    public static final ForgeConfigSpec.IntValue BOSS_REGEN_LOCKOUT_TICKS;
-    public static final ForgeConfigSpec.DoubleValue BOSS_REGEN_PLAYER_RADIUS;
-    public static final ForgeConfigSpec.IntValue BOSS_BLOCK_BREAKING_INTERVAL_TICKS;
-    public static final ForgeConfigSpec.BooleanValue BOSS_BLOCK_BREAKING_DROPS;
-    public static final ForgeConfigSpec.BooleanValue BOSS_TARGET_LOCK;
-    public static final ForgeConfigSpec.DoubleValue BOSS_PROJECTILE_DAMAGE_MULTIPLIER;
+    public static final ModConfigSpec.BooleanValue BOSS_REGEN_ENABLED;
+    public static final ModConfigSpec.DoubleValue BOSS_REGEN_PERCENT;
+    public static final ModConfigSpec.IntValue BOSS_REGEN_INTERVAL_TICKS;
+    public static final ModConfigSpec.IntValue BOSS_REGEN_LOCKOUT_TICKS;
+    public static final ModConfigSpec.DoubleValue BOSS_REGEN_PLAYER_RADIUS;
+    public static final ModConfigSpec.IntValue BOSS_BLOCK_BREAKING_INTERVAL_TICKS;
+    public static final ModConfigSpec.BooleanValue BOSS_BLOCK_BREAKING_DROPS;
+    public static final ModConfigSpec.BooleanValue BOSS_TARGET_LOCK;
+    public static final ModConfigSpec.DoubleValue BOSS_PROJECTILE_DAMAGE_MULTIPLIER;
 
     // [scaling]
-    public static final ForgeConfigSpec.DoubleValue HEALTH_MULTIPLIER;
-    public static final ForgeConfigSpec.DoubleValue DAMAGE_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue HEALTH_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue DAMAGE_MULTIPLIER;
 
     // [world]
-    public static final ForgeConfigSpec.BooleanValue DISABLE_KRAMPUS;
-    public static final ForgeConfigSpec.IntValue BEYONDER_REFRESH_INTERVAL_TICKS;
+    public static final ModConfigSpec.BooleanValue DISABLE_KRAMPUS;
+    public static final ModConfigSpec.IntValue BEYONDER_REFRESH_INTERVAL_TICKS;
 
     // [sequence_lock]
-    public static final ForgeConfigSpec.BooleanValue SEQUENCE_LOCK_ENABLED;
+    public static final ModConfigSpec.BooleanValue SEQUENCE_LOCK_ENABLED;
 
     // [profiles]
-    public static final ForgeConfigSpec.BooleanValue PROFILES_ENABLED;
-    public static final ForgeConfigSpec.BooleanValue NORMAL_PROFILE_REGRESSES;
-    public static final ForgeConfigSpec.IntValue REGRESSION_GRACE_MINUTES;
-    public static final ForgeConfigSpec.IntValue SAFEMODE_MAX_SEQUENCE;
-    public static final ForgeConfigSpec.DoubleValue SAFEMODE_ABILITY_DAMAGE;
-    public static final ForgeConfigSpec.IntValue PROFILE_SWITCH_COOLDOWN_MINUTES;
+    public static final ModConfigSpec.BooleanValue PROFILES_ENABLED;
+    public static final ModConfigSpec.BooleanValue NORMAL_PROFILE_REGRESSES;
+    public static final ModConfigSpec.IntValue REGRESSION_GRACE_MINUTES;
+    public static final ModConfigSpec.IntValue SAFEMODE_MAX_SEQUENCE;
+    public static final ModConfigSpec.DoubleValue SAFEMODE_ABILITY_DAMAGE;
+    public static final ModConfigSpec.IntValue PROFILE_SWITCH_COOLDOWN_MINUTES;
 
     public enum BannedItemAction {
         DELETE,
@@ -81,7 +81,7 @@ public final class PTDServerConfig {
     }
 
     static {
-        ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
 
         builder.comment("Combat tag: damage puts players (and mobs) \"in combat\" for a short time.",
                 "It also blocks switching Beyonder profiles, so it runs even if command locking is off.").push("combat");
@@ -290,7 +290,7 @@ public final class PTDServerConfig {
                     }
                     copyInt(legacy, "Profile Switch Cooldown Minutes", PROFILE_SWITCH_COOLDOWN_MINUTES);
                 }
-                config.save();
+                SPEC.save();
                 PTD.LOGGER.info("Copied legacy settings from {} into this world's {}",
                         LEGACY_COMMON_FILE.getFileName(), config.getFileName());
             }
@@ -300,14 +300,14 @@ public final class PTDServerConfig {
         }
     }
 
-    private static void copyBoolean(CommentedFileConfig legacy, String key, ForgeConfigSpec.BooleanValue target) {
+    private static void copyBoolean(CommentedFileConfig legacy, String key, ModConfigSpec.BooleanValue target) {
         Boolean value = legacy.get(List.of("PTD Configs", key));
         if (value != null) {
             target.set(value);
         }
     }
 
-    private static void copyInt(CommentedFileConfig legacy, String key, ForgeConfigSpec.IntValue target) {
+    private static void copyInt(CommentedFileConfig legacy, String key, ModConfigSpec.IntValue target) {
         Number value = legacy.get(List.of("PTD Configs", key));
         if (value != null) {
             target.set(value.intValue());

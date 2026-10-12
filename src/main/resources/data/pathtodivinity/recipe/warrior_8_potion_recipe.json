@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "mutantmonsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "warrior",
+  "sequence": 8,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "legendary_monsters:crystal_of_sandstorm"
+    },
+    {
+      "item": "lotm:spirit_eater_stomach_pouch"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "terramity:spiteful_soul"
+    },
+    {
+      "item": "mutantmonsters:hulk_hammer"
+    },
+    {
+      "item": "legendary_monsters:large_shulker_shell"
+    }
+  ]
+}

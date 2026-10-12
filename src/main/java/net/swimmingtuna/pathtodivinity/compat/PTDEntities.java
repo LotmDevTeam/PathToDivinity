@@ -16,19 +16,6 @@ public final class PTDEntities {
     // Born in Chaos
     public static final ResourceLocation PUMPKIN_PISTOL_PROJECTILE = id(ModCompat.BORN_IN_CHAOS, "pumpkin_pistol_projectile");
 
-    // Terramity
-    public static final ResourceLocation ULTRA_SNIFFER = id(ModCompat.TERRAMITY, "ultra_sniffer");
-
-    // Marium's Soulslike Weaponry
-    public static final ResourceLocation DAY_STALKER = id(ModCompat.SOULS_WEAPONRY, "day_stalker");
-    public static final ResourceLocation NIGHT_PROWLER = id(ModCompat.SOULS_WEAPONRY, "night_prowler");
-    public static final ResourceLocation FREYR_SWORD = id(ModCompat.SOULS_WEAPONRY, "freyr_sword_entity");
-
-    // Celestisynth
-    public static final ResourceLocation SOLARIS_BOMB = id(ModCompat.CELESTISYNTH, "solaris_bomb");
-    public static final ResourceLocation CRESCENTIA_DRAGON = id(ModCompat.CELESTISYNTH, "crescentia_dragon");
-    public static final ResourceLocation FROSTBOUND_SHARD = id(ModCompat.CELESTISYNTH, "frostbound_shard");
-
     private PTDEntities() {
     }
 
@@ -49,6 +36,6 @@ public final class PTDEntities {
     }
 
     private static ResourceLocation id(String namespace, String path) {
-        return new ResourceLocation(namespace, path);
+        return ResourceLocation.fromNamespaceAndPath(namespace, path);
     }
 }

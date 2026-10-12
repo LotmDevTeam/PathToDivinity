@@ -1,0 +1,49 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "aquamirae"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "bosses_of_mass_destruction"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "eeeabsmobs"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "mowziesmobs"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "sailor",
+  "sequence": 7,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "eeeabsmobs:heart_of_pagan"
+    },
+    {
+      "item": "mowziesmobs:ice_crystal"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "aquamirae:abyssal_amethyst"
+    },
+    {
+      "item": "legendary_monsters:anchor_handle"
+    },
+    {
+      "item": "bosses_of_mass_destruction:ancient_anima"
+    }
+  ]
+}

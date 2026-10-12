@@ -6,14 +6,14 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
-import net.minecraftforge.event.entity.living.LivingEquipmentChangeEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
+import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.common.util.TriState;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.swimmingtuna.pathtodivinity.PTD;
 
 import java.util.Map;
@@ -23,9 +23,9 @@ import java.util.WeakHashMap;
  * Stops players below an item's required sequence from using it, however they try. Checks run on
  * both sides so the client doesn't predict a swing or skill that the server then refuses; the
  * message is sent only by the server. Passive effects are stopped separately, by
- * {@code ItemStackInventoryTickMixin} and the Celestisynth hurt-dispatch mixin.
+ * {@code ItemStackInventoryTickMixin}.
  */
-@Mod.EventBusSubscriber(modid = PTD.MOD_ID)
+@EventBusSubscriber(modid = PTD.MOD_ID)
 public final class UseBlocker {
 
     private static final int MESSAGE_COOLDOWN_TICKS = 20;
@@ -35,7 +35,7 @@ public final class UseBlocker {
     private UseBlocker() {
     }
 
-    /** Right-click use: guns, staffs, Celestisynth skills (they start through Item.use). */
+    /** Right-click use: guns, staffs, weapon skills (they start through Item.use). */
     @SubscribeEvent
     public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
         if (isBlocked(event.getEntity(), event.getItemStack())) {
@@ -48,7 +48,7 @@ public final class UseBlocker {
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if (isBlocked(event.getEntity(), event.getItemStack())) {
-            event.setUseItem(Event.Result.DENY);
+            event.setUseItem(TriState.FALSE);
         }
     }
 
@@ -73,7 +73,7 @@ public final class UseBlocker {
      * the player in person are checked, so LOTM abilities used while carrying a gated weapon still land.
      */
     @SubscribeEvent
-    public static void onHurt(LivingHurtEvent event) {
+    public static void onHurt(LivingIncomingDamageEvent event) {
         if (event.getSource().getEntity() instanceof Player player && event.getSource().getDirectEntity() == player
                 && isBlocked(player, player.getMainHandItem())) {
             event.setCanceled(true);
@@ -83,7 +83,7 @@ public final class UseBlocker {
     /** Equipping can't be cancelled, so gated armour goes straight back into the inventory. */
     @SubscribeEvent
     public static void onEquipmentChange(LivingEquipmentChangeEvent event) {
-        if (event.getSlot().getType() != EquipmentSlot.Type.ARMOR || !(event.getEntity() instanceof Player player)
+        if (event.getSlot().getType() != EquipmentSlot.Type.HUMANOID_ARMOR || !(event.getEntity() instanceof Player player)
                 || player.level().isClientSide()) {
             return;
         }

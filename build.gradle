@@ -1,13 +1,10 @@
 plugins {
+    id 'java-library'
     id 'eclipse'
     id 'idea'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.spongepowered.mixin' version '0.7.+'
     id 'maven-publish'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'net.neoforged.moddev' version '2.0.148'
 }
-apply plugin: 'net.minecraftforge.gradle'
 
 version = mod_version
 group = mod_group_id
@@ -16,77 +13,74 @@ base {
     archivesName = mod_id
 }
 
-mixin {
-    add sourceSets.main, "pathtodivinity.refmap.json"
-    // Register the config with the Mixin Gradle plugin. This is required for the DEV run:
-    // mods.toml [[mixins]] is only honored for packaged jars (prod), NOT for the exploded
-    // dev mod, so without this line none of this mod's mixins apply in runClient/runServer.
-    // mods.toml [[mixins]] is kept for prod; duplicate registration is harmless (Mixin skips
-    // an already-registered config).
-    config "pathtodivinity.mixins.json"
-    debug.export = true
-}
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 // -PlotmOnly: leave every optional integration off the runtime classpath (they stay compileOnly), to
 // check that Path to Divinity still loads and works with only LOTM and its libraries, e.g.
 // ./gradlew runGameTestServer -PlotmOnly
 def lotmOnly = project.hasProperty('lotmOnly')
 def optionalMod = lotmOnly ? 'compileOnly' : 'implementation'
+def optionalRuntime = lotmOnly ? 'compileOnly' : 'runtimeOnly'
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
-minecraft {
 
-    mappings channel: mapping_channel, version: mapping_version
+neoForge {
+    version = neo_version
 
-    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    parchment {
+        mappingsVersion = parchment_mappings_version
+        minecraftVersion = parchment_minecraft_version
+    }
 
-    copyIdeResources = true
+    accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
 
+    // Run directories are untracked and shared with the Forge branch, so NeoForge runs get their own
+    // (run-neo*): a 1.21.1 server would upgrade, and so break, a 1.20.1 world left in run/.
     runs {
         configureEach {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                "${mod_id}" {
-                    source sourceSets.main
-                }
-            }
+            gameDirectory = project.file('run-neo')
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
         }
 
         client {
-            property 'forge.enabledGameTestNamespaces', mod_id
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
 
         // A second dev client, for testing anything that needs two players in the world at once —
         // profile regression and the characteristic drop, which both return early on a self-kill.
-        // Needs its own username (two 'Dev' players cannot share a world) and its own working
+        // Needs its own username (two 'Dev' players cannot share a world) and its own game
         // directory, so the two instances do not fight over run/logs and run/options.txt.
         client2 {
-            parent runs.client
-            workingDirectory project.file('run2')
-            args '--username', 'Dev2'
+            client()
+            gameDirectory = project.file('run-neo2')
+            programArguments.addAll '--username', 'Dev2'
         }
 
         server {
-            property 'forge.enabledGameTestNamespaces', mod_id
-            args '--nogui'
+            server()
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+            programArgument '--nogui'
         }
 
         gameTestServer {
+            type = "gameTestServer"
             // Its own world, never run/: -PlotmOnly and all-mods runs also get separate worlds.
-            workingDirectory project.file(lotmOnly ? 'run-gametest-lotm' : 'run-gametest')
-            property 'forge.enabledGameTestNamespaces', mod_id
+            gameDirectory = project.file(lotmOnly ? 'run-neo-gametest-lotm' : 'run-neo-gametest')
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
 
         data {
-            workingDirectory project.file('run-data')
-            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            data()
+            gameDirectory = project.file('run-neo-data')
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
         }
     }
 }
@@ -107,125 +101,103 @@ repositories {
         url = "https://dl.cloudsmith.io/public/tslat/sbl/maven/"
     }
     maven {
-        url = "https://jitpack.io"
+        name = "Illusive Soulworks maven"
+        url = "https://maven.theillusivec4.top/"
+    }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        // Photon, LDLib2, KilaGraph (LOTM's client effects)
+        url = "https://maven.firstdark.dev/snapshots"
+        content {
+            includeGroupByRegex "com\\.lowdragmc.*"
+        }
     }
     maven {
         url = "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
     }
-    // Add 100 Media repository for Capability Syncer
-    maven {
-        name = '100Media'
-        url = 'https://maven.100media.dev/'
-    }
-}
-
-// Configure shading for Capability Syncer
-configurations {
-    shade
-    implementation.extendsFrom shade
 }
 
 dependencies {
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.4.1"))
-    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.4.1")) {
-        jarJar.ranged(it, "[0.4.1,)")
-    }
+    //LOTMC (NeoForge port, local jar) and the libraries it needs at runtime
+    implementation files(lotm_jar)
+    implementation "maven.modrinth:pehkui:${pehkui_version}"
+    implementation "net.tslat.smartbrainlib:SmartBrainLib-neoforge-${minecraft_version}:${sbl_version}"
+    implementation "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+    implementation "software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}"
+    runtimeOnly "com.lowdragmc.photon:photon-neoforge-${minecraft_version}:${photon_version}:all"
+    runtimeOnly "com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all"
+    runtimeOnly "com.lowdragmc.kilagraph:kilagraph-neoforge-${minecraft_version}:${kilagraph_version}"
 
-    shade fg.deobf("dev._100media.capabilitysyncer:capabilitysyncer:1.20.1-4.0.1")
-
-    //Pehkui
-    implementation fg.deobf("com.github.Virtuoel:Pehkui:${pehkui_version}")
-    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    //Gecko Lib
-    implementation fg.deobf("software.bernie.geckolib:geckolib-forge-${minecraft_version}:${geckolib_version}")
-    //Brain Lib
-    implementation fg.deobf("net.tslat.smartbrainlib:SmartBrainLib-forge-${project.minecraft_version}:${project.sbl_version}")
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
-
+    // Optional integrations that have a 1.21.1 NeoForge release. Awakened Bosses, Bosses of Mass
+    // Destruction, Celestisynth, EEEAB's Mobs, Marium's Soulslike Weaponry, Obscure API and Terramity do
+    // not, so their mixins and compat code were dropped in the port; their datapack boss profiles stay and
+    // simply never match.
     //Aquamirae
-    add(optionalMod, fg.deobf("curse.maven:aquamirae-536254:7985699"))
-    //Awakened Bosses
-    add(optionalMod, fg.deobf("curse.maven:awakenedbosses-548167:5057212"))
-    //Better Combat
-    implementation fg.deobf("curse.maven:bettercombat-639842:7287334")
+    add(optionalMod, "curse.maven:aquamirae-536254:8931374")
     //Born in Chaos
-    add(optionalMod, fg.deobf("curse.maven:borninchaos-686437:7917933"))
-    //Bosses of Mass Destruction
-    add(optionalMod, fg.deobf("curse.maven:bomd-438365:4993305"))
+    add(optionalMod, "curse.maven:borninchaos-686437:8268280")
     //Cataclysm
-    add(optionalMod, fg.deobf("curse.maven:cataclysm-551586:8246047"))
-    //Celestisynth
-    add(optionalMod, fg.deobf("curse.maven:celestisynth-872712:7686018"))
-    //EEEAB's Mobs
-    add(optionalMod, fg.deobf("curse.maven:eeeabmobs-921600:8073814"))
+    add(optionalMod, "curse.maven:cataclysm-551586:8931182")
     //Legendary Monsters
-    add(optionalMod, fg.deobf("curse.maven:legendarymonsters-944035:8312236"))
-    //LOTMC
-    implementation fg.deobf("curse.maven:lord-of-the-mysteries-craft-1095869:8851279")
-    //Marium's Soulslike Weaponry
-    add(optionalMod, fg.deobf("curse.maven:soulsweapons-632066:7321885"))
+    add(optionalMod, "curse.maven:legendarymonsters-944035:8902342")
     //Mowzie's Mobs
-    add(optionalMod, fg.deobf("curse.maven:mowziesmobs-250498:7815705"))
+    add(optionalMod, "curse.maven:mowziesmobs-250498:7760267")
     //Mutant Monsters
-    add(optionalMod, fg.deobf("curse.maven:mutantmonsters-852665:5107399"))
-    //Terramity
-    add(optionalMod, fg.deobf("curse.maven:terramity-1084134:6054971"))
+    add(optionalMod, "curse.maven:mutantmonsters-852665:7232511")
+    //TerraBlender
+    add(optionalMod, "curse.maven:terrablender-940057:6054947")
 
-
-
-    //AttributeFix
-    implementation fg.deobf("curse.maven:attributefix-280510:7612291")
-    //Caelus API
-    implementation fg.deobf("curse.maven:caelusapi-308989:5281700")
-    //Citadel
-    implementation fg.deobf("curse.maven:citadel-331936:7476570")
-    //Cloth Config
-    implementation fg.deobf("curse.maven:clothconfig-348521:5729105")
-    //Curios API
-    implementation fg.deobf("curse.maven:curiosapi-309927:6418456")
-    //Dreamcat LIB
-    implementation fg.deobf("curse.maven:dreamcast-1323703:6869654")
-    //Jade
-    implementation fg.deobf("curse.maven:jade-324717:6855440")
-    //JEI
-    implementation fg.deobf("curse.maven:JEI-238222:8292131")
-    //JER
-    implementation fg.deobf("curse.maven:JER-240630:5057220")
-    //Lionfish API
-    implementation fg.deobf("curse.maven:lionfishapi-1001614:8095554")
-    //Obscure API
-    implementation fg.deobf("curse.maven:obscureapi-638417:7171906")
-    //Patchouli
-    implementation fg.deobf("curse.maven:patchouli-306770:7731017")
+    // Libraries the integrations above need at runtime
+    //Better Combat
+    add(optionalRuntime, "curse.maven:bettercombat-639842:8430183")
     //Player Animator
-    implementation fg.deobf("curse.maven:bettercombat-658587:4587214")
-    //Projectile Damage
-    implementation fg.deobf("curse.maven:projectiledamage-643780:4597791")
+    add(optionalRuntime, "curse.maven:playeranimator-658587:7389814")
+    //Cloth Config
+    add(optionalRuntime, "curse.maven:clothconfig-348521:5729127")
+    // AttributeFix is left out: no integration needs it, and its config library (Prickle) crashes the dev
+    // client at load complete ("MinecraftPropertyPlugin not a subtype").
+    //Fragmentum (Aquamirae)
+    add(optionalRuntime, "curse.maven:fragmentum-1123977:9070553")
+    //Caelus API
+    add(optionalRuntime, "curse.maven:caelusapi-308989:5694215")
+    //Citadel
+    add(optionalRuntime, "curse.maven:citadel-331936:8458935")
+    //Lionfish API
+    add(optionalRuntime, "curse.maven:lionfishapi-1001614:8345326")
     //PuzzlesLib
-    implementation fg.deobf("curse.maven:puzzleslib-495476:6918565")
-    //Terrablender
-    implementation fg.deobf("curse.maven:terrablender-563928:6290448")
+    add(optionalRuntime, "curse.maven:puzzleslib-495476:9007719")
+    //Jade
+    runtimeOnly "curse.maven:jade-324717:8591319"
+    //JEI
+    runtimeOnly "curse.maven:jei-238222:9009406"
 }
 
-tasks.named('processResources', ProcessResources).configure {
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
             minecraft_version: minecraft_version, minecraft_version_range: minecraft_version_range,
-            forge_version: forge_version, forge_version_range: forge_version_range,
+            neo_version: neo_version, neo_version_range: neo_version_range,
             loader_version_range: loader_version_range,
             mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
             mod_authors: mod_authors, mod_description: mod_description,
     ]
     inputs.properties replaceProperties
-
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
-        expand replaceProperties + [project: project]
-    }
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
 }
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
 
-// Configure jar task for shading
 tasks.named('jar', Jar).configure {
-    archiveClassifier = 'slim'  // Important for shading
     manifest {
         attributes([
                 'Specification-Title'     : mod_id,
@@ -237,62 +209,29 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
-
-    finalizedBy 'reobfJar'
-}
-
-// Configure Shadow plugin for shading Capability Syncer
-shadowJar {
-    archiveClassifier = ''
-    configurations = [project.configurations.shade]
-    relocate 'dev._100media.capabilitysyncer', "${project.group}.relocated.capabilitysyncer"
-    finalizedBy 'reobfShadowJar'
-}
-
-assemble.dependsOn shadowJar
-
-// The mixin annotation processor writes pathtodivinity.refmap.json into build/tmp/compileJava, and an
-// incremental recompile can leave it out. A jar without it crashes outside dev ("could not find any targets
-// matching 'inventoryTick'"), so always compile in full and refuse to produce a jar without the refmap.
-tasks.withType(JavaCompile).configureEach {
-    options.incremental = false
-}
-[tasks.named('jar'), tasks.named('shadowJar')].each { jarTask ->
-    jarTask.configure {
-        doLast {
-            def jarFile = destinationDirectory.get().file(archiveFileName.get()).asFile
-            def zip = new java.util.zip.ZipFile(jarFile)
-            try {
-                if (zip.getEntry('pathtodivinity.refmap.json') == null) {
-                    throw new GradleException("${jarFile.name} is missing pathtodivinity.refmap.json; run ./gradlew clean, then build")
-                }
-            } finally {
-                zip.close()
-            }
-        }
-    }
-}
-
-reobf {
-    shadowJar {}
 }
 
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
-            artifact jar
+            from components.java
         }
     }
     repositories {
         maven {
-            url = "https://jitpack.io"
-        }
-        maven {
-            url = "https://cursemaven.com"
+            url "file://${project.projectDir}/mcmodsrepo"
         }
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.compilerArgs << '-Xmaxerrs' << '100000'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
 }

@@ -1,0 +1,37 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "born_in_chaos_v1"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "apprentice",
+  "sequence": 9,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "lotm:gem_devouring_worm"
+    },
+    {
+      "item": "legendary_monsters:warped_mushroom_cap_part"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "born_in_chaos_v1:sea_terror_stomach"
+    },
+    {
+      "item": "lotm:goat_beard_strand"
+    },
+    {
+      "item": "lotm:spirit_world_soil"
+    }
+  ]
+}

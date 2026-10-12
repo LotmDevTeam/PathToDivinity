@@ -1,9 +1,9 @@
 package net.swimmingtuna.pathtodivinity.client;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.swimmingtuna.pathtodivinity.PTD;
 
 /**
@@ -11,7 +11,7 @@ import net.swimmingtuna.pathtodivinity.PTD;
  *
  * <p>Safemode players render with their ordinary name tag — no marker is appended.
  */
-@Mod.EventBusSubscriber(modid = PTD.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = PTD.MOD_ID, value = Dist.CLIENT)
 public class ProfileNameTagEvents {
 
     @SubscribeEvent

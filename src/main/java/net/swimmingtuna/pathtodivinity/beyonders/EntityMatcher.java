@@ -40,13 +40,13 @@ public record EntityMatcher(Kind kind, String value) {
     }
 
     public ResourceLocation entityId() {
-        return new ResourceLocation(value);
+        return ResourceLocation.parse(value);
     }
 
     public boolean matches(Entity entity) {
         return switch (kind) {
             case ENTITY -> value.equals(EntityType.getKey(entity.getType()).toString());
-            case TAG -> entity.getType().is(TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(value)));
+            case TAG -> entity.getType().is(TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse(value)));
             case NAME_CONTAINS -> PTDEntities.typeSearchText(entity).contains(value);
             case CLASS_NAME -> entity.getClass().getSimpleName().equals(value);
         };

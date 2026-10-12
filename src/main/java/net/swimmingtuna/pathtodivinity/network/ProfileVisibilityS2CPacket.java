@@ -1,9 +1,9 @@
 package net.swimmingtuna.pathtodivinity.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.swimmingtuna.pathtodivinity.client.ProfileVisibilityCache;
 import net.swimmingtuna.pathtodivinity.profile.ProfileType;
 
@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * Tells the client which players are on which profile, so name tags can be marked.
@@ -24,7 +23,11 @@ import java.util.function.Supplier;
  * <p>A {@code null} profile means "forget this player" — used on logout so the client's map does not
  * accumulate UUIDs for the whole session.
  */
-public class ProfileVisibilityS2CPacket {
+public class ProfileVisibilityS2CPacket implements CustomPacketPayload {
+
+    public static final Type<ProfileVisibilityS2CPacket> TYPE = PTDNetwork.type("profile_visibility");
+    public static final StreamCodec<FriendlyByteBuf, ProfileVisibilityS2CPacket> STREAM_CODEC =
+            StreamCodec.ofMember(ProfileVisibilityS2CPacket::encode, ProfileVisibilityS2CPacket::new);
 
     /** Marks "no profile" on the wire, where {@code null} cannot be written. Matches ProfileScreenS2CPacket. */
     private static final byte NO_PROFILE = -1;
@@ -72,11 +75,14 @@ public class ProfileVisibilityS2CPacket {
         }
     }
 
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
-                () -> () -> ProfileVisibilityCache.apply(this)));
-        ctx.setPacketHandled(true);
+    @Override
+    public Type<ProfileVisibilityS2CPacket> type() {
+        return TYPE;
+    }
+
+    /** Only ever runs on the client: the payload is registered play-to-client. */
+    public void handle(IPayloadContext context) {
+        ProfileVisibilityCache.apply(this);
     }
 
     public boolean isReplaceAll() {

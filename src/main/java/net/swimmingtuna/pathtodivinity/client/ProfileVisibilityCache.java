@@ -1,7 +1,7 @@
 package net.swimmingtuna.pathtodivinity.client;
 
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import net.swimmingtuna.pathtodivinity.network.ProfileVisibilityS2CPacket;
 import net.swimmingtuna.pathtodivinity.profile.ProfileType;
 
@@ -14,8 +14,8 @@ import java.util.UUID;
  * What this client has been told about other players' profiles.
  *
  * <p>The server's profile store never leaves the server, so this is the only thing name tag rendering has to
- * go on. Deliberately not synchronised: the packet handler applies its changes through
- * {@code ctx.enqueueWork}, so every read and write happens on the client thread.
+ * go on. Deliberately not synchronised: payload handlers run on the client thread, so every read and
+ * write happens there.
  */
 @OnlyIn(Dist.CLIENT)
 public final class ProfileVisibilityCache {

@@ -1,5 +1,6 @@
 package net.swimmingtuna.pathtodivinity.behavior;
 
+import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -9,7 +10,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
@@ -53,10 +54,8 @@ public final class ProfileBehaviors {
         int tick = living.tickCount;
         if (!profile.effects().isEmpty() && tick % EFFECT_REFRESH_TICKS == 0) {
             for (BeyonderProfile.Effect effect : profile.effects()) {
-                MobEffect mobEffect = ForgeRegistries.MOB_EFFECTS.getValue(effect.effect());
-                if (mobEffect != null) {
-                    living.addEffect(new MobEffectInstance(mobEffect, EFFECT_REFRESH_TICKS * 2, effect.amplifier(), false, false));
-                }
+                BuiltInRegistries.MOB_EFFECT.getHolder(effect.effect()).ifPresent(mobEffect ->
+                        living.addEffect(new MobEffectInstance(mobEffect, EFFECT_REFRESH_TICKS * 2, effect.amplifier(), false, false)));
             }
         }
         BeyonderProfile.Allies allies = profile.allies();
@@ -86,7 +85,7 @@ public final class ProfileBehaviors {
     public static void onDeath(LivingEntity living, BeyonderProfile profile) {
         for (BeyonderProfile.Drop drop : profile.drops()) {
             ResourceLocation itemId = drop.item();
-            Item item = ForgeRegistries.ITEMS.containsKey(itemId) ? ForgeRegistries.ITEMS.getValue(itemId) : null;
+            Item item = BuiltInRegistries.ITEM.getOptional(itemId).orElse(null);
             if (item == null) {
                 continue;
             }

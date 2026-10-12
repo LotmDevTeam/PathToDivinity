@@ -17,12 +17,12 @@ public final class PTDTags {
     /** Silently deleted from inventories and never allowed to exist as a dropped item. */
     public static final TagKey<Item> DESTROYED = item("destroyed");
     /** Blocks bosses never break while climbing to a player. */
-    public static final TagKey<Block> BOSS_UNBREAKABLE = TagKey.create(Registries.BLOCK, new ResourceLocation(PTD.MOD_ID, "boss_unbreakable"));
+    public static final TagKey<Block> BOSS_UNBREAKABLE = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(PTD.MOD_ID, "boss_unbreakable"));
 
     private PTDTags() {
     }
 
     static TagKey<Item> item(String path) {
-        return TagKey.create(Registries.ITEM, new ResourceLocation(PTD.MOD_ID, path));
+        return TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(PTD.MOD_ID, path));
     }
 }

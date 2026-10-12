@@ -51,7 +51,7 @@ public record BeyonderProfile(
     /** {@code "ability_sequence": -1}: registered with LOTM as a Beyonder of its pathway, but inert. */
     public static final int NO_ABILITIES = -1;
 
-    private static final Set<String> KNOWN_KEYS = Set.of("format", "conditions", "match", "priority", "disabled",
+    private static final Set<String> KNOWN_KEYS = Set.of("format", "conditions", "neoforge:conditions", "match", "priority", "disabled",
             "pathway", "reroll", "sequence", "ability_sequence", "health_multiplier", "damage_multiplier", "boss",
             "effects", "allies", "drops", "persistent_data", "phase_two", "special");
 

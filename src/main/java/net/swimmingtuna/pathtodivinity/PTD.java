@@ -3,24 +3,24 @@ package net.swimmingtuna.pathtodivinity;
 import com.mojang.logging.LogUtils;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.bus.api.EventPriority;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
-import net.swimmingtuna.pathtodivinity.network.PTDNetwork;
 import org.slf4j.Logger;
 
 import java.util.function.Supplier;
 
 @Mod(PTD.MOD_ID)
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class PTD {
 
     public static final int NEW_STRUCTURE_SIZE = 512;
@@ -34,14 +34,12 @@ public class PTD {
     public static final Logger LOGGER = LogUtils.getLogger();
 
 
-    public PTD() {
-        MinecraftForge.EVENT_BUS.register(this);
+    public PTD(IEventBus modEventBus, ModContainer modContainer) {
         PTDServerConfig.relocateLegacyCommonFile();
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, PTDServerConfig.FILE_NAME);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, PTDBalance.FILE_NAME);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(PTDServerConfig::onConfigLoading);
-        MinecraftForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);
-        PTDNetwork.register();
+        modContainer.registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, PTDServerConfig.FILE_NAME);
+        modContainer.registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, PTDBalance.FILE_NAME);
+        modEventBus.addListener(PTDServerConfig::onConfigLoading);
+        NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);
     }
 
     /**

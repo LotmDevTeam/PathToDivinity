@@ -7,11 +7,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.fml.ModList;
+import net.neoforged.fml.ModList;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.capabilities.acting_data.ActingDataProvider;
+import net.swimmingtuna.lotm.capabilities.compat.Capability;
+import net.swimmingtuna.lotm.capabilities.compat.INBTSerializable;
 import net.swimmingtuna.lotm.capabilities.concealed_data.ConcealedDataProvider;
 import net.swimmingtuna.lotm.capabilities.concealed_space.ConcealedSpaceProvider;
 import net.swimmingtuna.lotm.capabilities.criminal_pathway_data.CriminalPathwayDataProvider;
@@ -96,7 +96,7 @@ public final class ProfileSnapshot {
 
         CompoundTag capabilities = new CompoundTag();
         for (Map.Entry<String, Capability<?>> entry : LOTM_PLAYER_CAPS.entrySet()) {
-            player.getCapability(entry.getValue()).ifPresent(instance -> {
+            entry.getValue().getFrom(player).ifPresent(instance -> {
                 INBTSerializable<CompoundTag> serializable = asSerializable(instance);
                 if (serializable != null) {
                     capabilities.put(entry.getKey(), serializable.serializeNBT());
@@ -107,7 +107,7 @@ public final class ProfileSnapshot {
 
         snapshot.put(KEY_INVENTORY, player.getInventory().save(new ListTag()));
         snapshot.putInt(KEY_SELECTED_SLOT, player.getInventory().selected);
-        snapshot.put(KEY_ENDER_CHEST, player.getEnderChestInventory().createTag());
+        snapshot.put(KEY_ENDER_CHEST, player.getEnderChestInventory().createTag(player.registryAccess()));
 
         if (CURIOS_LOADED) {
             // Deliberately unguarded: a failure here has to abort the switch rather than quietly write a
@@ -136,7 +136,7 @@ public final class ProfileSnapshot {
             if (className.isEmpty() || sequence < 0) {
                 return "not a Beyonder";
             }
-            BeyonderClass pathway = BeyonderClassInit.getRegistry().getValue(new ResourceLocation(className));
+            BeyonderClass pathway = BeyonderClassInit.getRegistry().get(ResourceLocation.parse(className));
             if (pathway == null) {
                 return "saved";
             }
@@ -185,7 +185,7 @@ public final class ProfileSnapshot {
 
     private static void restoreCapabilities(ServerPlayer player, CompoundTag capabilities) {
         for (Map.Entry<String, Capability<?>> entry : LOTM_PLAYER_CAPS.entrySet()) {
-            player.getCapability(entry.getValue()).ifPresent(instance -> {
+            entry.getValue().getFrom(player).ifPresent(instance -> {
                 INBTSerializable<CompoundTag> serializable = asSerializable(instance);
                 if (serializable == null) {
                     return;
@@ -227,7 +227,7 @@ public final class ProfileSnapshot {
     private static void restoreInventoryAndExperience(ServerPlayer player, CompoundTag snapshot) {
         player.getInventory().load(snapshot.getList(KEY_INVENTORY, Tag.TAG_COMPOUND));
         player.getInventory().selected = snapshot.getInt(KEY_SELECTED_SLOT);
-        player.getEnderChestInventory().fromTag(snapshot.getList(KEY_ENDER_CHEST, Tag.TAG_COMPOUND));
+        player.getEnderChestInventory().fromTag(snapshot.getList(KEY_ENDER_CHEST, Tag.TAG_COMPOUND), player.registryAccess());
 
         player.experienceLevel = snapshot.getInt(KEY_XP_LEVEL);
         player.experienceProgress = snapshot.getFloat(KEY_XP_PROGRESS);

@@ -1,5 +1,6 @@
 package net.swimmingtuna.pathtodivinity.beyonders;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -10,7 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
@@ -127,8 +128,7 @@ public final class BeyonderRegistrations {
 
     @Nullable
     private static String sequenceId(BeyonderProfile profile, ResourceLocation pathwayId, int sequence) {
-        BeyonderClass pathway = BeyonderClassInit.getRegistry().containsKey(pathwayId)
-                ? BeyonderClassInit.getRegistry().getValue(pathwayId) : null;
+        BeyonderClass pathway = BeyonderClassInit.getRegistry().get(pathwayId);
         if (pathway == null) {
             PTD.LOGGER.warn("Boss profile {}: unknown pathway {}", profile.id(), pathwayId);
             return null;
@@ -138,7 +138,7 @@ public final class BeyonderRegistrations {
 
     @Nullable
     private static EntityType<?> entityType(ResourceLocation id) {
-        return ForgeRegistries.ENTITY_TYPES.containsKey(id) ? ForgeRegistries.ENTITY_TYPES.getValue(id) : null;
+        return BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
     }
 
     private static Set<ResourceLocation> loadedEntityTypes(MinecraftServer server) {
@@ -160,10 +160,11 @@ public final class BeyonderRegistrations {
         private final Set<ResourceLocation> ruleEntityIds = new HashSet<>();
 
         static OwnedRegistrations get(ServerLevel overworld) {
-            return overworld.getDataStorage().computeIfAbsent(OwnedRegistrations::load, OwnedRegistrations::new, NAME);
+            return overworld.getDataStorage().computeIfAbsent(
+                    new SavedData.Factory<>(OwnedRegistrations::new, OwnedRegistrations::load, null), NAME);
         }
 
-        private static OwnedRegistrations load(CompoundTag tag) {
+        private static OwnedRegistrations load(CompoundTag tag, HolderLookup.Provider registries) {
             OwnedRegistrations data = new OwnedRegistrations();
             for (Tag element : tag.getList("entities", Tag.TAG_STRING)) {
                 ResourceLocation id = ResourceLocation.tryParse(element.getAsString());
@@ -205,7 +206,7 @@ public final class BeyonderRegistrations {
         }
 
         @Override
-        public CompoundTag save(CompoundTag tag) {
+        public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
             ListTag list = new ListTag();
             entityIds.stream().sorted().forEach(id -> list.add(StringTag.valueOf(id.toString())));
             tag.put("entities", list);

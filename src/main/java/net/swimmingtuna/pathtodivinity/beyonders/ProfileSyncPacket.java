@@ -2,27 +2,31 @@ package net.swimmingtuna.pathtodivinity.beyonders;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.network.PTDNetwork;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Sends clients the part of the boss profiles that client-side code reads: which entities each
  * profile matches, in what precedence, and the sequence it gives them. {@code BeyonderUtil.getSequence}
  * also runs on the client, and without this it would disagree with the server.
  */
-@Mod.EventBusSubscriber(modid = PTD.MOD_ID)
-public final class ProfileSyncPacket {
+@EventBusSubscriber(modid = PTD.MOD_ID)
+public final class ProfileSyncPacket implements CustomPacketPayload {
+
+    public static final Type<ProfileSyncPacket> TYPE = PTDNetwork.type("profile_sync");
+    public static final StreamCodec<FriendlyByteBuf, ProfileSyncPacket> STREAM_CODEC =
+            StreamCodec.ofMember(ProfileSyncPacket::encode, ProfileSyncPacket::decode);
 
     private final List<BeyonderProfile> profiles;
 
@@ -39,7 +43,11 @@ public final class ProfileSyncPacket {
             // A /reload: bring LOTM's registrations in line with the new profiles too.
             BeyonderRegistrations.apply(event.getPlayerList().getServer(), false);
         }
-        PTDNetwork.CHANNEL.send(player != null ? PacketDistributor.PLAYER.with(() -> player) : PacketDistributor.ALL.noArg(), packet);
+        if (player != null) {
+            PTDNetwork.sendToPlayer(packet, player);
+        } else {
+            PTDNetwork.sendToAll(packet);
+        }
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -70,8 +78,12 @@ public final class ProfileSyncPacket {
         return new ProfileSyncPacket(profiles);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        context.get().enqueueWork(() -> BeyonderProfiles.setClient(new ProfileSnapshot(profiles)));
-        context.get().setPacketHandled(true);
+    @Override
+    public Type<ProfileSyncPacket> type() {
+        return TYPE;
+    }
+
+    public void handle(IPayloadContext context) {
+        BeyonderProfiles.setClient(new ProfileSnapshot(profiles));
     }
 }

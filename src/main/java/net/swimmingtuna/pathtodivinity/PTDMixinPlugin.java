@@ -1,16 +1,13 @@
 package net.swimmingtuna.pathtodivinity;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.LoadingModList;
-import org.objectweb.asm.Opcodes;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
-import org.spongepowered.asm.service.MixinService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,12 +37,8 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
 
     private static final Map<String, String> PACKAGE_TO_MOD_ID = Map.of(
             "Aquamirae", "aquamirae",
-            "AwakenedBosses", "awakened_bosses",
             "BornInChaos", "born_in_chaos_v1",
-            "Celestisynth", "celestisynth",
-            "LOTMC", "lotm",
-            "ObscureAPI", "obscure_api",
-            "Terramity", "terramity"
+            "LOTMC", "lotm"
     );
 
     private static final Map<String, String> TOP_LEVEL_MIXIN_TO_MOD_ID = Map.of(
@@ -55,15 +48,9 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
     /** Kill-switch keys in config/ptd/pathtodivinity-mixins.toml, per mixin sub-package or top-level mixin. */
     private static final Map<String, String> TOGGLE_KEYS = Map.of(
             "Aquamirae", "aquamirae",
-            "AwakenedBosses", "awakened_bosses",
             "BornInChaos", "born_in_chaos",
-            "Celestisynth", "celestisynth",
-            "ObscureAPI", "obscure_api",
-            "Terramity", "terramity",
             "SurfaceRuleManagerMixin", "terrablender_surface_rule_fix"
     );
-
-    private static final Set<String> BACKPORTED_METHODS = Set.of("parse", "fromNamespaceAndPath", "withDefaultNamespace");
 
     // "mixin -> target" pairs Mixin was told to apply, and those that did. A GameTest forces every target to
     // load and compares the two, so a mixin broken by a mod update fails the tests instead of a player's game.
@@ -105,7 +92,7 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
                 config.set("disabled_mixins", new ArrayList<String>());
             }
             config.setComment("disabled_mixins", String.join("\n",
-                    " Individual mixins to skip, by name relative to the mixin package, e.g. [\"Terramity.MurasamaMixin\"].",
+                    " Individual mixins to skip, by name relative to the mixin package, e.g. [\"Aquamirae.CaptainCorneliaMixin\"].",
                     " Names are listed in pathtodivinity.mixins.json inside the jar. Needs a restart."));
             for (Object name : config.<List<?>>get("disabled_mixins")) {
                 disabledMixins.add(MIXIN_PACKAGE + name);
@@ -123,9 +110,6 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.endsWith(".ResourceLocationBackportMixin")) {
-            return !hasMethod(targetClassName, "parse");
-        }
         if (disabledMixins.contains(mixinClassName)) {
             LOGGER.info("Skipping mixin {}: listed in disabled_mixins", mixinClassName);
             return false;
@@ -142,17 +126,6 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
         }
         LOGGER.debug("Skipping mixin {}: optional mod '{}' is not installed", mixinClassName, modId);
         return false;
-    }
-
-    /** Reads the target's bytecode (without loading it) to see whether a method already exists. */
-    private static boolean hasMethod(String className, String methodName) {
-        try {
-            ClassNode node = MixinService.getService().getBytecodeProvider().getClassNode(className.replace('.', '/'));
-            return node.methods.stream().anyMatch(method -> method.name.equals(methodName));
-        } catch (Exception e) {
-            LOGGER.warn("Could not inspect {}; assuming it has {}: {}", className, methodName, e.toString());
-            return true;
-        }
     }
 
     private static String toggleKey(String mixinClassName) {
@@ -197,14 +170,6 @@ public class PTDMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
         APPLIED.add(mixinClassName + " -> " + targetClassName);
-        if (mixinClassName.endsWith(".ResourceLocationBackportMixin")) {
-            // Mixin only adds private static methods; the backported factories must be public.
-            for (MethodNode method : targetClass.methods) {
-                if (BACKPORTED_METHODS.contains(method.name) && (method.access & Opcodes.ACC_STATIC) != 0) {
-                    method.access = (method.access & ~Opcodes.ACC_PRIVATE) | Opcodes.ACC_PUBLIC;
-                }
-            }
-        }
     }
 
     /** How many mixin/target pairs were selected; lets the GameTest tell "all applied" from "saw none". */

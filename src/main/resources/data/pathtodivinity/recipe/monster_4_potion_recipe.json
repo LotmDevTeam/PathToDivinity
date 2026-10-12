@@ -1,0 +1,45 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "eeeabsmobs"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "monster",
+  "sequence": 4,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "terramity:music_sheet_of_the_gnome_king"
+    },
+    {
+      "item": "cataclysm:ignitium_ingot"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "cataclysm:essence_of_the_storm"
+    },
+    {
+      "item": "legendary_monsters:ancient_sandstone_shard"
+    },
+    {
+      "item": "eeeabsmobs:guardian_cube"
+    }
+  ]
+}

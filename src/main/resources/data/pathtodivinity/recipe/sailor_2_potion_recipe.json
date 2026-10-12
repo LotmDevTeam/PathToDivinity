@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "terramity"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "sailor",
+  "sequence": 2,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "terramity:music_sheet_of_the_legendary_super_sniffer"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "terramity:fortunes_favor"
+    },
+    {
+      "item": "terramity:lightning_staff"
+    }
+  ]
+}

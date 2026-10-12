@@ -1,0 +1,41 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "cataclysm"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "eeeabsmobs"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "legendary_monsters"
+    }
+  ],
+  "type": "lotm:potion_cauldron",
+  "pathway": "apprentice",
+  "sequence": 4,
+  "flask": {
+    "item": "minecraft:glass_bottle"
+  },
+  "main": [
+    {
+      "item": "cataclysm:ignitium_ingot"
+    },
+    {
+      "item": "lotm:phoenix_eye"
+    }
+  ],
+  "supplementary": [
+    {
+      "item": "cataclysm:essence_of_the_storm"
+    },
+    {
+      "item": "eeeabsmobs:guardian_cube"
+    },
+    {
+      "item": "legendary_monsters:somber_key"
+    }
+  ]
+}
