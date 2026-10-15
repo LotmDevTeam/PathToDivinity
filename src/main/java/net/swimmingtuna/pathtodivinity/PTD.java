@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import java.util.function.Supplier;
 
 @Mod(PTD.MOD_ID)
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber
 public class PTD {
 
     public static final int NEW_STRUCTURE_SIZE = 512;
@@ -55,6 +55,7 @@ public class PTD {
         if (event.getConfig().getSpec() != PTDServerConfig.SPEC) {
             return;
         }
+        PTDServerConfig.rebuildBannedAbilities();
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) {
             return;

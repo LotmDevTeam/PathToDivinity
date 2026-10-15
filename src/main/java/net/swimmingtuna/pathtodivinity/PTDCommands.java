@@ -24,5 +24,6 @@ public class PTDCommands {
         SequenceLockCommand.register(event.getDispatcher());
         BeyonderProfileCommand.register(event.getDispatcher());
         BeyonderCheckCommand.register(event.getDispatcher());
+        AbilityBanCommand.register(event.getDispatcher());
     }
 }

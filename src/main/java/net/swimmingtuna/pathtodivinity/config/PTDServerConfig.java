@@ -1,6 +1,9 @@
 package net.swimmingtuna.pathtodivinity.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.config.ModConfigEvent;
@@ -11,7 +14,10 @@ import net.swimmingtuna.pathtodivinity.PTD;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Server rules: {@code serverconfig/ptd/pathtodivinity-server.toml} in each world, synced to clients.
@@ -44,6 +50,7 @@ public final class PTDServerConfig {
     public static final ModConfigSpec.IntValue ITEM_SCAN_INTERVAL_TICKS;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNED_ENCHANTMENTS;
     public static final ModConfigSpec.EnumValue<BannedItemAction> BANNED_ITEM_ACTION;
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BANNED_ABILITIES;
 
     // [bosses]
     public static final ModConfigSpec.BooleanValue BOSS_REGEN_ENABLED;
@@ -100,7 +107,7 @@ public final class PTDServerConfig {
         COMBAT_BLOCKED_COMMANDS = builder
                 .comment("Commands players cannot use while in combat, without the leading slash.",
                         "Namespaced forms are matched too: \"home\" also blocks \"essentials:home\".")
-                .defineListAllowEmpty(List.of("blocked_commands"), () -> List.of("home", "spawn"), PTDServerConfig::isString);
+                .defineListAllowEmpty(List.of("blocked_commands"), () -> List.of("home", "spawn"), () -> "", PTDServerConfig::isString);
         COMBAT_MESSAGE = builder
                 .comment("Shown when a command is blocked. %s is replaced by the command name.")
                 .define("message", "You are in combat and cannot use /%s!");
@@ -112,7 +119,7 @@ public final class PTDServerConfig {
                         "The defaults stop FTB Teams parties, which would share Sequence quest progress.")
                 .defineListAllowEmpty(List.of("blocked_prefixes"),
                         () -> List.of("ftbteams party create", "ftbteams party join", "ftbteams party invite"),
-                        PTDServerConfig::isString);
+                        () -> "", PTDServerConfig::isString);
         BLOCKED_COMMAND_MESSAGE = builder
                 .comment("Shown when one of blocked_prefixes is used.")
                 .define("blocked_message", "Teams are disabled on this pack — each player must progress their own pathway.");
@@ -124,11 +131,15 @@ public final class PTDServerConfig {
                 .defineInRange("scan_interval_ticks", 200, 1, 72000);
         BANNED_ENCHANTMENTS = builder
                 .comment("Enchantments removed from the item in a player's main hand.")
-                .defineListAllowEmpty(List.of("banned_enchantments"), () -> List.of("minecraft:piercing"), PTDServerConfig::isString);
+                .defineListAllowEmpty(List.of("banned_enchantments"), () -> List.of("minecraft:piercing"), () -> "", PTDServerConfig::isString);
         BANNED_ITEM_ACTION = builder
                 .comment("What happens to a banned item a player carries: DELETE removes it, DROP drops it at their feet.",
                         "Banned items on mobs are always deleted.")
                 .defineEnum("banned_item_action", BannedItemAction.DELETE);
+        BANNED_ABILITIES = builder
+                .comment("LOTM ability items (e.g. \"lotm:hurricane\") that cannot be cast or run as a passive, by players or mobs.",
+                        "The items themselves are kept. Also editable in-game with /abilityban.")
+                .defineListAllowEmpty(List.of("banned_abilities"), List::of, () -> "", PTDServerConfig::isString);
         builder.pop();
 
         builder.comment("Behaviour of Beyonder bosses.",
@@ -232,6 +243,27 @@ public final class PTDServerConfig {
         return value instanceof String;
     }
 
+    private static volatile Set<Item> bannedAbilities = Set.of();
+
+    public static Set<Item> bannedAbilities() {
+        return bannedAbilities;
+    }
+
+    /** Rebuilds the cache behind {@link #bannedAbilities()} from [items] banned_abilities. */
+    public static void rebuildBannedAbilities() {
+        Set<Item> items = new HashSet<>();
+        for (String id : BANNED_ABILITIES.get()) {
+            ResourceLocation key = ResourceLocation.tryParse(id);
+            Optional<Item> item = key == null ? Optional.empty() : BuiltInRegistries.ITEM.getOptional(key);
+            if (item.isPresent()) {
+                items.add(item.get());
+            } else {
+                PTD.LOGGER.warn("Ignoring unknown item '{}' in [items] banned_abilities", id);
+            }
+        }
+        bannedAbilities = Set.copyOf(items);
+    }
+
     // ---- Migration from the old COMMON config ----
 
     private static final Path LEGACY_COMMON_FILE = FMLPaths.CONFIGDIR.get().resolve(FOLDER).resolve("pathtodivinity-common.toml");
@@ -260,6 +292,9 @@ public final class PTDServerConfig {
      */
     public static void onConfigLoading(ModConfigEvent.Loading event) {
         ModConfig config = event.getConfig();
+        if (config.getSpec() == SPEC) {
+            rebuildBannedAbilities(); // clients too, for the tooltip
+        }
         if (config.getSpec() != SPEC || ServerLifecycleHooks.getCurrentServer() == null) {
             return; // not ours, or a synced copy on a remote client (no file to migrate into)
         }

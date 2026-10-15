@@ -8,6 +8,7 @@ import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.swimmingtuna.pathtodivinity.PTD;
+import net.swimmingtuna.pathtodivinity.PTDUtil;
 
 /** "Requires Sequence N or higher" on gated items: red while unmet, grey once met. */
 @EventBusSubscriber(modid = PTD.MOD_ID, value = Dist.CLIENT)
@@ -18,6 +19,9 @@ public final class GateTooltip {
 
     @SubscribeEvent
     public static void onTooltip(ItemTooltipEvent event) {
+        if (PTDUtil.isAbilityBanned(event.getItemStack().getItem())) {
+            event.getToolTip().add(Component.translatable("tooltip.pathtodivinity.ability_banned").withStyle(ChatFormatting.RED));
+        }
         int required = SequenceGates.requiredSequence(event.getItemStack());
         if (required == SequenceGates.NONE) {
             return;

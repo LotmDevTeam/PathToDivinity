@@ -15,6 +15,7 @@
     "LOTMC.BeyonderUtilMixin",
     "LOTMC.LimitedSequenceSlotMixin",
     "LOTMC.SafemodeDamageSourceMixin",
+    "LOTMC.SimpleAbilityItemMixin",
     "LOTMC.LotmJoinModifiersMixin",
     "LOTMC.PotionCauldronBlockEntityMixin"
   ],

@@ -1,4 +1,5 @@
 {
   "tooltip.pathtodivinity.requires_sequence": "Requires Sequence %s or higher",
+  "tooltip.pathtodivinity.ability_banned": "Banned on this server",
   "message.pathtodivinity.requires_sequence": "You must be Sequence %s or higher to use %s"
 }

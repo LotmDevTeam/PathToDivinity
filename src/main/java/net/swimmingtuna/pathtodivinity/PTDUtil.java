@@ -7,6 +7,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
@@ -17,6 +18,12 @@ public class PTDUtil {
     /** A Beyonder boss, per its boss profile ({@code data/<ns>/ptd_beyonders}). */
     public static boolean isBeyonderEntity(Entity entity) {
         return BeyonderProfiles.isBoss(entity);
+    }
+
+
+    /** Listed in [items] banned_abilities: cannot be cast or run as a passive, but is never taken away. */
+    public static boolean isAbilityBanned(Item item) {
+        return PTDServerConfig.bannedAbilities().contains(item);
     }
 
 

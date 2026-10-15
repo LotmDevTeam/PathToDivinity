@@ -6,6 +6,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.Item;
@@ -17,6 +18,7 @@ import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
+import net.swimmingtuna.lotm.item.BeyonderAbilities.SimpleAbilityItem;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import net.swimmingtuna.pathtodivinity.PTD;
@@ -28,6 +30,7 @@ import net.swimmingtuna.pathtodivinity.gating.SequenceGates;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -115,6 +118,35 @@ public class PTDGameTests {
         // The FakePlayer is shared by the level: leave it as it was.
         holder.removeCurrentClass();
         player.setGameMode(GameType.SURVIVAL);
+        helper.succeed();
+    }
+
+    /** [items] banned_abilities blocks casting and passives, but never deletes the item. */
+    @GameTest(template = EMPTY)
+    public static void bannedAbilityIsBlockedButKept(GameTestHelper helper) {
+        SimpleAbilityItem ability = (SimpleAbilityItem) BeyonderUtil.getAbilities().getFirst();
+        List<? extends String> before = PTDServerConfig.BANNED_ABILITIES.get();
+        FakePlayer player = FakePlayerFactory.getMinecraft(helper.getLevel());
+        Zombie zombie = helper.spawn(EntityType.ZOMBIE, MIDDLE);
+        try {
+            PTDServerConfig.BANNED_ABILITIES.set(List.of(BuiltInRegistries.ITEM.getKey(ability).toString()));
+            PTDServerConfig.rebuildBannedAbilities();
+            helper.assertTrue(PTDUtil.isAbilityBanned(ability), "the ability should be banned");
+            for (LivingEntity living : List.of(player, zombie)) {
+                helper.assertFalse(BeyonderUtil.canUseAbility(living, ability), "canUseAbility must be false while banned");
+                helper.assertFalse(ability.checkIfCanUseAbility(living), "checkIfCanUseAbility must be false while banned");
+            }
+            // The FakePlayer has no pathway, so without the ban inventoryTick would take the item away.
+            ItemStack stack = new ItemStack(ability);
+            player.getInventory().setItem(0, stack);
+            ability.inventoryTick(stack, helper.getLevel(), player, 0, false);
+            helper.assertTrue(player.getInventory().getItem(0).is(ability), "a banned ability must stay in the inventory");
+        } finally {
+            player.getInventory().setItem(0, ItemStack.EMPTY);
+            PTDServerConfig.BANNED_ABILITIES.set(before);
+            PTDServerConfig.rebuildBannedAbilities();
+        }
+        helper.assertFalse(PTDUtil.isAbilityBanned(ability), "unbanning should lift the ban");
         helper.succeed();
     }
 
