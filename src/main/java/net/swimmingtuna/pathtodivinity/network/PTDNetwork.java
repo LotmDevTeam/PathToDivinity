@@ -22,7 +22,7 @@ import net.swimmingtuna.pathtodivinity.beyonders.ProfileSyncPacket;
  * <p>Bump {@link #PROTOCOL_VERSION} whenever the packet set changes, so a mismatched client is refused at
  * connect rather than mis-decoding a payload whose layout has shifted.
  */
-@EventBusSubscriber(modid = PTD.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = PTD.MOD_ID)
 public final class PTDNetwork {
 
     private static final String PROTOCOL_VERSION = "4";
