@@ -1,10 +1,18 @@
 package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
+import net.swimmingtuna.lotm.events.LivingTickEvent;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
+import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
@@ -13,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
@@ -39,9 +48,38 @@ public class BeyonderEntityDataMixin {
     @Inject(method = "selectAndUseAbility(Lnet/minecraft/world/entity/Mob;)V", at = @At("HEAD"), cancellable = true, remap = false)
     private static void pathtodivinity$skipAbilitiesWhenDisabled(Mob mob, CallbackInfo ci) {
         BeyonderProfile profile = BeyonderProfiles.find(mob);
-        if (profile != null && !profile.usesAbilities()) {
+        if (profile != null && !profile.usesAbilities() && BeyonderSummonCommand.summonedAs(mob) == null) {
             ci.cancel();
         }
+    }
+
+    /** A {@code /beyonder summon} mob is a Beyonder by itself, whatever its type is registered as. */
+    @Inject(method = "resolveGenericEntityPathway", at = @At("HEAD"), cancellable = true, remap = false)
+    private static void pathtodivinity$summonedPathway(LivingEntity entity, ServerLevel level,
+                                                      CallbackInfoReturnable<BeyonderUtil.PathwayAndSequence> cir) {
+        BeyonderUtil.PathwayAndSequence summoned = BeyonderSummonCommand.summonedAs(entity);
+        CompoundTag data = entity.getPersistentData();
+        // Purification still applies, the same way LOTM applies it to registered types.
+        if (summoned == null || data.getBoolean("purificationPathwayRemoved")) {
+            return;
+        }
+        cir.setReturnValue(data.contains("purificationSequenceOverride")
+                ? new BeyonderUtil.PathwayAndSequence(summoned.pathway(), data.getInt("purificationSequenceOverride"))
+                : summoned);
+    }
+
+    /** LOTM only ticks spirituality and abilities for registered types; let summoned mobs through too. */
+    @WrapOperation(method = "regenerateSpirituality", at = @At(value = "INVOKE",
+            target = "Lnet/swimmingtuna/lotm/world/worlddata/BeyonderEntityData;getStringForEntity(Lnet/minecraft/world/entity/EntityType;)Ljava/lang/String;"),
+            remap = false)
+    private static String pathtodivinity$tickSummoned(BeyonderEntityData data, EntityType<?> type, Operation<String> original,
+                                                     @Local(argsOnly = true) LivingTickEvent event) {
+        String registered = original.call(data, type);
+        if (registered != null) {
+            return registered;
+        }
+        BeyonderUtil.PathwayAndSequence summoned = BeyonderSummonCommand.summonedAs(event.getEntity());
+        return summoned == null ? null : summoned.pathway().sequenceIds().get(summoned.sequence());
     }
 
     @Redirect(

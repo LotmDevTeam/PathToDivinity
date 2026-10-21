@@ -82,6 +82,12 @@ public final class PTDServerConfig {
     public static final ModConfigSpec.DoubleValue SAFEMODE_ABILITY_DAMAGE;
     public static final ModConfigSpec.IntValue PROFILE_SWITCH_COOLDOWN_MINUTES;
 
+    // [inactivity]
+    public static final ModConfigSpec.BooleanValue INACTIVITY_ENABLED;
+    public static final ModConfigSpec.DoubleValue INACTIVITY_TIMEOUT_DAYS;
+    public static final ModConfigSpec.DoubleValue INACTIVITY_RESET_HOURS;
+    public static final ModConfigSpec.IntValue INACTIVITY_MAX_LOGOUT_MINUTES;
+
     public enum BannedItemAction {
         DELETE,
         DROP
@@ -231,6 +237,22 @@ public final class PTDServerConfig {
                 .comment("Minutes a player must wait between profile switches. Switching is always blocked while",
                         "they are in combat. Set to 0 to disable the cooldown.")
                 .defineInRange("switch_cooldown_minutes", 60, 0, 100000);
+        builder.pop();
+
+        builder.comment("Inactive Sequence 0 players are demoted to Sequence 1, which frees their pathway's Sequence 0",
+                "slot while they are still offline. Replaces LOTM's own fixed ~7 day login demotion. Real-world time.").push("inactivity");
+        INACTIVITY_ENABLED = builder
+                .comment("Enables the inactivity demotion. When off, LOTM's own login demotion applies instead.")
+                .define("enabled", true);
+        INACTIVITY_TIMEOUT_DAYS = builder
+                .comment("Days without an active stretch (see reset_hours) before an offline Sequence 0 player is demoted.")
+                .defineInRange("timeout_days", 7.0, 0.001, 3650.0);
+        INACTIVITY_RESET_HOURS = builder
+                .comment("Hours a player must be online, added up across sessions, to restart their timeout.")
+                .defineInRange("reset_hours", 2.0, 0.0, 1000.0);
+        INACTIVITY_MAX_LOGOUT_MINUTES = builder
+                .comment("A logout longer than this many minutes throws away the online time counted towards reset_hours.")
+                .defineInRange("max_logout_minutes", 10, 0, 100000);
         builder.pop();
 
         SPEC = builder.build();

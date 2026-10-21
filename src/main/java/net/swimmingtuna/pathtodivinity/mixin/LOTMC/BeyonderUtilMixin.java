@@ -5,6 +5,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
+import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
 import net.swimmingtuna.pathtodivinity.PTDUtil;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
@@ -33,6 +34,10 @@ public class BeyonderUtilMixin {
         // sequence itself so it comes from the /beyonderentity registration rather than the profile
         // sequence below. See BeyonderEntityDataMixin.
         if (MobAbilitySequenceContext.isSelectingAbilitiesFor(living)) {
+            return;
+        }
+        // A /beyonder summon mob's own sequence beats its type's profile; LOTM reads it via BeyonderEntityDataMixin.
+        if (BeyonderSummonCommand.summonedAs(living) != null) {
             return;
         }
         // Profiles (data/<ns>/ptd_beyonders) set the sequence LOTM reports for a mob. On the client

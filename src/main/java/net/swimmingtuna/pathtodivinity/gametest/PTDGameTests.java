@@ -21,7 +21,11 @@ import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.item.BeyonderAbilities.SimpleAbilityItem;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
 import org.spongepowered.asm.mixin.MixinEnvironment;
+import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
+import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.PTD;
+import net.swimmingtuna.pathtodivinity.inactivity.InactivityData;
+import net.swimmingtuna.pathtodivinity.inactivity.InactivityTracker;
 import net.swimmingtuna.pathtodivinity.PTDMixinPlugin;
 import net.swimmingtuna.pathtodivinity.PTDUtil;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
@@ -162,6 +166,33 @@ public class PTDGameTests {
         PTD.LOGGER.info("Mixin audit: {} selected mixins", PTDMixinPlugin.selectedMixinCount());
         Set<String> missing = PTDMixinPlugin.unappliedMixins();
         helper.assertTrue(missing.isEmpty(), "mixins that did not apply: " + missing);
+        helper.succeed();
+    }
+
+    /** /beyonder summon tags one mob; it alone is a Beyonder, and its own sequence beats its type's profile. */
+    @GameTest(template = EMPTY)
+    public static void summonedBeyonderIsOnlyThatMob(GameTestHelper helper) {
+        BeyonderClass pathway = BeyonderClassInit.getRegistry().iterator().next();
+        ElderGuardian summoned = helper.spawn(EntityType.ELDER_GUARDIAN, MIDDLE);
+        summoned.getPersistentData().putString(BeyonderSummonCommand.PATHWAY_KEY,
+                BeyonderClassInit.getRegistry().getKey(pathway).toString());
+        summoned.getPersistentData().putInt(BeyonderSummonCommand.SEQUENCE_KEY, 2);
+        Zombie plain = helper.spawn(EntityType.ZOMBIE, MIDDLE.east());
+        helper.assertTrue(BeyonderUtil.getPathway(summoned) == pathway, "summoned mob should have the given pathway");
+        helper.assertTrue(BeyonderUtil.getSequence(summoned) == 2, "summoned mob's sequence should beat its profile's 8");
+        helper.assertTrue(BeyonderUtil.getPathway(plain) == null, "an untagged zombie must not become a Beyonder");
+        helper.succeed();
+    }
+
+    @GameTest(template = EMPTY)
+    public static void inactivityTimeoutExpiry(GameTestHelper helper) {
+        long day = 24 * 60 * 60 * 1000L;
+        InactivityData.Entry entry = new InactivityData.Entry();
+        helper.assertFalse(InactivityTracker.isExpired(entry, 100 * day, 7 * day), "an untimed entry never expires");
+        entry.lastActiveMillis = 10 * day;
+        helper.assertFalse(InactivityTracker.isExpired(entry, 16 * day, 7 * day), "6 days inactive is not expired");
+        helper.assertTrue(InactivityTracker.isExpired(entry, 17 * day, 7 * day), "7 days inactive is expired");
+        helper.assertFalse(InactivityTracker.isExpired(entry, 2 * day, 7 * day), "a stamp in the future never expires");
         helper.succeed();
     }
 }
