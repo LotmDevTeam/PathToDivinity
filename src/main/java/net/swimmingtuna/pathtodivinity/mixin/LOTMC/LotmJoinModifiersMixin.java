@@ -1,9 +1,16 @@
 package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.events.ModEvents;
 import net.swimmingtuna.lotm.util.BeyonderUtil;
+import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
+import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,8 +57,17 @@ public class LotmJoinModifiersMixin {
         }
     }
 
+    /** A {@code /beyonder summon} mob gets the same join setup (full spirituality, attributes, events) as a registered type. */
+    @WrapOperation(method = "onLivingJoinWorld", at = @At(value = "INVOKE",
+            target = "Lnet/swimmingtuna/lotm/world/worlddata/BeyonderEntityData;getStringForEntity(Lnet/minecraft/world/entity/EntityType;)Ljava/lang/String;"),
+            remap = false)
+    private static String pathtodivinity$joinSummoned(BeyonderEntityData data, EntityType<?> type, Operation<String> original,
+                                                     @Local(argsOnly = true) EntityJoinLevelEvent event) {
+        return BeyonderSummonCommand.registrationFor(original.call(data, type), event.getEntity());
+    }
+
     private static boolean usesPathwayEffects(LivingEntity entity) {
         BeyonderProfile profile = BeyonderProfiles.find(entity);
-        return profile == null || profile.usesAbilities();
+        return profile == null || profile.usesAbilities() || BeyonderSummonCommand.summonedAs(entity) != null;
     }
 }

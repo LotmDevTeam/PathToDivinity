@@ -74,12 +74,7 @@ public class BeyonderEntityDataMixin {
             remap = false)
     private static String pathtodivinity$tickSummoned(BeyonderEntityData data, EntityType<?> type, Operation<String> original,
                                                      @Local(argsOnly = true) LivingTickEvent event) {
-        String registered = original.call(data, type);
-        if (registered != null) {
-            return registered;
-        }
-        BeyonderUtil.PathwayAndSequence summoned = BeyonderSummonCommand.summonedAs(event.getEntity());
-        return summoned == null ? null : summoned.pathway().sequenceIds().get(summoned.sequence());
+        return BeyonderSummonCommand.registrationFor(original.call(data, type), event.getEntity());
     }
 
     @Redirect(

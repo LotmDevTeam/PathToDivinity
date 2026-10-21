@@ -173,13 +173,22 @@ public class PTDGameTests {
     @GameTest(template = EMPTY)
     public static void summonedBeyonderIsOnlyThatMob(GameTestHelper helper) {
         BeyonderClass pathway = BeyonderClassInit.getRegistry().iterator().next();
-        ElderGuardian summoned = helper.spawn(EntityType.ELDER_GUARDIAN, MIDDLE);
+        // Tagged before joining the world, as /beyonder summon does, so LOTM's join setup sees it.
+        Zombie summoned = EntityType.ZOMBIE.create(helper.getLevel());
         summoned.getPersistentData().putString(BeyonderSummonCommand.PATHWAY_KEY,
                 BeyonderClassInit.getRegistry().getKey(pathway).toString());
         summoned.getPersistentData().putInt(BeyonderSummonCommand.SEQUENCE_KEY, 2);
+        BlockPos pos = helper.absolutePos(MIDDLE);
+        summoned.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        helper.getLevel().addFreshEntity(summoned);
         Zombie plain = helper.spawn(EntityType.ZOMBIE, MIDDLE.east());
         helper.assertTrue(BeyonderUtil.getPathway(summoned) == pathway, "summoned mob should have the given pathway");
-        helper.assertTrue(BeyonderUtil.getSequence(summoned) == 2, "summoned mob's sequence should beat its profile's 8");
+        helper.assertTrue(BeyonderUtil.getSequence(summoned) == 2, "summoned mob should have the given sequence");
+        int max = BeyonderUtil.getMaxSpirituality(summoned);
+        helper.assertTrue(max > 0 && BeyonderUtil.getSpirituality(summoned) == max,
+                "summoned mob should join with full spirituality (" + max + ") but has " + BeyonderUtil.getSpirituality(summoned));
+        BeyonderUtil.setSpirituality(summoned, max / 2);
+        helper.assertTrue(BeyonderUtil.getSpirituality(summoned) == max / 2, "summoned mob's spirituality should be settable");
         helper.assertTrue(BeyonderUtil.getPathway(plain) == null, "an untagged zombie must not become a Beyonder");
         helper.succeed();
     }

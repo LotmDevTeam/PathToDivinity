@@ -113,4 +113,18 @@ public class BeyonderSummonCommand {
         BeyonderClass pathway = id == null ? null : BeyonderClassInit.getRegistry().get(id);
         return pathway == null ? null : new BeyonderUtil.PathwayAndSequence(pathway, data.getInt(SEQUENCE_KEY));
     }
+
+    /**
+     * LOTM asks {@code BeyonderEntityData.getStringForEntity(type)} for "is this mob a Beyonder?" before it touches
+     * a mob's spirituality, abilities or join setup. Mixins pass its answer through here, so a summoned mob of an
+     * unregistered type answers with its own sequence id instead of null.
+     */
+    @Nullable
+    public static String registrationFor(@Nullable String registered, Entity entity) {
+        if (registered != null || !(entity instanceof LivingEntity living)) {
+            return registered;
+        }
+        BeyonderUtil.PathwayAndSequence summoned = summonedAs(living);
+        return summoned == null ? null : summoned.pathway().sequenceIds().get(summoned.sequence());
+    }
 }
