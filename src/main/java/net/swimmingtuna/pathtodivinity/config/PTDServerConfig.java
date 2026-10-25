@@ -85,8 +85,15 @@ public final class PTDServerConfig {
     // [inactivity]
     public static final ModConfigSpec.BooleanValue INACTIVITY_ENABLED;
     public static final ModConfigSpec.DoubleValue INACTIVITY_TIMEOUT_DAYS;
+    public static final ModConfigSpec.DoubleValue INACTIVITY_SECOND_TIMEOUT_DAYS;
+    public static final ModConfigSpec.DoubleValue INACTIVITY_THIRD_TIMEOUT_DAYS;
     public static final ModConfigSpec.DoubleValue INACTIVITY_RESET_HOURS;
     public static final ModConfigSpec.IntValue INACTIVITY_MAX_LOGOUT_MINUTES;
+
+    // [slots]
+    public static final ModConfigSpec.IntValue SLOTS_SEQUENCE_0;
+    public static final ModConfigSpec.IntValue SLOTS_SEQUENCE_1;
+    public static final ModConfigSpec.IntValue SLOTS_SEQUENCE_2;
 
     public enum BannedItemAction {
         DELETE,
@@ -239,20 +246,34 @@ public final class PTDServerConfig {
                 .defineInRange("switch_cooldown_minutes", 60, 0, 100000);
         builder.pop();
 
-        builder.comment("Inactive Sequence 0 players are demoted to Sequence 1, which frees their pathway's Sequence 0",
-                "slot while they are still offline. Replaces LOTM's own fixed ~7 day login demotion. Real-world time.").push("inactivity");
+        builder.comment("Inactive Sequence 2, 1 and 0 players are demoted one Sequence at a time until they reach Sequence 3,",
+                "freeing their pathway slot while they are still offline. Playing for reset_hours stops the chain.",
+                "Replaces LOTM's own fixed ~7 day login demotion. Real-world time.").push("inactivity");
         INACTIVITY_ENABLED = builder
                 .comment("Enables the inactivity demotion. When off, LOTM's own login demotion applies instead.")
                 .define("enabled", true);
         INACTIVITY_TIMEOUT_DAYS = builder
-                .comment("Days without an active stretch (see reset_hours) before an offline Sequence 0 player is demoted.")
+                .comment("Days without an active stretch (see reset_hours) before an offline Sequence 2, 1 or 0 player is demoted.")
                 .defineInRange("timeout_days", 7.0, 0.001, 3650.0);
+        INACTIVITY_SECOND_TIMEOUT_DAYS = builder
+                .comment("After an inactivity demotion, days until the next one if the player stays inactive.")
+                .defineInRange("second_timeout_days", 2.0, 0.001, 3650.0);
+        INACTIVITY_THIRD_TIMEOUT_DAYS = builder
+                .comment("Days until every further inactivity demotion, after the second.")
+                .defineInRange("third_timeout_days", 1.0, 0.001, 3650.0);
         INACTIVITY_RESET_HOURS = builder
                 .comment("Hours a player must be online, added up across sessions, to restart their timeout.")
                 .defineInRange("reset_hours", 2.0, 0.0, 1000.0);
         INACTIVITY_MAX_LOGOUT_MINUTES = builder
                 .comment("A logout longer than this many minutes throws away the online time counted towards reset_hours.")
                 .defineInRange("max_logout_minutes", 10, 0, 100000);
+        builder.pop();
+
+        builder.comment("How many players can hold each high Sequence per pathway at once, when LOTM's \"Only One God\" is on.",
+                "Lowering a cap does not demote anyone already holding a slot; it only stops new players advancing.").push("slots");
+        SLOTS_SEQUENCE_0 = builder.defineInRange("sequence_0", 1, 1, 1000);
+        SLOTS_SEQUENCE_1 = builder.defineInRange("sequence_1", 3, 1, 1000);
+        SLOTS_SEQUENCE_2 = builder.defineInRange("sequence_2", 7, 1, 1000);
         builder.pop();
 
         SPEC = builder.build();

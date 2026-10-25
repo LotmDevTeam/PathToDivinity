@@ -19,18 +19,25 @@ import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.lotm.world.worlddata.Sequence0Data;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
+import net.swimmingtuna.pathtodivinity.mixin.LOTMC.Sequence0DataAccessor;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Demotes Sequence 0 players who stop playing ([inactivity] in the server config).
+ * Demotes Sequence 2, 1 and 0 players who stop playing ([inactivity] in the server config) by one Sequence.
  *
  * <p>A player's timeout restarts once they have been online for {@code reset_hours}, added up across sessions;
- * a logout longer than {@code max_logout_minutes} throws the added-up time away. When an offline Sequence 0
- * player's timeout runs out, their LOTM Sequence 0 slot is released straight away, so someone else can take
- * it, and they drop to Sequence 1 when they next log in (an offline player's Beyonder data can't be edited).
+ * a logout longer than {@code max_logout_minutes} throws the added-up time away. When an offline limited-Sequence
+ * player's timeout runs out, their LOTM slot is released straight away, so someone else can take it, and they
+ * drop one Sequence when they next log in (an offline player's Beyonder data can't be edited). If the Sequence
+ * below is full, LOTM force-claims a slot for the demoted player, so it can briefly go over its cap.
+ *
+ * <p>Demotions cascade: each one is a strike, and the next timeout is shorter (7, then 2, then 1 day by default),
+ * until the player is out of the capped Sequences. Playing for {@code reset_hours} clears the strikes.
  *
  * <p>LOTM's own fixed login demotion is switched off while this is enabled, see {@code Sequence0DataMixin}.
  */
@@ -52,11 +59,17 @@ public final class InactivityTracker {
         return PTDServerConfig.INACTIVITY_ENABLED.get();
     }
 
-    public static long timeoutMillis() {
-        return (long) (PTDServerConfig.INACTIVITY_TIMEOUT_DAYS.get() * DAY_MILLIS);
+    /** 7 days for the first demotion, then 2, then 1 for every one after (by default). */
+    public static long timeoutMillis(int strikes) {
+        double days = switch (strikes) {
+            case 0 -> PTDServerConfig.INACTIVITY_TIMEOUT_DAYS.get();
+            case 1 -> PTDServerConfig.INACTIVITY_SECOND_TIMEOUT_DAYS.get();
+            default -> PTDServerConfig.INACTIVITY_THIRD_TIMEOUT_DAYS.get();
+        };
+        return (long) (days * DAY_MILLIS);
     }
 
-    /** HIGHEST: the demotion must land before LOTM's login handler re-claims the Sequence 0 slot it was released from. */
+    /** HIGHEST: the demotion must land before LOTM's login handler re-claims the slot it was released from. */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player) || !isEnabled()) {
@@ -65,7 +78,7 @@ public final class InactivityTracker {
         InactivityData data = InactivityData.get(player.server);
         InactivityData.Entry entry = data.entryFor(player.getUUID());
         long now = System.currentTimeMillis();
-        if (entry.pendingDemotion) {
+        if (entry.pendingSteps > 0) {
             demote(player, entry, now);
         }
         long maxLogout = PTDServerConfig.INACTIVITY_MAX_LOGOUT_MINUTES.get() * MINUTE_MILLIS;
@@ -130,69 +143,141 @@ public final class InactivityTracker {
         if (entry.onlineMillis >= (long) (PTDServerConfig.INACTIVITY_RESET_HOURS.get() * HOUR_MILLIS)) {
             entry.lastActiveMillis = now;
             entry.onlineMillis = 0;
+            entry.strikes = 0;
         }
-    }
-
-    /** Records whether the player holds Sequence 0. Reaching it counts as activity, so a stale timeout can't fire at once. */
-    private static void observe(ServerPlayer player, InactivityData.Entry entry, long now) {
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
-        BeyonderClass pathway = holder.getCurrentClass();
-        if (pathway == null || holder.getSequence() != 0) {
-            entry.sequence0Pathway = null;
-            return;
-        }
-        if (entry.sequence0Pathway == null) {
-            entry.lastActiveMillis = now;
-        }
-        entry.sequence0Pathway = BeyonderClassInit.getRegistry().getKey(pathway).toString();
     }
 
     /**
-     * Sequence 0 holders this tracker has never seen (offline since before it was installed) start their
-     * timeout now rather than never being tracked.
+     * Records which limited Sequence (2, 1 or 0) the player holds. Reaching a new one counts as activity, so a
+     * stale timeout can't fire at once.
+     */
+    private static void observe(ServerPlayer player, InactivityData.Entry entry, long now) {
+        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderClass pathway = holder.getCurrentClass();
+        int sequence = holder.getSequence();
+        if (pathway == null || !Sequence0Data.isLimitedSequence(sequence)) {
+            entry.limitedPathway = null;
+            entry.strikes = 0; // out of the capped Sequences, so the chain is over
+            return;
+        }
+        if (entry.limitedPathway != null && sequence < entry.limitedSequence) {
+            entry.strikes = 0; // advanced, so clearly playing
+        }
+        if (entry.limitedPathway == null || entry.limitedSequence != sequence) {
+            entry.lastActiveMillis = now;
+        }
+        entry.limitedPathway = BeyonderClassInit.getRegistry().getKey(pathway).toString();
+        entry.limitedSequence = sequence;
+    }
+
+    /**
+     * Slot holders this tracker has never seen (offline since before it was installed) start their timeout now
+     * rather than never being tracked.
      */
     private static void seedFromSlots(MinecraftServer server, long now) {
         InactivityData data = InactivityData.get(server);
-        Sequence0Data slots = Sequence0Data.get(server);
+        Map<Integer, Map<String, Set<UUID>>> holders =
+                ((Sequence0DataAccessor) Sequence0Data.get(server)).pathtodivinity$sequenceHolders();
         for (BeyonderClass pathway : BeyonderClassInit.getRegistry()) {
-            UUID holder = slots.getSequence0Holder(pathway);
-            if (holder == null) {
-                continue;
-            }
-            InactivityData.Entry entry = data.entryFor(holder);
-            if (entry.sequence0Pathway == null) {
-                entry.sequence0Pathway = BeyonderClassInit.getRegistry().getKey(pathway).toString();
-            }
-            if (entry.lastActiveMillis == Long.MIN_VALUE) {
-                entry.lastActiveMillis = now;
+            String name = Sequence0DataAccessor.pathtodivinity$pathwayName(pathway);
+            for (Map.Entry<Integer, Map<String, Set<UUID>>> level : holders.entrySet()) {
+                for (UUID holder : level.getValue().getOrDefault(name, Set.of())) {
+                    InactivityData.Entry entry = data.entryFor(holder);
+                    if (entry.limitedPathway == null) {
+                        entry.limitedPathway = BeyonderClassInit.getRegistry().getKey(pathway).toString();
+                        entry.limitedSequence = level.getKey();
+                    }
+                    if (entry.lastActiveMillis == Long.MIN_VALUE) {
+                        entry.lastActiveMillis = now;
+                    }
+                }
             }
         }
         data.setDirty();
     }
 
-    /** Releases the Sequence 0 slot of every offline holder whose timeout has run out. */
+    /**
+     * Demotes every offline limited-Sequence holder whose timeout has run out, one Sequence per timeout, until they
+     * leave the capped Sequences. Each step releases the slot they would hold and is applied at their next login.
+     */
     private static void sweep(MinecraftServer server, long now) {
         InactivityData data = InactivityData.get(server);
-        Sequence0Data slots = Sequence0Data.get(server);
-        long timeout = timeoutMillis();
         for (Map.Entry<UUID, InactivityData.Entry> mapEntry : data.entries().entrySet()) {
             UUID uuid = mapEntry.getKey();
             InactivityData.Entry entry = mapEntry.getValue();
-            if (entry.pendingDemotion || entry.sequence0Pathway == null
-                    || server.getPlayerList().getPlayer(uuid) != null
-                    || !isExpired(entry, now, timeout)) {
+            if (entry.limitedPathway == null || server.getPlayerList().getPlayer(uuid) != null) {
                 continue;
             }
-            ResourceLocation pathwayId = ResourceLocation.tryParse(entry.sequence0Pathway);
-            BeyonderClass pathway = pathwayId == null ? null : BeyonderClassInit.getRegistry().get(pathwayId);
-            if (pathway != null) {
-                slots.releaseSequence(uuid, pathway, 0);
-            }
-            entry.pendingDemotion = true;
+            cascade(server, uuid, entry, now);
             data.setDirty();
-            PTD.LOGGER.info("Released {}'s Sequence 0 slot ({}): inactive for {} days; demoting them to Sequence 1 at next login",
-                    uuid, entry.sequence0Pathway, PTDServerConfig.INACTIVITY_TIMEOUT_DAYS.get());
         }
+    }
+
+    /** Queues one demotion per timeout that has run out for an offline player, stopping below Sequence 2. */
+    public static void cascade(MinecraftServer server, UUID uuid, InactivityData.Entry entry, long now) {
+        while (Sequence0Data.isLimitedSequence(effectiveSequence(entry))
+                && isExpired(entry, now, timeoutMillis(entry.strikes))) {
+            // The next timeout runs from when this demotion was due, so server downtime still counts.
+            entry.lastActiveMillis += timeoutMillis(entry.strikes);
+            entry.strikes++;
+            queueDemotion(server, uuid, entry);
+            PTD.LOGGER.info("{} ({}) inactive: demoted to Sequence {} at next login (strike {})",
+                    uuid, entry.limitedPathway, effectiveSequence(entry), entry.strikes);
+        }
+    }
+
+    /** The Sequence the player will be at once their queued demotions land. */
+    public static int effectiveSequence(InactivityData.Entry entry) {
+        return entry.limitedSequence + entry.pendingSteps;
+    }
+
+    /** Frees the slot an offline player would hold and queues one more demotion for their next login. */
+    private static void queueDemotion(MinecraftServer server, UUID uuid, InactivityData.Entry entry) {
+        ResourceLocation pathwayId = ResourceLocation.tryParse(entry.limitedPathway);
+        BeyonderClass pathway = pathwayId == null ? null : BeyonderClassInit.getRegistry().get(pathwayId);
+        if (pathway != null) {
+            Sequence0Data.get(server).releaseSequence(uuid, pathway, effectiveSequence(entry));
+        }
+        entry.pendingSteps++;
+    }
+
+    /**
+     * {@code /beyonder demote}: one Sequence down through the same path as an inactivity demotion. Online players
+     * change at once; offline players need a tracked Sequence 2-0 entry, and the change lands at their next login.
+     *
+     * @return null on success, otherwise why it could not be done
+     */
+    @Nullable
+    public static String adminDemote(MinecraftServer server, UUID uuid) {
+        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+        if (player != null) {
+            BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+            int sequence = holder.getSequence();
+            if (holder.getCurrentClass() == null || sequence < 0 || sequence >= 9) {
+                return "They are not a Beyonder who can drop a Sequence.";
+            }
+            BeyonderUtil.setSequence(player, sequence + 1);
+            if (holder.getSequence() == sequence) {
+                return "LOTM refused the sequence change.";
+            }
+            if (isEnabled()) {
+                InactivityData data = InactivityData.get(server);
+                observe(player, data.entryFor(uuid), System.currentTimeMillis());
+                data.setDirty();
+            }
+            return null;
+        }
+        if (!isEnabled()) {
+            return "They are offline, and offline demotion needs [inactivity] enabled.";
+        }
+        InactivityData data = InactivityData.get(server);
+        InactivityData.Entry entry = data.entries().get(uuid);
+        if (entry == null || entry.limitedPathway == null || !Sequence0Data.isLimitedSequence(effectiveSequence(entry))) {
+            return "They are offline and not holding Sequence 2-0, so they can only be demoted while online.";
+        }
+        queueDemotion(server, uuid, entry);
+        data.setDirty();
+        return null;
     }
 
     public static boolean isExpired(InactivityData.Entry entry, long now, long timeout) {
@@ -200,23 +285,27 @@ public final class InactivityTracker {
         return entry.lastActiveMillis != Long.MIN_VALUE && now - entry.lastActiveMillis >= timeout;
     }
 
+    /** Applies every demotion queued while the player was offline. Strikes are kept, so the next timeout is short. */
     private static void demote(ServerPlayer player, InactivityData.Entry entry, long now) {
-        entry.pendingDemotion = false;
-        entry.sequence0Pathway = null;
+        int sequence = entry.limitedSequence;
+        int target = effectiveSequence(entry);
+        entry.pendingSteps = 0;
+        entry.limitedPathway = null;
         entry.lastActiveMillis = now;
         BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
-        if (holder.getCurrentClass() == null || holder.getSequence() != 0) {
+        if (holder.getCurrentClass() == null || holder.getSequence() != sequence) {
             return; // an admin already changed their sequence
         }
-        BeyonderUtil.setSequence(player, 1);
-        if (holder.getSequence() == 0) {
-            PTD.LOGGER.warn("Could not demote inactive Sequence 0 player {}; LOTM refused the sequence change",
-                    player.getGameProfile().getName());
+        BeyonderUtil.setSequence(player, target);
+        if (holder.getSequence() == sequence) {
+            PTD.LOGGER.warn("Could not demote Sequence {} player {}; LOTM refused the sequence change",
+                    sequence, player.getGameProfile().getName());
             return;
         }
-        PTD.LOGGER.info("Demoted inactive player {} from Sequence 0 to Sequence 1", player.getGameProfile().getName());
-        player.sendSystemMessage(Component.literal("You were inactive for too long and fell to Sequence 1. "
-                + "Your Sequence 0 position was given up.").withStyle(ChatFormatting.RED));
+        PTD.LOGGER.info("Demoted player {} from Sequence {} to Sequence {}",
+                player.getGameProfile().getName(), sequence, target);
+        player.sendSystemMessage(Component.literal("While you were away you fell to Sequence " + target
+                + ". Your Sequence " + sequence + " position was given up.").withStyle(ChatFormatting.RED));
     }
 
     /** Readable "2d 5h" / "3h 10m" / "4m". */

@@ -9,6 +9,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.swimmingtuna.lotm.LOTM;
 import net.swimmingtuna.lotm.commands.BeyonderClassArgument;
+import net.swimmingtuna.pathtodivinity.inactivity.DemoteCommand;
 import net.swimmingtuna.pathtodivinity.inactivity.InactivityCommand;
 
 public class PTDCommands {
@@ -28,5 +29,6 @@ public class PTDCommands {
         AbilityBanCommand.register(event.getDispatcher());
         BeyonderSummonCommand.register(event.getDispatcher(), event.getBuildContext());
         InactivityCommand.register(event.getDispatcher());
+        DemoteCommand.register(event.getDispatcher());
     }
 }

@@ -26,11 +26,15 @@ public class InactivityData extends SavedData {
         /** Online time counted towards restarting the timeout. */
         public long onlineMillis;
         public long lastLogoutMillis = Long.MIN_VALUE;
-        /** Pathway id this player was last seen holding Sequence 0 in, or null. */
+        /** Pathway id this player was last seen holding a limited Sequence (2, 1 or 0) in, or null. */
         @Nullable
-        public String sequence0Pathway;
-        /** Their Sequence 0 slot was released while offline; demote them when they next log in. */
-        public boolean pendingDemotion;
+        public String limitedPathway;
+        /** The limited Sequence they were last seen at; meaningless while {@link #limitedPathway} is null. */
+        public int limitedSequence;
+        /** Demotions decided while offline (their slot already released); applied together at next login. */
+        public int pendingSteps;
+        /** Inactivity demotions in a row; picks the next, shorter timeout. Cleared once they are active again. */
+        public int strikes;
     }
 
     private final Map<UUID, Entry> entries = new HashMap<>();
@@ -52,8 +56,18 @@ public class InactivityData extends SavedData {
             entry.lastActiveMillis = playerTag.contains("lastActive") ? playerTag.getLong("lastActive") : Long.MIN_VALUE;
             entry.onlineMillis = playerTag.getLong("online");
             entry.lastLogoutMillis = playerTag.contains("lastLogout") ? playerTag.getLong("lastLogout") : Long.MIN_VALUE;
-            entry.sequence0Pathway = playerTag.contains("sequence0Pathway") ? playerTag.getString("sequence0Pathway") : null;
-            entry.pendingDemotion = playerTag.getBoolean("pendingDemotion");
+            if (playerTag.contains("limitedPathway")) {
+                entry.limitedPathway = playerTag.getString("limitedPathway");
+                entry.limitedSequence = playerTag.getInt("limitedSequence");
+            } else if (playerTag.contains("sequence0Pathway")) {
+                entry.limitedPathway = playerTag.getString("sequence0Pathway"); // saved before Sequences 1 and 2 were tracked
+            }
+            entry.pendingSteps = playerTag.getInt("pendingSteps");
+            entry.strikes = playerTag.getInt("strikes");
+            if (playerTag.getBoolean("pendingDemotion")) { // saved before demotions could cascade
+                entry.pendingSteps = 1;
+                entry.strikes = 1;
+            }
             data.entries.put(playerTag.getUUID("uuid"), entry);
         }
         return data;
@@ -73,10 +87,12 @@ public class InactivityData extends SavedData {
             if (entry.lastLogoutMillis != Long.MIN_VALUE) {
                 playerTag.putLong("lastLogout", entry.lastLogoutMillis);
             }
-            if (entry.sequence0Pathway != null) {
-                playerTag.putString("sequence0Pathway", entry.sequence0Pathway);
+            if (entry.limitedPathway != null) {
+                playerTag.putString("limitedPathway", entry.limitedPathway);
+                playerTag.putInt("limitedSequence", entry.limitedSequence);
             }
-            playerTag.putBoolean("pendingDemotion", entry.pendingDemotion);
+            playerTag.putInt("pendingSteps", entry.pendingSteps);
+            playerTag.putInt("strikes", entry.strikes);
             players.add(playerTag);
         }
         tag.put("players", players);

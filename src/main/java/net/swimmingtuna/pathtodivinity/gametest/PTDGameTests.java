@@ -204,4 +204,33 @@ public class PTDGameTests {
         helper.assertFalse(InactivityTracker.isExpired(entry, 2 * day, 7 * day), "a stamp in the future never expires");
         helper.succeed();
     }
+
+    @GameTest(template = EMPTY)
+    public static void inactivityDemotionsCascade(GameTestHelper helper) {
+        long now = 1_000_000_000_000L;
+        long first = InactivityTracker.timeoutMillis(0);
+        long second = InactivityTracker.timeoutMillis(1);
+        long third = InactivityTracker.timeoutMillis(2);
+        // A random offline player: releasing slots they never held is a no-op.
+        java.util.UUID uuid = java.util.UUID.randomUUID();
+
+        InactivityData.Entry partway = cascadeEntry(now - first - second / 2);
+        InactivityTracker.cascade(helper.getLevel().getServer(), uuid, partway, now);
+        helper.assertTrue(partway.pendingSteps == 1 && partway.strikes == 1,
+                "past the first timeout but not the second: one demotion queued");
+
+        InactivityData.Entry gone = cascadeEntry(now - first - second - third - 1);
+        InactivityTracker.cascade(helper.getLevel().getServer(), uuid, gone, now);
+        helper.assertTrue(gone.pendingSteps == 3 && InactivityTracker.effectiveSequence(gone) == 3,
+                "a Sequence 0 gone long enough cascades to Sequence 3 and stops");
+        helper.succeed();
+    }
+
+    private static InactivityData.Entry cascadeEntry(long lastActive) {
+        InactivityData.Entry entry = new InactivityData.Entry();
+        entry.limitedPathway = BeyonderClassInit.getRegistry().keySet().iterator().next().toString();
+        entry.limitedSequence = 0;
+        entry.lastActiveMillis = lastActive;
+        return entry;
+    }
 }
