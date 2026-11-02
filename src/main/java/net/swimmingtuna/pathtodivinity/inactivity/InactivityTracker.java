@@ -12,10 +12,8 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.lotm.world.worlddata.Sequence0Data;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
@@ -26,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.swimmingtuna.lotm.beyonder.Pathways;
 
 /**
  * Demotes Sequence 2, 1 and 0 players who stop playing ([inactivity] in the server config) by one Sequence.
@@ -152,7 +151,7 @@ public final class InactivityTracker {
      * stale timeout can't fire at once.
      */
     private static void observe(ServerPlayer player, InactivityData.Entry entry, long now) {
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         BeyonderClass pathway = holder.getCurrentClass();
         int sequence = holder.getSequence();
         if (pathway == null || !Sequence0Data.isLimitedSequence(sequence)) {
@@ -251,12 +250,12 @@ public final class InactivityTracker {
     public static String adminDemote(MinecraftServer server, UUID uuid) {
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player != null) {
-            BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+            BeyonderHolder holder = BeyonderHolder.get(player);
             int sequence = holder.getSequence();
             if (holder.getCurrentClass() == null || sequence < 0 || sequence >= 9) {
                 return "They are not a Beyonder who can drop a Sequence.";
             }
-            BeyonderUtil.setSequence(player, sequence + 1);
+            Pathways.setSequence(player, sequence + 1);
             if (holder.getSequence() == sequence) {
                 return "LOTM refused the sequence change.";
             }
@@ -292,11 +291,11 @@ public final class InactivityTracker {
         entry.pendingSteps = 0;
         entry.limitedPathway = null;
         entry.lastActiveMillis = now;
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         if (holder.getCurrentClass() == null || holder.getSequence() != sequence) {
             return; // an admin already changed their sequence
         }
-        BeyonderUtil.setSequence(player, target);
+        Pathways.setSequence(player, target);
         if (holder.getSequence() == sequence) {
             PTD.LOGGER.warn("Could not demote Sequence {} player {}; LOTM refused the sequence change",
                     sequence, player.getGameProfile().getName());

@@ -16,10 +16,8 @@ import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.item.BeyonderAbilities.SimpleAbilityItem;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
@@ -37,6 +35,10 @@ import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import net.swimmingtuna.lotm.beyonder.Pathways;
+import net.swimmingtuna.lotm.ability.AbilityUse;
+import net.swimmingtuna.lotm.beyonder.Spirituality;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 
 /**
  * Behaviour that must hold however the internals change. Run with
@@ -66,7 +68,7 @@ public class PTDGameTests {
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, MIDDLE);
         zombie.setCustomName(Component.literal("vessel of calamity"));
         helper.assertFalse(PTDUtil.isBeyonderEntity(zombie), "a name-tagged zombie must not count as a boss");
-        helper.assertFalse(BeyonderUtil.getSequence(zombie) == 3, "a name-tagged zombie must not get the Vessel's sequence");
+        helper.assertFalse(Pathways.getSequence(zombie) == 3, "a name-tagged zombie must not get the Vessel's sequence");
         helper.succeed();
     }
 
@@ -75,7 +77,7 @@ public class PTDGameTests {
     public static void elderGuardianIsSequence8Boss(GameTestHelper helper) {
         ElderGuardian guardian = helper.spawn(EntityType.ELDER_GUARDIAN, MIDDLE);
         helper.assertTrue(PTDUtil.isBeyonderEntity(guardian), "Elder Guardian should be a boss");
-        helper.assertTrue(BeyonderUtil.getSequence(guardian) == 8, "Elder Guardian should be Sequence 8");
+        helper.assertTrue(Pathways.getSequence(guardian) == 8, "Elder Guardian should be Sequence 8");
         double expectedDamage = 1.3 * PTDServerConfig.DAMAGE_MULTIPLIER.get();
         double actualDamage = guardian.getPersistentData().getDouble("PTDDamageMultiplier");
         helper.assertTrue(Math.abs(actualDamage - expectedDamage) < 1e-6,
@@ -111,7 +113,7 @@ public class PTDGameTests {
         FakePlayer player = FakePlayerFactory.getMinecraft(helper.getLevel());
         player.setGameMode(GameType.SURVIVAL);
         helper.assertFalse(SequenceGates.canUse(player, stack), "a player without a pathway must be blocked");
-        var holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        var holder = BeyonderHolder.get(player);
         holder.setPathwayAndSequenceNoSpirituality(BeyonderClassInit.SAILOR.get(), 5);
         helper.assertFalse(SequenceGates.canUse(player, stack), "Sequence 5 must be blocked");
         holder.setPathwayAndSequenceNoSpirituality(BeyonderClassInit.SAILOR.get(), 4);
@@ -128,7 +130,7 @@ public class PTDGameTests {
     /** [items] banned_abilities blocks casting and passives, but never deletes the item. */
     @GameTest(template = EMPTY)
     public static void bannedAbilityIsBlockedButKept(GameTestHelper helper) {
-        SimpleAbilityItem ability = (SimpleAbilityItem) BeyonderUtil.getAbilities().getFirst();
+        SimpleAbilityItem ability = (SimpleAbilityItem) AbilityUse.getAbilities().getFirst();
         List<? extends String> before = PTDServerConfig.BANNED_ABILITIES.get();
         FakePlayer player = FakePlayerFactory.getMinecraft(helper.getLevel());
         Zombie zombie = helper.spawn(EntityType.ZOMBIE, MIDDLE);
@@ -137,7 +139,7 @@ public class PTDGameTests {
             PTDServerConfig.rebuildBannedAbilities();
             helper.assertTrue(PTDUtil.isAbilityBanned(ability), "the ability should be banned");
             for (LivingEntity living : List.of(player, zombie)) {
-                helper.assertFalse(BeyonderUtil.canUseAbility(living, ability), "canUseAbility must be false while banned");
+                helper.assertFalse(AbilityUse.canUseAbility(living, ability), "canUseAbility must be false while banned");
                 helper.assertFalse(ability.checkIfCanUseAbility(living), "checkIfCanUseAbility must be false while banned");
             }
             // The FakePlayer has no pathway, so without the ban inventoryTick would take the item away.
@@ -182,14 +184,14 @@ public class PTDGameTests {
         summoned.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         helper.getLevel().addFreshEntity(summoned);
         Zombie plain = helper.spawn(EntityType.ZOMBIE, MIDDLE.east());
-        helper.assertTrue(BeyonderUtil.getPathway(summoned) == pathway, "summoned mob should have the given pathway");
-        helper.assertTrue(BeyonderUtil.getSequence(summoned) == 2, "summoned mob should have the given sequence");
-        int max = BeyonderUtil.getMaxSpirituality(summoned);
-        helper.assertTrue(max > 0 && BeyonderUtil.getSpirituality(summoned) == max,
-                "summoned mob should join with full spirituality (" + max + ") but has " + BeyonderUtil.getSpirituality(summoned));
-        BeyonderUtil.setSpirituality(summoned, max / 2);
-        helper.assertTrue(BeyonderUtil.getSpirituality(summoned) == max / 2, "summoned mob's spirituality should be settable");
-        helper.assertTrue(BeyonderUtil.getPathway(plain) == null, "an untagged zombie must not become a Beyonder");
+        helper.assertTrue(Pathways.getPathway(summoned) == pathway, "summoned mob should have the given pathway");
+        helper.assertTrue(Pathways.getSequence(summoned) == 2, "summoned mob should have the given sequence");
+        int max = Spirituality.getMaxSpirituality(summoned);
+        helper.assertTrue(max > 0 && Spirituality.getSpirituality(summoned) == max,
+                "summoned mob should join with full spirituality (" + max + ") but has " + Spirituality.getSpirituality(summoned));
+        Spirituality.setSpirituality(summoned, max / 2);
+        helper.assertTrue(Spirituality.getSpirituality(summoned) == max / 2, "summoned mob's spirituality should be settable");
+        helper.assertTrue(Pathways.getPathway(plain) == null, "an untagged zombie must not become a Beyonder");
         helper.succeed();
     }
 

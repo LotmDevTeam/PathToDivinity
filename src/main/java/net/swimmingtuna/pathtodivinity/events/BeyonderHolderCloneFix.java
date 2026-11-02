@@ -6,8 +6,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 import net.swimmingtuna.pathtodivinity.PTD;
 
 import java.util.HashMap;
@@ -50,7 +49,7 @@ public class BeyonderHolderCloneFix {
         Player original = event.getOriginal();
         // LOTM's holder is a data attachment, which stays readable on the dead player (Forge capabilities
         // had to be revived first).
-        BeyonderHolder oldHolder = BeyonderHolderAttacher.getHolderUnwrap(original);
+        BeyonderHolder oldHolder = BeyonderHolder.get(original);
         // Only snapshot a genuinely valid holder, so we never persist the corrupted state.
         if (oldHolder.getCurrentClass() != null && oldHolder.getSequence() >= 0) {
             SNAPSHOTS.put(original.getUUID(), oldHolder.serializeNBT(false));
@@ -66,7 +65,7 @@ public class BeyonderHolderCloneFix {
         if (snapshot == null) {
             return;
         }
-        BeyonderHolder newHolder = BeyonderHolderAttacher.getHolderUnwrap(event.getEntity());
+        BeyonderHolder newHolder = BeyonderHolder.get(event.getEntity());
         newHolder.deserializeNBT(snapshot, false);
     }
 }

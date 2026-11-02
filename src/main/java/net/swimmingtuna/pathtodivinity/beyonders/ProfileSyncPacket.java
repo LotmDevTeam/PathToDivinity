@@ -15,10 +15,11 @@ import net.swimmingtuna.pathtodivinity.network.PTDNetwork;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.swimmingtuna.lotm.beyonder.Pathways;
 
 /**
  * Sends clients the part of the boss profiles that client-side code reads: which entities each
- * profile matches, in what precedence, and the sequence it gives them. {@code BeyonderUtil.getSequence}
+ * profile matches, in what precedence, and the sequence it gives them. {@code Pathways.getSequence}
  * also runs on the client, and without this it would disagree with the server.
  */
 @EventBusSubscriber(modid = PTD.MOD_ID)

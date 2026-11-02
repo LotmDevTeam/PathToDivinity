@@ -3,14 +3,13 @@ package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
-import net.swimmingtuna.lotm.events.LivingTickEvent;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
+import net.swimmingtuna.lotm.data.AbilitySettings;
+import net.swimmingtuna.lotm.data.CoreSettings;
 import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
 import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
@@ -24,16 +23,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import net.swimmingtuna.lotm.beyonder.Pathways;
+import net.swimmingtuna.lotm.ability.AbilityUse;
 
 /**
  * Makes mobs pick their abilities at the sequence they are registered with in
  * {@link BeyonderEntityData}, i.e. the one given to
  * {@code /beyonderentity add <entity> <pathway> <sequence>}, instead of the sequence from
- * {@code BeyonderUtilMixin}'s entity map.
+ * {@code SeqMixin}'s profile sequence.
  *
  * <p>{@code selectAndUseAbility} builds its candidate list from
- * {@code BeyonderUtil.getAbilities(mob)}, which gates every ability on
- * {@code BeyonderUtil.getSequence(mob)}. Because {@code BeyonderUtilMixin} overrides that method
+ * {@code AbilityUse.getAbilities(mob)}, which gates every ability on
+ * {@code Pathways.getSequence(mob)}. Because {@code SeqMixin} overrides the sequence
  * for all callers, a mob registered as e.g. {@code lotm:spectator 3} was still handed the
  * sequence 1 ability set (the ultra sniffer being the obvious case). The pathway half of the
  * decision already came from {@link BeyonderEntityData}, so the two halves disagreed.
@@ -56,39 +57,38 @@ public class BeyonderEntityDataMixin {
     /** A {@code /beyonder summon} mob is a Beyonder by itself, whatever its type is registered as. */
     @Inject(method = "resolveGenericEntityPathway", at = @At("HEAD"), cancellable = true, remap = false)
     private static void pathtodivinity$summonedPathway(LivingEntity entity, ServerLevel level,
-                                                      CallbackInfoReturnable<BeyonderUtil.PathwayAndSequence> cir) {
-        BeyonderUtil.PathwayAndSequence summoned = BeyonderSummonCommand.summonedAs(entity);
-        CompoundTag data = entity.getPersistentData();
+                                                      CallbackInfoReturnable<Pathways.PathwayAndSequence> cir) {
+        Pathways.PathwayAndSequence summoned = BeyonderSummonCommand.summonedAs(entity);
         // Purification still applies, the same way LOTM applies it to registered types.
-        if (summoned == null || data.getBoolean("purificationPathwayRemoved")) {
+        if (summoned == null || AbilitySettings.get(entity, CoreSettings.PURIFIED_OUT)) {
             return;
         }
-        cir.setReturnValue(data.contains("purificationSequenceOverride")
-                ? new BeyonderUtil.PathwayAndSequence(summoned.pathway(), data.getInt("purificationSequenceOverride"))
+        cir.setReturnValue(AbilitySettings.has(entity, CoreSettings.PURIFICATION_OVERRIDE)
+                ? new Pathways.PathwayAndSequence(summoned.pathway(), AbilitySettings.get(entity, CoreSettings.PURIFICATION_OVERRIDE))
                 : summoned);
     }
 
     /** LOTM only ticks spirituality and abilities for registered types; let summoned mobs through too. */
-    @WrapOperation(method = "regenerateSpirituality", at = @At(value = "INVOKE",
+    @WrapOperation(method = "isMapped", at = @At(value = "INVOKE",
             target = "Lnet/swimmingtuna/lotm/world/worlddata/BeyonderEntityData;getStringForEntity(Lnet/minecraft/world/entity/EntityType;)Ljava/lang/String;"),
             remap = false)
     private static String pathtodivinity$tickSummoned(BeyonderEntityData data, EntityType<?> type, Operation<String> original,
-                                                     @Local(argsOnly = true) LivingTickEvent event) {
-        return BeyonderSummonCommand.registrationFor(original.call(data, type), event.getEntity());
+                                                     @Local(argsOnly = true) LivingEntity living) {
+        return BeyonderSummonCommand.registrationFor(original.call(data, type), living);
     }
 
     @Redirect(
             method = "selectAndUseAbility(Lnet/minecraft/world/entity/Mob;)V",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/swimmingtuna/lotm/util/BeyonderUtil;getAbilities(Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/List;"
+                    target = "Lnet/swimmingtuna/lotm/ability/AbilityUse;getAbilities(Lnet/minecraft/world/entity/LivingEntity;)Ljava/util/List;"
             ),
             remap = false
     )
     private static List<Item> pathtodivinity$abilitiesAtRegisteredSequence(LivingEntity entity) {
         MobAbilitySequenceContext.begin(entity);
         try {
-            return BeyonderUtil.getAbilities(entity);
+            return AbilityUse.getAbilities(entity);
         } finally {
             MobAbilitySequenceContext.end();
         }

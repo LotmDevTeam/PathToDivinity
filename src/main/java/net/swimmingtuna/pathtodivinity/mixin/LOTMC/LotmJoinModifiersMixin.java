@@ -7,8 +7,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.lotm.events.ModEvents;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
+import net.swimmingtuna.lotm.event.mob.MobEvents;
 import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
 import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
@@ -16,6 +15,7 @@ import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import net.swimmingtuna.lotm.beyonder.Pathways;
 
 /**
  * When a mob registered with LOTM joins the world, LOTM applies its pathway's stat modifiers and
@@ -23,37 +23,27 @@ import org.spongepowered.asm.mixin.injection.Redirect;
  * {@code "ability_sequence": -1} ("a Beyonder of this pathway, but inert") both are skipped, so
  * giving such a boss a pathway changes nothing about how it fights.
  *
- * <p>LOTM 2.5.2 and older call {@code pathway.applyAllModifiers}; 2.5.3 calls
- * {@code BeyonderUtil.applyPathwayAttributes} instead. Every redirect here is {@code require = 0} so
- * whichever call is missing is skipped rather than stopping the game from loading.
+ * <p>{@code Pathways.applyPathwayAttributes} also applies the pathway's modifiers, and
+ * {@code startPassives} replaced the old pathway events.
  */
-@Mixin(value = ModEvents.class, remap = false)
+@Mixin(value = MobEvents.class, remap = false)
 public class LotmJoinModifiersMixin {
 
     @Redirect(method = "onLivingJoinWorld",
-            at = @At(value = "INVOKE", target = "Lnet/swimmingtuna/lotm/beyonder/api/BeyonderClass;applyAllModifiers(Lnet/minecraft/world/entity/LivingEntity;I)V"),
-            remap = false, require = 0)
-    private static void pathtodivinity$applyModifiers(BeyonderClass pathway, LivingEntity entity, int sequence) {
-        if (usesPathwayEffects(entity)) {
-            pathway.applyAllModifiers(entity, sequence);
-        }
-    }
-
-    @Redirect(method = "onLivingJoinWorld",
-            at = @At(value = "INVOKE", target = "Lnet/swimmingtuna/lotm/util/BeyonderUtil;applyPathwayAttributes(Lnet/minecraft/world/entity/LivingEntity;Lnet/swimmingtuna/lotm/beyonder/api/BeyonderClass;I)V"),
-            remap = false, require = 0)
+            at = @At(value = "INVOKE", target = "Lnet/swimmingtuna/lotm/beyonder/Pathways;applyPathwayAttributes(Lnet/minecraft/world/entity/LivingEntity;Lnet/swimmingtuna/lotm/beyonder/api/BeyonderClass;I)V"),
+            remap = false)
     private static void pathtodivinity$applyPathwayAttributes(LivingEntity entity, BeyonderClass pathway, int sequence) {
         if (usesPathwayEffects(entity)) {
-            BeyonderUtil.applyPathwayAttributes(entity, pathway, sequence);
+            Pathways.applyPathwayAttributes(entity, pathway, sequence);
         }
     }
 
     @Redirect(method = "onLivingJoinWorld",
-            at = @At(value = "INVOKE", target = "Lnet/swimmingtuna/lotm/beyonder/api/BeyonderClass;addAllEvents(Lnet/minecraft/world/entity/LivingEntity;I)V"),
-            remap = false, require = 0)
-    private static void pathtodivinity$addEvents(BeyonderClass pathway, LivingEntity entity, int sequence) {
+            at = @At(value = "INVOKE", target = "Lnet/swimmingtuna/lotm/beyonder/api/BeyonderClass;startPassives(Lnet/minecraft/world/entity/LivingEntity;I)V"),
+            remap = false)
+    private static void pathtodivinity$startPassives(BeyonderClass pathway, LivingEntity entity, int sequence) {
         if (usesPathwayEffects(entity)) {
-            pathway.addAllEvents(entity, sequence);
+            pathway.startPassives(entity, sequence);
         }
     }
 

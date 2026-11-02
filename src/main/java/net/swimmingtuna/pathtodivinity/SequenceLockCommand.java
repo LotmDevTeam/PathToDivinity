@@ -10,8 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -90,14 +89,14 @@ public class SequenceLockCommand {
         MinecraftServer server = source.getServer();
         List<ServerPlayer> pastLock = new ArrayList<>();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+            BeyonderHolder holder = BeyonderHolder.get(player);
             // getSequence() >= 0 skips half-initialised holders, same guard as BeyonderHolderCloneFix.
             if (holder.getCurrentClass() != null && holder.getSequence() >= 0
                     && holder.getSequence() < lockedSequence) {
                 pastLock.add(player);
             }
         }
-        pastLock.sort(Comparator.comparingInt(player -> BeyonderHolderAttacher.getHolderUnwrap(player).getSequence()));
+        pastLock.sort(Comparator.comparingInt(player -> BeyonderHolder.get(player).getSequence()));
 
         MutableComponent report;
         if (pastLock.isEmpty()) {
@@ -108,7 +107,7 @@ public class SequenceLockCommand {
                     + lockedSequence + ":").withStyle(ChatFormatting.YELLOW);
             for (ServerPlayer player : pastLock) {
                 report.append(Component.literal("\n  " + player.getName().getString() + " - Sequence "
-                                + BeyonderHolderAttacher.getHolderUnwrap(player).getSequence())
+                                + BeyonderHolder.get(player).getSequence())
                         .withStyle(ChatFormatting.YELLOW));
             }
         }

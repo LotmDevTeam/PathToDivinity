@@ -57,7 +57,6 @@ import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
@@ -71,7 +70,6 @@ import net.swimmingtuna.pathtodivinity.compat.BornInChaosCompat;
 import net.swimmingtuna.pathtodivinity.compat.CataclysmCompat;
 import net.swimmingtuna.pathtodivinity.compat.ModCompat;
 import net.swimmingtuna.pathtodivinity.compat.PTDEntities;
-import net.swimmingtuna.pathtodivinity.profile.AbilityDamageTracker;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -80,6 +78,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import net.swimmingtuna.pathtodivinity.config.PTDBalance;
+import net.swimmingtuna.lotm.beyonder.Pathways;
+import net.swimmingtuna.lotm.world.BlockOps;
+import net.swimmingtuna.lotm.ability.damage.LOTMDamageSource;
+import net.swimmingtuna.pathtodivinity.profile.ProfileManager;
 
 
 @EventBusSubscriber(modid = PTD.MOD_ID)
@@ -153,7 +155,7 @@ public class ModEvents {
                     mob.heal((float) (mob.getMaxHealth() * PTDServerConfig.BOSS_REGEN_PERCENT.get() / 100.0));
                 }
                 // Follows LOTM's own "Mobs Destroy Blocks" option, and LOTM's per-block rules
-                // (hardness limit, faction claims) via BeyonderUtil.canDestroyBlock.
+                // (hardness limit, faction claims) via BlockOps.canDestroyBlock.
                 if (blockBreakTick && Configs.COMMON.shouldMobsDestroyBlocks.get()
                         && mob.getTarget() instanceof Player target && target.getY() > mob.getEyeY()) {
                     Level level = mob.level();
@@ -162,7 +164,7 @@ public class ModEvents {
                     BlockPos.betweenClosedStream(box).forEach(pos -> {
                         BlockState state = level.getBlockState(pos);
                         if (!state.isAir() && pos.getY() >= mob.getY() + 1 && state.getFluidState().isEmpty()
-                                && !state.is(PTDTags.BOSS_UNBREAKABLE) && BeyonderUtil.canDestroyBlock(mob, pos)) {
+                                && !state.is(PTDTags.BOSS_UNBREAKABLE) && BlockOps.canDestroyBlock(mob, pos)) {
                             level.destroyBlock(pos, drops, mob);
                         }
                     });
@@ -210,7 +212,7 @@ public class ModEvents {
     public static void onEntityChangeTarget(LivingChangeTargetEvent event) {
         LivingEntity living = event.getEntity();
         CompoundTag tag = living.getPersistentData();
-        BeyonderClass pathway = BeyonderUtil.getPathway(living);
+        BeyonderClass pathway = Pathways.getPathway(living);
         LivingEntity originalTarget = event.getOriginalAboutToBeSetTarget();
         LivingEntity newTarget = event.getNewAboutToBeSetTarget();
         if (!living.level().isClientSide() && (originalTarget instanceof Player || newTarget instanceof Player) && originalTarget != null && newTarget != null) {
@@ -277,9 +279,10 @@ public class ModEvents {
             }
 
             // Safemode profiles trade offensive power against other players for immunity to death regression.
-            // SafemodeDamageSourceMixin tags the damage source as it is built, so this only fires for genuine
-            // Beyonder ability damage - melee, arrows and damage dealt to mobs are all untouched.
-            if (entity instanceof Player && AbilityDamageTracker.isSafemodeAbilityDamage(source)) {
+            // LOTM delivers every ability hit as an LOTMDamageSource caused by the caster, so this only fires for
+            // genuine Beyonder ability damage - melee, arrows and damage dealt to mobs are all untouched.
+            if (entity instanceof Player && source instanceof LOTMDamageSource
+                    && source.getEntity() instanceof Player caster && ProfileManager.isSafemode(caster)) {
                 event.setAmount((float) (event.getAmount() * PTDServerConfig.SAFEMODE_ABILITY_DAMAGE.get()));
             }
         }

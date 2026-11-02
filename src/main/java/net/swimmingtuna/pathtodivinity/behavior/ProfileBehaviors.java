@@ -12,10 +12,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderRegistrations;
 import net.swimmingtuna.pathtodivinity.beyonders.EntityMatcher;
+import net.swimmingtuna.lotm.entity.Allies;
 
 /**
  * What a boss profile does to its mob, apart from the lookups other code makes directly
@@ -68,7 +68,7 @@ public final class ProfileBehaviors {
                         ? !(mob instanceof PlayerMobEntity)
                         : allies.entities().contains(EntityType.getKey(mob.getType()));
                 if (ally) {
-                    BeyonderUtil.forceAlly(mob, living);
+                    Allies.forceAlly(mob, living);
                 }
             }
         }

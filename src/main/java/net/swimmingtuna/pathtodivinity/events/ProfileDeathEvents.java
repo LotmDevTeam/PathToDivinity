@@ -14,14 +14,13 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
-import net.swimmingtuna.lotm.events.NewEventLoop.LayerClasses.SequenceRegressionProtectionLayer;
+import net.swimmingtuna.lotm.ability.trait.CoreTraits;
+import net.swimmingtuna.lotm.ability.trait.Traits;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.init.ItemInit;
 import net.swimmingtuna.lotm.item.BeyonderPotions.BeyonderCharacteristic;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.profile.PlayerProfileData;
@@ -29,6 +28,9 @@ import net.swimmingtuna.pathtodivinity.profile.ProfileManager;
 import net.swimmingtuna.pathtodivinity.profile.ProfileType;
 
 import javax.annotation.Nullable;
+import net.swimmingtuna.lotm.beyonder.Pathways;
+import net.swimmingtuna.lotm.ability.damage.Sources;
+import net.swimmingtuna.lotm.entity.Allies;
 
 /**
  * Owns sequence regression and the Beyonder Characteristic drop on death while the profile system is enabled.
@@ -55,15 +57,11 @@ import javax.annotation.Nullable;
  * {@code deathEvent}, which runs at {@code NORMAL}. Because {@code LivingDeathEvent} is cancellable and this
  * listener does not opt into receiving cancelled events, Forge skips it entirely when the death was prevented.
  *
- * <p>The Safemode-victim and Normal-regression branches finish by calling
- * {@link SequenceRegressionProtectionLayer#putRegressionTimer}, which does double duty: LOTM's handler skips its
- * regression block whenever that timer is non-zero, so this suppresses LOTM's path — preventing a double
+ * <p>The Safemode-victim and Normal-regression branches finish by imposing
+ * LOTM's {@code SEQUENCE_REGRESSION_PROTECTION} trait, which does double duty: LOTM's handler skips its
+ * regression block while that trait is active, so this suppresses LOTM's path — preventing a double
  * regression if an operator ever turns on {@code Should Drop Characteristic} — while also granting the usual
  * grace window. The Safemode-killer branch deliberately does not, for the reason spelled out at its call site.
- *
- * <p>Always use LOTM's helper rather than writing the {@code sequenceRegressionProtectionTimer} NBT key by hand:
- * the helper also registers the tick layer that counts the timer back down. Setting the raw tag alone would
- * grant permanent immunity.
  *
  * <p>That LOTM timer cannot carry the grace window on its own, which is why the Normal-regression branch also
  * stamps one of its own through {@link ProfileManager#startRegressionGrace}. The timer lives in the player's
@@ -91,9 +89,12 @@ public class ProfileDeathEvents {
      */
     private static final int SAFEMODE_SUPPRESSION_MINUTES = 10;
 
-    private static final String PROTECTION_TIMER_KEY = "sequenceRegressionProtectionTimer";
 
     private static final String MONSTER_REINCARNATION_KEY = "monsterReincarnationCounter";
+
+    private static void protectFromRegression(Player victim, int minutes) {
+        Traits.impose(victim, CoreTraits.SEQUENCE_REGRESSION_PROTECTION.get(), minutes * 1200, 1, null);
+    }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void applyProfileRegression(LivingDeathEvent event) {
@@ -106,19 +107,19 @@ public class ProfileDeathEvents {
             return;
         }
 
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(victim);
+        BeyonderHolder holder = BeyonderHolder.get(victim);
         if (holder.getCurrentClass() == null || holder.getSequence() < 0) {
             return;
         }
 
         LivingEntity killer = resolvePlayerKiller(event.getSource());
-        if (killer == null || killer == victim || BeyonderUtil.areAllies(killer, victim)) {
+        if (killer == null || killer == victim || Allies.areAllies(killer, victim)) {
             return;
         }
 
         if (ProfileManager.getActiveProfile(victim) == ProfileType.SAFEMODE) {
             // Suppress LOTM's regression too, so the exemption holds no matter how lotm-common.toml is set.
-            SequenceRegressionProtectionLayer.putRegressionTimer(victim, SAFEMODE_SUPPRESSION_MINUTES);
+            protectFromRegression(victim, SAFEMODE_SUPPRESSION_MINUTES);
             victim.sendSystemMessage(Component.literal(
                             "Your Safemode profile protected your sequence from this death.")
                     .withStyle(ChatFormatting.AQUA));
@@ -156,7 +157,7 @@ public class ProfileDeathEvents {
         if (graceMinutes > 0
                 && (ProfileManager.getRemainingRegressionGraceTicks(
                         victim.getServer(), victim.getUUID(), graceMinutes) > 0
-                || victim.getPersistentData().getInt(PROTECTION_TIMER_KEY) > 0)) {
+                || Traits.has(victim, CoreTraits.SEQUENCE_REGRESSION_PROTECTION.get()))) {
             return;
         }
 
@@ -171,21 +172,21 @@ public class ProfileDeathEvents {
             // PERFORM_RESPAWN handler ignores the request while getHealth() > 0, so Respawn does nothing and
             // they carry on playing having already dropped their loot. Putting the health back is enough to
             // let the death finish, because ServerPlayer.die never sets a flag of its own - it goes by health
-            // alone. Not needed on the branch below; BeyonderUtil.setSequence never touches health.
+            // alone. Not needed on the branch below; Pathways.setSequence never touches health.
             float healthAtDeath = victim.getHealth();
-            BeyonderUtil.resetPathway(victim);
+            Pathways.resetPathway(victim);
             victim.setHealth(healthAtDeath);
             victim.sendSystemMessage(Component.literal(
                             "You were killed at Sequence 9 and have lost your pathway.")
                     .withStyle(ChatFormatting.RED));
         } else {
-            BeyonderUtil.setSequence(victim, sequence + 1);
+            Pathways.setSequence(victim, sequence + 1);
             victim.sendSystemMessage(Component.literal(
                             "You were killed and have regressed to Sequence " + (sequence + 1) + ".")
                     .withStyle(ChatFormatting.RED));
         }
         if (graceMinutes > 0) {
-            SequenceRegressionProtectionLayer.putRegressionTimer(victim, graceMinutes);
+            protectFromRegression(victim, graceMinutes);
             // The LOTM timer above is what suppresses LOTM's own regression block, but it dies with the body it
             // is written on. This is the stamp that actually holds the window open across the respawn.
             ProfileManager.startRegressionGrace(victim.getServer(), victim.getUUID());
@@ -218,7 +219,7 @@ public class ProfileDeathEvents {
      * The player-side attacker behind a death, or {@code null} when the kill was not a player's doing.
      *
      * <p>Mirrors LOTM 2.4.4's inline check: a {@link Player}, a {@link PlayerMobEntity} that has a creator, or a
-     * projectile owned by either. LOTM 2.4.9 factors this out into {@code BeyonderUtil.isPlayerAttack}, which
+     * projectile owned by either. LOTM 2.4.9 factors this out into {@code Sources.isPlayerAttack}, which
      * does not exist in the version this mod compiles against.
      */
     @Nullable

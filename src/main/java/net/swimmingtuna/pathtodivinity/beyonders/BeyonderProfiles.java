@@ -1,6 +1,7 @@
 package net.swimmingtuna.pathtodivinity.beyonders;
 
 import net.minecraft.world.entity.Entity;
+import net.swimmingtuna.lotm.beyonder.Pathways;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -33,6 +34,8 @@ public final class BeyonderProfiles {
 
     static void setServer(ProfileSnapshot snapshot) {
         server = snapshot;
+        // SeqMixin applies profile sequences inside LOTM's cached Seq; drop every cached one.
+        Pathways.changedAll();
     }
 
     static void setClient(ProfileSnapshot snapshot) {

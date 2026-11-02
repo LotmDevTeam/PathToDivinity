@@ -9,12 +9,12 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.swimmingtuna.lotm.LOTM;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import net.swimmingtuna.lotm.beyonder.Pathways;
 
 /**
  * Behaviour too specific for profile JSON, referenced by a profile's {@code "special"} field.
@@ -113,11 +113,11 @@ public final class SpecialHandlers {
                 ultraSniffer.setHealth(ultraSniffer.getMaxHealth());
                 ultraSniffer.getPersistentData().putInt("age", 0);
             }
-            if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.SPECTATOR.get())) {
+            if (Pathways.currentPathwayMatchesNoException(living, BeyonderClassInit.SPECTATOR.get())) {
                 Scaling.multiplyDamage(living, 0.8);
-            } else if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.SAILOR.get())) {
+            } else if (Pathways.currentPathwayMatchesNoException(living, BeyonderClassInit.SAILOR.get())) {
                 Scaling.multiplyDamage(living, 0.9);
-            } else if (BeyonderUtil.currentPathwayMatchesNoException(living, BeyonderClassInit.MONSTER.get())) {
+            } else if (Pathways.currentPathwayMatchesNoException(living, BeyonderClassInit.MONSTER.get())) {
                 if (!ultraSniffer.getPersistentData().getBoolean("PtDGaveLuck")) {
                     ultraSniffer.getPersistentData().putDouble("luck", 5000);
                     ultraSniffer.getPersistentData().putBoolean("PtDGaveLuck", true);

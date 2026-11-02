@@ -7,8 +7,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.world.worlddata.Sequence0Data;
 import net.swimmingtuna.pathtodivinity.PTD;
@@ -65,7 +64,7 @@ public final class ProfileManager {
         if (data.hasChosenProfile(player.getUUID())) {
             return false;
         }
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         if (holder.getCurrentClass() != null && holder.getSequence() >= 0) {
             applyActiveProfile(data, player, ProfileType.NORMAL);
             return false;
@@ -172,7 +171,7 @@ public final class ProfileManager {
     }
 
     public static String describeLiveBeyonder(Player player) {
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         BeyonderClass pathway = holder.getCurrentClass();
         int sequence = holder.getSequence();
         if (pathway == null || sequence < 0) {
@@ -218,7 +217,7 @@ public final class ProfileManager {
         if (!Configs.COMMON.onlyOneGod.get()) {
             return null;
         }
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         BeyonderClass pathway = holder.getCurrentClass();
         int sequence = holder.getSequence();
         if (pathway == null || sequence < 0 || !Sequence0Data.isLimitedSequence(sequence)) {

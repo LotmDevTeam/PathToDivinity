@@ -7,30 +7,30 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.HolderLookup;
 import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.capabilities.acting_data.ActingDataProvider;
-import net.swimmingtuna.lotm.capabilities.compat.Capability;
-import net.swimmingtuna.lotm.capabilities.compat.INBTSerializable;
-import net.swimmingtuna.lotm.capabilities.concealed_data.ConcealedDataProvider;
 import net.swimmingtuna.lotm.capabilities.concealed_space.ConcealedSpaceProvider;
-import net.swimmingtuna.lotm.capabilities.criminal_pathway_data.CriminalPathwayDataProvider;
 import net.swimmingtuna.lotm.capabilities.doll_data.DollDataProvider;
 import net.swimmingtuna.lotm.capabilities.grazed_abilities.GrazedAbilitiesProvider;
 import net.swimmingtuna.lotm.capabilities.honorific_name.HonorificNameProvider;
-import net.swimmingtuna.lotm.capabilities.is_concealed_data.IsConcealedProvider;
 import net.swimmingtuna.lotm.capabilities.manipulated_player_data.ManipulatedEntityProvider;
 import net.swimmingtuna.lotm.capabilities.potion_recipes_data.PotionRecipesProvider;
 import net.swimmingtuna.lotm.capabilities.replicated_entity.ReplicatedEntityProvider;
 import net.swimmingtuna.lotm.capabilities.ritual_data.RitualDataProvider;
-import net.swimmingtuna.lotm.capabilities.sanity_data.SanityDataProvider;
+import net.swimmingtuna.lotm.capabilities.sanity_data.SanityUtil;
 import net.swimmingtuna.lotm.capabilities.scribed_abilities.ScribedAbilitiesProvider;
 import net.swimmingtuna.lotm.capabilities.sealed_data.SealedDataProvider;
 import net.swimmingtuna.lotm.capabilities.sleep_data.SleepDataProvider;
 import net.swimmingtuna.lotm.capabilities.spirit_data.SpiritHolderProvider;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.Attachments;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
+import net.swimmingtuna.lotm.data.SanityData;
+import net.swimmingtuna.lotm.data.ScopedAttachment;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
+import net.swimmingtuna.lotm.pathway.criminal.data.CriminalPathwayDataProvider;
 import net.swimmingtuna.pathtodivinity.PTD;
 
 import javax.annotation.Nullable;
@@ -52,6 +52,8 @@ public final class ProfileSnapshot {
     private static final String KEY_XP_TOTAL = "xpTotal";
     private static final String KEY_SELECTED_SLOT = "selectedSlot";
     private static final String KEY_CURIOS = "curios";
+    // Sanity is a plain attachment with its own serializer, not an INBTSerializable like the rest.
+    private static final String KEY_SANITY = "sanity";
 
     /**
      * Whether Curios is installed. Neither this mod nor LOTM requires it, so every curios call has to go
@@ -63,7 +65,7 @@ public final class ProfileSnapshot {
      */
     private static final boolean CURIOS_LOADED = ModList.get().isLoaded("curios");
 
-    private static final Map<String, Capability<?>> LOTM_PLAYER_CAPS = new LinkedHashMap<>();
+    private static final Map<String, ScopedAttachment<?>> LOTM_PLAYER_CAPS = new LinkedHashMap<>();
 
     static {
         LOTM_PLAYER_CAPS.put("acting", ActingDataProvider.ACTING_DATA);
@@ -74,11 +76,8 @@ public final class ProfileSnapshot {
         LOTM_PLAYER_CAPS.put("spiritHolder", SpiritHolderProvider.SPIRIT_HOLDER);
         LOTM_PLAYER_CAPS.put("grazedAbilities", GrazedAbilitiesProvider.GRAZED_ABILITIES);
         LOTM_PLAYER_CAPS.put("scribedAbilities", ScribedAbilitiesProvider.SCRIBED_ABILITIES);
-        LOTM_PLAYER_CAPS.put("sanity", SanityDataProvider.SANITY_DATA);
         LOTM_PLAYER_CAPS.put("sleep", SleepDataProvider.SLEEP_DATA);
-        LOTM_PLAYER_CAPS.put("concealed", ConcealedDataProvider.CONCEALED_DATA);
         LOTM_PLAYER_CAPS.put("concealedSpace", ConcealedSpaceProvider.CONCEALED_SPACE);
-        LOTM_PLAYER_CAPS.put("isConcealed", IsConcealedProvider.IS_CONCEALED);
         LOTM_PLAYER_CAPS.put("criminal", CriminalPathwayDataProvider.CRIMINAL_DATA);
         LOTM_PLAYER_CAPS.put("doll", DollDataProvider.DOLL_DATA);
         LOTM_PLAYER_CAPS.put("manipulatedPlayer", ManipulatedEntityProvider.MANIPULATED_PLAYER);
@@ -91,18 +90,19 @@ public final class ProfileSnapshot {
     public static CompoundTag capture(ServerPlayer player) {
         CompoundTag snapshot = new CompoundTag();
 
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         snapshot.put(KEY_HOLDER, holder.serializeNBT(false));
 
         CompoundTag capabilities = new CompoundTag();
-        for (Map.Entry<String, Capability<?>> entry : LOTM_PLAYER_CAPS.entrySet()) {
+        for (Map.Entry<String, ScopedAttachment<?>> entry : LOTM_PLAYER_CAPS.entrySet()) {
             entry.getValue().getFrom(player).ifPresent(instance -> {
                 INBTSerializable<CompoundTag> serializable = asSerializable(instance);
                 if (serializable != null) {
-                    capabilities.put(entry.getKey(), serializable.serializeNBT());
+                    capabilities.put(entry.getKey(), serializable.serializeNBT(player.registryAccess()));
                 }
             });
         }
+        capabilities.put(KEY_SANITY, SanityData.SERIALIZER.write(SanityUtil.data(player), player.registryAccess()));
         snapshot.put(KEY_CAPABILITIES, capabilities);
 
         snapshot.put(KEY_INVENTORY, player.getInventory().save(new ListTag()));
@@ -162,7 +162,7 @@ public final class ProfileSnapshot {
     }
 
     private static void restoreHolder(ServerPlayer player, CompoundTag holderTag) {
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
 
         holder.removePathway();
 
@@ -184,7 +184,7 @@ public final class ProfileSnapshot {
     }
 
     private static void restoreCapabilities(ServerPlayer player, CompoundTag capabilities) {
-        for (Map.Entry<String, Capability<?>> entry : LOTM_PLAYER_CAPS.entrySet()) {
+        for (Map.Entry<String, ScopedAttachment<?>> entry : LOTM_PLAYER_CAPS.entrySet()) {
             entry.getValue().getFrom(player).ifPresent(instance -> {
                 INBTSerializable<CompoundTag> serializable = asSerializable(instance);
                 if (serializable == null) {
@@ -194,28 +194,32 @@ public final class ProfileSnapshot {
                 CompoundTag stored = capabilities.contains(key, Tag.TAG_COMPOUND)
                         ? capabilities.getCompound(key)
                         : null;
-                restoreCapability(key, serializable, stored);
+                restoreCapability(key, serializable, stored, player.registryAccess());
             });
         }
+        CompoundTag sanity = capabilities.getCompound(KEY_SANITY);
+        player.setData(Attachments.SANITY, sanity.isEmpty() ? new SanityData()
+                : SanityData.SERIALIZER.read(player, sanity, player.registryAccess()));
+        SanityUtil.syncSanity(player);
     }
     
     private static void restoreCapability(String name, INBTSerializable<CompoundTag> live,
-                                          @Nullable CompoundTag stored) {
-        CompoundTag tag = stored != null ? stored : defaultsFor(live);
+                                          @Nullable CompoundTag stored, HolderLookup.Provider provider) {
+        CompoundTag tag = stored != null ? stored : defaultsFor(live, provider);
         try {
-            live.deserializeNBT(tag);
+            live.deserializeNBT(provider, tag);
         } catch (Exception exception) {
             PTD.LOGGER.warn("Could not restore LOTM capability '{}'; leaving it as it was", name, exception);
         }
     }
 
-    private static CompoundTag defaultsFor(INBTSerializable<CompoundTag> live) {
+    private static CompoundTag defaultsFor(INBTSerializable<CompoundTag> live, HolderLookup.Provider provider) {
         try {
             Constructor<?> constructor = live.getClass().getDeclaredConstructor();
             constructor.setAccessible(true);
             INBTSerializable<CompoundTag> fresh = asSerializable(constructor.newInstance());
             if (fresh != null) {
-                return fresh.serializeNBT();
+                return fresh.serializeNBT(provider);
             }
         } catch (Exception exception) {
             PTD.LOGGER.warn("Could not build defaults for LOTM capability {}",

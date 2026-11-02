@@ -21,13 +21,15 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+import net.swimmingtuna.lotm.beyonder.Pathways;
+import net.swimmingtuna.lotm.beyonder.Spirituality;
+import net.swimmingtuna.lotm.init.PathwayNames;
 
 /**
  * Extends LOTM's {@code /beyonder check <player>} to any entity:
@@ -94,7 +96,7 @@ public class BeyonderCheckCommand {
             return message.append(Component.literal("\n  Not a living entity").withStyle(ChatFormatting.GRAY));
         }
 
-        BeyonderClass pathway = BeyonderUtil.getPathway(living);
+        BeyonderClass pathway = Pathways.getPathway(living);
         BeyonderProfile profile = BeyonderProfiles.find(living);
         if (pathway == null) {
             message.append(Component.literal("\n  Not a Beyonder").withStyle(ChatFormatting.RED));
@@ -103,10 +105,10 @@ public class BeyonderCheckCommand {
                         .withStyle(ChatFormatting.GRAY));
             }
         } else {
-            int sequence = BeyonderUtil.getSequence(living);
+            int sequence = Pathways.getSequence(living);
             List<Component> sequenceNames = pathway.sequenceNames();
             MutableComponent line = Component.literal("\n  Pathway: ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal(BeyonderUtil.getPathwayName(pathway)).withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(PathwayNames.getPathwayName(pathway)).withStyle(ChatFormatting.WHITE))
                     .append(Component.literal("  Sequence: ").withStyle(ChatFormatting.YELLOW))
                     .append(Component.literal(String.valueOf(sequence)).withStyle(ChatFormatting.WHITE));
             if (sequence >= 0 && sequence < sequenceNames.size()) {
@@ -120,7 +122,7 @@ public class BeyonderCheckCommand {
                         .append(Component.literal(" (ability_sequence -1 in " + profile.id() + ")").withStyle(ChatFormatting.GRAY)));
             }
             message.append(Component.literal("\n  Spirituality: ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal(BeyonderUtil.getSpirituality(living) + " / " + BeyonderUtil.getMaxSpirituality(living)).withStyle(ChatFormatting.WHITE)));
+                    .append(Component.literal(Spirituality.getSpirituality(living) + " / " + Spirituality.getMaxSpirituality(living)).withStyle(ChatFormatting.WHITE)));
         }
 
         message.append(Component.literal("\n  Health: ").withStyle(ChatFormatting.YELLOW)

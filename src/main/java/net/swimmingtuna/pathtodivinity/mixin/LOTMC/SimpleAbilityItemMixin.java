@@ -15,15 +15,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(value = SimpleAbilityItem.class, remap = false)
 public class SimpleAbilityItemMixin {
 
-    @Inject(method = "checkIfCanUseAbility(Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
-    private void blockBannedAbility(LivingEntity livingEntity, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "checkIfCanUseAbility(Lnet/minecraft/world/entity/LivingEntity;Z)Z", at = @At("HEAD"), cancellable = true)
+    private void blockBannedAbility(LivingEntity livingEntity, boolean ignoreCooldown, CallbackInfoReturnable<Boolean> cir) {
         if (PTDUtil.isAbilityBanned((Item) (Object) this)) {
             cir.setReturnValue(false);
         }
     }
 
     @WrapOperation(method = "inventoryTick", at = @At(value = "INVOKE",
-            target = "Lnet/swimmingtuna/lotm/util/BeyonderUtil;canUseAbility(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/Item;)Z"))
+            target = "Lnet/swimmingtuna/lotm/ability/AbilityUse;canUseAbility(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/Item;)Z"))
     private boolean keepBannedAbility(LivingEntity living, Item item, Operation<Boolean> original) {
         // shortcut: banned items are never removed by inventoryTick, even if the holder wouldn't own them; fine since they can't be used while banned
         return PTDUtil.isAbilityBanned(item) || original.call(living, item);

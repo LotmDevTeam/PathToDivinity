@@ -28,8 +28,9 @@ import net.neoforged.neoforge.event.EventHooks;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.commands.BeyonderClassArgument;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import org.jetbrains.annotations.Nullable;
+import net.swimmingtuna.lotm.beyonder.Pathways;
+import net.swimmingtuna.lotm.init.PathwayNames;
 
 /**
  * {@code /beyonder summon <pathway> <sequence> <entity> <location>}: spawns one mob that fights as a Beyonder
@@ -98,20 +99,20 @@ public class BeyonderSummonCommand {
             throw DUPLICATE_UUID.create();
         }
         source.sendSuccess(() -> Component.literal("Summoned ").append(living.getDisplayName())
-                .append(" as a " + BeyonderUtil.getPathwayName(pathway) + " Beyonder, Sequence " + sequence), true);
+                .append(" as a " + PathwayNames.getPathwayName(pathway) + " Beyonder, Sequence " + sequence), true);
         return 1;
     }
 
     /** The pathway and sequence {@code /beyonder summon} gave this entity, or null for any other entity. */
     @Nullable
-    public static BeyonderUtil.PathwayAndSequence summonedAs(LivingEntity entity) {
+    public static Pathways.PathwayAndSequence summonedAs(LivingEntity entity) {
         CompoundTag data = entity.getPersistentData();
         if (!data.contains(PATHWAY_KEY)) {
             return null;
         }
         ResourceLocation id = ResourceLocation.tryParse(data.getString(PATHWAY_KEY));
         BeyonderClass pathway = id == null ? null : BeyonderClassInit.getRegistry().get(id);
-        return pathway == null ? null : new BeyonderUtil.PathwayAndSequence(pathway, data.getInt(SEQUENCE_KEY));
+        return pathway == null ? null : new Pathways.PathwayAndSequence(pathway, data.getInt(SEQUENCE_KEY));
     }
 
     /**
@@ -124,7 +125,7 @@ public class BeyonderSummonCommand {
         if (registered != null || !(entity instanceof LivingEntity living)) {
             return registered;
         }
-        BeyonderUtil.PathwayAndSequence summoned = summonedAs(living);
+        Pathways.PathwayAndSequence summoned = summonedAs(living);
         return summoned == null ? null : summoned.pathway().sequenceIds().get(summoned.sequence());
     }
 }

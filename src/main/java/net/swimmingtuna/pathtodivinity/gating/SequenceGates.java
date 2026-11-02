@@ -6,8 +6,8 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.PTD;
+import net.swimmingtuna.lotm.beyonder.Pathways;
 
 /**
  * Sequence-gated items: an item in {@code #pathtodivinity:requires_sequence_N} only works for a
@@ -62,7 +62,7 @@ public final class SequenceGates {
         if (player.isCreative() || player.isSpectator()) {
             return true;
         }
-        int sequence = BeyonderUtil.getSequence(player);
+        int sequence = Pathways.getSequence(player);
         return sequence >= 0 && sequence <= requiredSequence;
     }
 }

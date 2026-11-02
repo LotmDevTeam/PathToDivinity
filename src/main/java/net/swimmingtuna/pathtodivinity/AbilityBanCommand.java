@@ -8,11 +8,11 @@ import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.swimmingtuna.lotm.util.BeyonderUtil;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.swimmingtuna.lotm.ability.AbilityUse;
 
 /**
  * {@code /abilityban add|remove|list} — edits [items] banned_abilities. The config file stays the single
@@ -26,7 +26,7 @@ public class AbilityBanCommand {
                 .then(Commands.literal("add")
                         .then(Commands.argument("item", ResourceLocationArgument.id())
                                 .suggests((context, builder) -> SharedSuggestionProvider.suggestResource(
-                                        BeyonderUtil.getAbilities().stream().map(BuiltInRegistries.ITEM::getKey), builder))
+                                        AbilityUse.getAbilities().stream().map(BuiltInRegistries.ITEM::getKey), builder))
                                 .executes(context -> add(context.getSource(), ResourceLocationArgument.getId(context, "item")))))
                 .then(Commands.literal("remove")
                         .then(Commands.argument("item", ResourceLocationArgument.id())
@@ -39,7 +39,7 @@ public class AbilityBanCommand {
     }
 
     private static int add(CommandSourceStack source, ResourceLocation id) {
-        if (!BeyonderUtil.getAbilities().contains(BuiltInRegistries.ITEM.get(id))) {
+        if (!AbilityUse.getAbilities().contains(BuiltInRegistries.ITEM.get(id))) {
             source.sendFailure(Component.literal(id + " is not a LOTM ability."));
             return 0;
         }

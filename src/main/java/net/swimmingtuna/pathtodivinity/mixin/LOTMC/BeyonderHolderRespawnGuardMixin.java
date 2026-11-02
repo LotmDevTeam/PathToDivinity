@@ -4,8 +4,7 @@ import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.swimmingtuna.lotm.LOTM;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.lotm.caps.BeyonderHolder;
-import net.swimmingtuna.lotm.caps.BeyonderHolderAttacher;
+import net.swimmingtuna.lotm.data.BeyonderHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -42,7 +41,7 @@ public class BeyonderHolderRespawnGuardMixin {
         if (player == null || player.level().isClientSide()) {
             return;
         }
-        BeyonderHolder holder = BeyonderHolderAttacher.getHolderUnwrap(player);
+        BeyonderHolder holder = BeyonderHolder.get(player);
         BeyonderClass pathway = holder.getCurrentClass();
         if (pathway != null && holder.getSequence() < 0) {
             ci.cancel();
