@@ -6,11 +6,11 @@ import net.minecraft.world.entity.LivingEntity;
  * Marks the window in which {@code BeyonderEntityData.selectAndUseAbility} is building the
  * ability list for a mob.
  *
- * <p>While that window is open, {@code BeyonderUtilMixin}'s custom sequence map is bypassed so
+ * <p>While that window is open, {@code SeqMixin}'s custom sequence map is bypassed so
  * that LOTM's own resolution runs instead, i.e. the sequence registered for the entity type via
  * {@code /beyonderentity add <entity> <pathway> <sequence>}. Everything else that asks for a
  * sequence (spirituality regen, ability cooldowns, damage scaling, other mods' logic) keeps
- * seeing the mapped sequence from {@code BeyonderUtilMixin}.
+ * seeing the mapped sequence from {@code SeqMixin}.
  *
  * <p>The entity is stored rather than a plain flag so only queries about the mob whose abilities
  * are being picked are affected - a query about its target (a player, another mob) is untouched.

@@ -23,7 +23,6 @@ import net.swimmingtuna.lotm.capabilities.ritual_data.RitualDataProvider;
 import net.swimmingtuna.lotm.capabilities.sanity_data.SanityUtil;
 import net.swimmingtuna.lotm.capabilities.scribed_abilities.ScribedAbilitiesProvider;
 import net.swimmingtuna.lotm.capabilities.sealed_data.SealedDataProvider;
-import net.swimmingtuna.lotm.capabilities.sleep_data.SleepDataProvider;
 import net.swimmingtuna.lotm.capabilities.spirit_data.SpiritHolderProvider;
 import net.swimmingtuna.lotm.data.Attachments;
 import net.swimmingtuna.lotm.data.BeyonderHolder;
@@ -76,7 +75,6 @@ public final class ProfileSnapshot {
         LOTM_PLAYER_CAPS.put("spiritHolder", SpiritHolderProvider.SPIRIT_HOLDER);
         LOTM_PLAYER_CAPS.put("grazedAbilities", GrazedAbilitiesProvider.GRAZED_ABILITIES);
         LOTM_PLAYER_CAPS.put("scribedAbilities", ScribedAbilitiesProvider.SCRIBED_ABILITIES);
-        LOTM_PLAYER_CAPS.put("sleep", SleepDataProvider.SLEEP_DATA);
         LOTM_PLAYER_CAPS.put("concealedSpace", ConcealedSpaceProvider.CONCEALED_SPACE);
         LOTM_PLAYER_CAPS.put("criminal", CriminalPathwayDataProvider.CRIMINAL_DATA);
         LOTM_PLAYER_CAPS.put("doll", DollDataProvider.DOLL_DATA);

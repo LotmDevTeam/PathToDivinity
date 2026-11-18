@@ -2,7 +2,7 @@ package net.swimmingtuna.pathtodivinity.mixin.LOTMC;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.swimmingtuna.lotm.ability.Seq;
-import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
+import net.swimmingtuna.lotm.beyonder.MobBeyonders;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
@@ -25,7 +25,7 @@ public abstract class SeqMixin {
      * While BeyonderEntityData is picking which abilities a mob may use, skip the cache (it holds the profile
      * sequence) so the sequence comes from the /beyonderentity registration. See BeyonderEntityDataMixin.
      */
-    @Inject(method = "of", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "of(Lnet/minecraft/world/entity/LivingEntity;)Lnet/swimmingtuna/lotm/ability/Seq;", at = @At("HEAD"), cancellable = true)
     private static void pathtodivinity$registeredSequenceForAbilities(LivingEntity entity, CallbackInfoReturnable<Seq> cir) {
         if (MobAbilitySequenceContext.isSelectingAbilitiesFor(entity)) {
             cir.setReturnValue(compute(entity));
@@ -41,8 +41,8 @@ public abstract class SeqMixin {
         if (MobAbilitySequenceContext.isSelectingAbilitiesFor(living)) {
             return;
         }
-        // A /beyonder summon mob's own sequence beats its type's profile; LOTM reads it via BeyonderEntityDataMixin.
-        if (BeyonderSummonCommand.summonedAs(living) != null) {
+        // A mob given a pathway of its own (/beyonder summon, /lotmob) keeps that sequence over its type's profile.
+        if (MobBeyonders.hasGrant(living)) {
             return;
         }
         BeyonderProfile profile = BeyonderProfiles.find(living);

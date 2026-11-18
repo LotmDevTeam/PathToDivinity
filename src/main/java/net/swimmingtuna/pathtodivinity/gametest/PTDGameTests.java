@@ -20,7 +20,6 @@ import net.swimmingtuna.lotm.init.BeyonderClassInit;
 import net.swimmingtuna.lotm.item.BeyonderAbilities.SimpleAbilityItem;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
-import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.inactivity.InactivityData;
 import net.swimmingtuna.pathtodivinity.inactivity.InactivityTracker;
@@ -35,6 +34,7 @@ import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import net.swimmingtuna.lotm.beyonder.MobBeyonders;
 import net.swimmingtuna.lotm.beyonder.Pathways;
 import net.swimmingtuna.lotm.ability.AbilityUse;
 import net.swimmingtuna.lotm.beyonder.Spirituality;
@@ -175,11 +175,9 @@ public class PTDGameTests {
     @GameTest(template = EMPTY)
     public static void summonedBeyonderIsOnlyThatMob(GameTestHelper helper) {
         BeyonderClass pathway = BeyonderClassInit.getRegistry().iterator().next();
-        // Tagged before joining the world, as /beyonder summon does, so LOTM's join setup sees it.
+        // Granted before joining the world, as /beyonder summon does, so LOTM's join setup sees it.
         Zombie summoned = EntityType.ZOMBIE.create(helper.getLevel());
-        summoned.getPersistentData().putString(BeyonderSummonCommand.PATHWAY_KEY,
-                BeyonderClassInit.getRegistry().getKey(pathway).toString());
-        summoned.getPersistentData().putInt(BeyonderSummonCommand.SEQUENCE_KEY, 2);
+        MobBeyonders.give(summoned, pathway, 2);
         BlockPos pos = helper.absolutePos(MIDDLE);
         summoned.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         helper.getLevel().addFreshEntity(summoned);

@@ -16,7 +16,6 @@
     "LOTMC.LimitedSequenceSlotMixin",
     "LOTMC.SeqAccessor",
     "LOTMC.SeqMixin",
-    "LOTMC.SpiritualityMixin",
     "LOTMC.Sequence0DataAccessor",
     "LOTMC.Sequence0DataMixin",
     "LOTMC.SimpleAbilityItemMixin",

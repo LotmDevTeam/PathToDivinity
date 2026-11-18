@@ -25,11 +25,10 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.EventHooks;
+import net.swimmingtuna.lotm.beyonder.MobBeyonders;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.commands.BeyonderClassArgument;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
-import org.jetbrains.annotations.Nullable;
-import net.swimmingtuna.lotm.beyonder.Pathways;
 import net.swimmingtuna.lotm.init.PathwayNames;
 
 /**
@@ -37,14 +36,13 @@ import net.swimmingtuna.lotm.init.PathwayNames;
  * of that pathway and sequence, leaving every other mob of its type alone (unlike {@code /beyonderentity},
  * which registers the whole type).
  *
- * <p>The pathway is stored on the mob itself, so it survives unloading and restarts. LOTM reads it through
- * {@code BeyonderEntityDataMixin} and {@code BeyonderUtilMixin}. Server side only: clients are not told, so
- * anything LOTM draws from the client's copy of the type registrations won't show it.
+ * <p>The pathway is LOTM's own per-mob grant ({@link MobBeyonders}), saved with the mob.
  */
 public class BeyonderSummonCommand {
 
-    public static final String PATHWAY_KEY = "ptdBeyonderPathway";
-    public static final String SEQUENCE_KEY = "ptdBeyonderSequence";
+    // Legacy storage, read only by migrateLegacy.
+    private static final String PATHWAY_KEY = "ptdBeyonderPathway";
+    private static final String SEQUENCE_KEY = "ptdBeyonderSequence";
 
     private static final SimpleCommandExceptionType INVALID_POSITION = new SimpleCommandExceptionType(
             Component.translatable("commands.summon.invalidPosition"));
@@ -90,8 +88,7 @@ public class BeyonderSummonCommand {
         if (!(entity instanceof LivingEntity living)) {
             throw NOT_LIVING.create();
         }
-        living.getPersistentData().putString(PATHWAY_KEY, BeyonderClassInit.getRegistry().getKey(pathway).toString());
-        living.getPersistentData().putInt(SEQUENCE_KEY, sequence);
+        MobBeyonders.give(living, pathway, sequence);
         if (living instanceof Mob mob) {
             EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(mob.blockPosition()), MobSpawnType.COMMAND, null);
         }
@@ -103,29 +100,19 @@ public class BeyonderSummonCommand {
         return 1;
     }
 
-    /** The pathway and sequence {@code /beyonder summon} gave this entity, or null for any other entity. */
-    @Nullable
-    public static Pathways.PathwayAndSequence summonedAs(LivingEntity entity) {
-        CompoundTag data = entity.getPersistentData();
+    /**
+     * Mobs summoned before LOTM had per-mob grants kept their pathway in persistent data. Moves it to a grant;
+     * call before LOTM's join setup so the mob still starts as a Beyonder.
+     */
+    public static void migrateLegacy(LivingEntity living) {
+        CompoundTag data = living.getPersistentData();
         if (!data.contains(PATHWAY_KEY)) {
-            return null;
+            return;
         }
         ResourceLocation id = ResourceLocation.tryParse(data.getString(PATHWAY_KEY));
-        BeyonderClass pathway = id == null ? null : BeyonderClassInit.getRegistry().get(id);
-        return pathway == null ? null : new Pathways.PathwayAndSequence(pathway, data.getInt(SEQUENCE_KEY));
-    }
-
-    /**
-     * LOTM asks {@code BeyonderEntityData.getStringForEntity(type)} for "is this mob a Beyonder?" before it touches
-     * a mob's spirituality, abilities or join setup. Mixins pass its answer through here, so a summoned mob of an
-     * unregistered type answers with its own sequence id instead of null.
-     */
-    @Nullable
-    public static String registrationFor(@Nullable String registered, Entity entity) {
-        if (registered != null || !(entity instanceof LivingEntity living)) {
-            return registered;
-        }
-        Pathways.PathwayAndSequence summoned = summonedAs(living);
-        return summoned == null ? null : summoned.pathway().sequenceIds().get(summoned.sequence());
+        // give() ignores a null (unknown) pathway
+        MobBeyonders.give(living, id == null ? null : BeyonderClassInit.getRegistry().get(id), data.getInt(SEQUENCE_KEY));
+        data.remove(PATHWAY_KEY);
+        data.remove(SEQUENCE_KEY);
     }
 }

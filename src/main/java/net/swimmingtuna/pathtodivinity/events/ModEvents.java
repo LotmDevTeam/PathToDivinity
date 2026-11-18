@@ -49,6 +49,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -57,6 +58,7 @@ import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
+import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
@@ -302,6 +304,14 @@ public class ModEvents {
         return 1.0f;
     }
 
+
+    /** Ahead of LOTM's join handler, which starts a mob only if it already has its grant. */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void migrateSummonedBeyonder(EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide() && event.getEntity() instanceof LivingEntity living) {
+            BeyonderSummonCommand.migrateLegacy(living);
+        }
+    }
 
     @SubscribeEvent
     public static void entityJoinEvent(EntityJoinLevelEvent event) {
