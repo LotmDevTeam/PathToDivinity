@@ -1,0 +1,15 @@
+{
+  "type": "pathtodivinity:beyonder_recipes",
+  "sequence": 4,
+  "conditions": [],
+  "item": [
+    "lotm:recipes/spectator_4_recipe",
+    "lotm:recipes/warrior_4_recipe",
+    "lotm:recipes/monster_4_recipe",
+    "lotm:recipes/sailor_4_recipe",
+    "lotm:recipes/apprentice_4_recipe",
+    "lotm:recipes/bard_4_recipe",
+    "lotm:recipes/corpse_collector_4_recipe",
+    "lotm:recipes/sleepless_4_recipe"
+  ]
+}

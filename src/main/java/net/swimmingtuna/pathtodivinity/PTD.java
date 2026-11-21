@@ -15,6 +15,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import net.swimmingtuna.pathtodivinity.config.PTDBalance;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
+import net.swimmingtuna.pathtodivinity.loot.PTDLootModifiers;
 import org.slf4j.Logger;
 
 import java.util.function.Supplier;
@@ -39,6 +40,7 @@ public class PTD {
         modContainer.registerConfig(ModConfig.Type.SERVER, PTDServerConfig.SPEC, PTDServerConfig.FILE_NAME);
         modContainer.registerConfig(ModConfig.Type.SERVER, PTDBalance.SPEC, PTDBalance.FILE_NAME);
         modEventBus.addListener(PTDServerConfig::onConfigLoading);
+        PTDLootModifiers.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST, PTDCommands::onCommandRegistration);
     }
 

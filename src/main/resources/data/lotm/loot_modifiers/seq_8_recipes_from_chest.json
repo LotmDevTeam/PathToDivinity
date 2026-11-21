@@ -1,0 +1,15 @@
+{
+  "type": "pathtodivinity:beyonder_recipes",
+  "sequence": 8,
+  "conditions": [],
+  "item": [
+    "lotm:recipes/spectator_8_recipe",
+    "lotm:recipes/warrior_8_recipe",
+    "lotm:recipes/monster_8_recipe",
+    "lotm:recipes/sailor_8_recipe",
+    "lotm:recipes/apprentice_8_recipe",
+    "lotm:recipes/bard_8_recipe",
+    "lotm:recipes/corpse_collector_8_recipe",
+    "lotm:recipes/sleepless_8_recipe"
+  ]
+}

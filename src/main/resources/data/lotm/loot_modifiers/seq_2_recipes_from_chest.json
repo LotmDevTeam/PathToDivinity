@@ -1,0 +1,14 @@
+{
+  "type": "pathtodivinity:beyonder_recipes",
+  "sequence": 2,
+  "conditions": [],
+  "item": [
+    "lotm:recipes/spectator_2_recipe",
+    "lotm:recipes/warrior_2_recipe",
+    "lotm:recipes/monster_2_recipe",
+    "lotm:recipes/sailor_2_recipe",
+    "lotm:recipes/apprentice_2_recipe",
+    "lotm:recipes/bard_2_recipe",
+    "lotm:recipes/corpse_collector_2_recipe"
+  ]
+}

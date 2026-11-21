@@ -95,6 +95,30 @@ public final class PTDServerConfig {
     public static final ModConfigSpec.IntValue SLOTS_SEQUENCE_1;
     public static final ModConfigSpec.IntValue SLOTS_SEQUENCE_2;
 
+    // [beyonder_recipes.sequence_N], indexed by Sequence
+    public static final ModConfigSpec.DoubleValue[] BEYONDER_RECIPE_CHANCE = new ModConfigSpec.DoubleValue[10];
+    public static final ModConfigSpec.ConfigValue<List<? extends String>>[] BEYONDER_RECIPE_LOOT_TABLES = newListArray(10);
+
+    /** LOTM's own chance and loot tables for each Sequence's recipes (data/lotm/loot_modifiers/seq_N_recipes_from_chest.json). */
+    private static final double[] DEFAULT_RECIPE_CHANCE = {0.1, 0.05, 0.08, 0.1, 0.14, 0.18, 0.22, 0.29, 0.36, 0.5};
+    private static final List<List<String>> DEFAULT_RECIPE_LOOT_TABLES = List.of(
+            List.of("minecraft:entities/warden"),
+            List.of("minecraft:chests/ancient_city", "minecraft:chests/ancient_city_ice_box"),
+            List.of("minecraft:chests/bastion_bridge", "minecraft:chests/bastion_hoglin_stable", "minecraft:chests/bastion_other",
+                    "minecraft:chests/bastion_treasure"),
+            List.of("minecraft:chests/end_city_treasure"),
+            List.of("minecraft:entities/ender_dragon", "minecraft:entities/wither"),
+            List.of("minecraft:chests/stronghold_corridor", "minecraft:chests/stronghold_library", "minecraft:chests/stronghold_crossing",
+                    "minecraft:chests/woodland_mansion", "minecraft:chests/abandoned_mineshaft", "minecraft:chests/pillager_outpost"),
+            List.of("minecraft:chests/woodland_mansion", "minecraft:chests/nether_bridge", "minecraft:chests/abandoned_mineshaft",
+                    "minecraft:chests/stronghold_corridor", "minecraft:chests/stronghold_library", "minecraft:chests/stronghold_crossing",
+                    "minecraft:chests/igloo_chest"),
+            List.of("minecraft:chests/desert_pyramid", "minecraft:chests/jungle_temple", "minecraft:chests/underwater_ruin_big",
+                    "minecraft:chests/underwater_ruin_small", "minecraft:chests/pillager_outpost"),
+            List.of("minecraft:chests/shipwreck_treasure", "minecraft:chests/shipwreck_supply", "minecraft:chests/shipwreck_map",
+                    "minecraft:chests/ruined_portal", "minecraft:chests/desert_pyramid"),
+            List.of("minecraft:chests/simple_dungeon", "minecraft:chests/spawn_bonus_chest", "minecraft:chests/ruined_portal"));
+
     public enum BannedItemAction {
         DELETE,
         DROP
@@ -276,6 +300,25 @@ public final class PTDServerConfig {
         SLOTS_SEQUENCE_2 = builder.defineInRange("sequence_2", 7, 1, 1000);
         builder.pop();
 
+        builder.comment("Where Beyonder recipe items (lotm:recipes/...) can be found, and how often. Defaults are LOTM's own values.",
+                "Each Sequence's recipes can be added to loot from the loot tables in its loot_tables: chests",
+                "(e.g. \"minecraft:chests/simple_dungeon\"), mob drops (e.g. \"minecraft:entities/warden\") or any modded loot table.",
+                "End an entry with * to match every loot table starting with it, e.g. \"minecraft:chests/*\".",
+                "Which recipe items drop is set in data/lotm/loot_modifiers/seq_N_recipes_from_chest.json, so a datapack can change it.")
+                .push("beyonder_recipes");
+        for (int sequence = 0; sequence <= 9; sequence++) {
+            builder.push("sequence_" + sequence);
+            BEYONDER_RECIPE_CHANCE[sequence] = builder
+                    .comment("Chance (0.0 to 1.0) that loot from one of loot_tables also holds Sequence " + sequence + " recipes. 0 = never.")
+                    .defineInRange("chance", DEFAULT_RECIPE_CHANCE[sequence], 0.0, 1.0);
+            List<String> defaultTables = DEFAULT_RECIPE_LOOT_TABLES.get(sequence);
+            BEYONDER_RECIPE_LOOT_TABLES[sequence] = builder
+                    .comment("Loot tables Sequence " + sequence + " recipes can drop from. Empty = nowhere.")
+                    .defineListAllowEmpty(List.of("loot_tables"), () -> defaultTables, () -> "", PTDServerConfig::isString);
+            builder.pop();
+        }
+        builder.pop();
+
         SPEC = builder.build();
     }
 
@@ -284,6 +327,30 @@ public final class PTDServerConfig {
 
     private static boolean isString(Object value) {
         return value instanceof String;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ModConfigSpec.ConfigValue<List<? extends String>>[] newListArray(int size) {
+        return (ModConfigSpec.ConfigValue<List<? extends String>>[]) new ModConfigSpec.ConfigValue[size];
+    }
+
+    /** [beyonder_recipes.sequence_N] chance. */
+    public static double beyonderRecipeChance(int sequence) {
+        return BEYONDER_RECIPE_CHANCE[sequence].get();
+    }
+
+    /** Whether [beyonder_recipes.sequence_N] loot_tables lists this loot table, exactly or by a trailing-* prefix. */
+    public static boolean beyonderRecipeSpawnsIn(int sequence, ResourceLocation lootTable) {
+        if (lootTable == null) {
+            return false;
+        }
+        String id = lootTable.toString();
+        for (String entry : BEYONDER_RECIPE_LOOT_TABLES[sequence].get()) {
+            if (entry.endsWith("*") ? id.startsWith(entry.substring(0, entry.length() - 1)) : id.equals(entry)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static volatile Set<Item> bannedAbilities = Set.of();

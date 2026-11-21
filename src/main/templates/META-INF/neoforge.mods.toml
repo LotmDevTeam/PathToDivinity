@@ -31,7 +31,8 @@ file="META-INF/accesstransformer.cfg"
     modId="lotm"
     type="required"
     versionRange="[0.1,)"
-    ordering="NONE"
+    # AFTER: Path to Divinity's data/lotm/loot_modifiers/seq_N_recipes_from_chest.json must override LOTM's own.
+    ordering="AFTER"
     side="BOTH"
 
 # Optional integrations. Everything below may be absent: their mixins are skipped by PTDMixinPlugin,
