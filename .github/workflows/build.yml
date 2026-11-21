@@ -5,16 +5,54 @@ on:
 permissions:
   contents: read
 
+env:
+  # LOTM branch PTD is built against. Sir's options: Development-Neoforge-1.21.1 or pathways/hunter.
+  LOTM_REF: Development-Neoforge-1.21.1
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
+        with:
+          path: ptd
+
+      # PTD compiles against the private LOTM mod (libs/lotm-neoforge.jar, gitignored).
+      # Build it from LotmDevTeam/Lord-of-the-Mysteries with a read-only token.
+      # Never commit the LOTM jar or source into this public repo.
+      - name: Check LOTM_READ_TOKEN
+        env:
+          LOTM_READ_TOKEN: ${{ secrets.LOTM_READ_TOKEN }}
+        run: |
+          if [ -z "$LOTM_READ_TOKEN" ]; then
+            echo "::error::Repo secret LOTM_READ_TOKEN is missing (or this PR comes from a fork, which gets no secrets). CI needs it to build the private LOTM jar."
+            exit 1
+          fi
+      - uses: actions/checkout@v6
+        with:
+          repository: LotmDevTeam/Lord-of-the-Mysteries
+          ref: ${{ env.LOTM_REF }}
+          token: ${{ secrets.LOTM_READ_TOKEN }}
+          path: lotm
+          persist-credentials: false
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
-      - run: chmod +x gradlew
-      - run: ./gradlew compileJava
+
+      - name: Build LOTM jar
+        working-directory: lotm
+        run: |
+          chmod +x gradlew
+          ./gradlew jar
+          mkdir -p ../ptd/libs
+          cp build/output/output.jar ../ptd/libs/lotm-neoforge.jar
+
+      - name: Compile PTD
+        working-directory: ptd
+        run: |
+          chmod +x gradlew
+          ./gradlew compileJava
