@@ -8,7 +8,7 @@ import net.swimmingtuna.lotm.init.BeyonderClassInit;
 
 /**
  * Mobs summoned by PtD's old {@code /beyonder summon} before LOTM had per-mob grants kept their pathway in
- * persistent data. The command itself is gone: LOTM's {@code /beyondersummon} is the one command for a single
+ * persistent data. The command itself is gone: LOTM's {@code /beyonderentity summon} is the one command for a single
  * Beyonder mob (LOTM #203). This still moves such old mobs onto a grant when they load.
  */
 public final class LegacySummonMigration {

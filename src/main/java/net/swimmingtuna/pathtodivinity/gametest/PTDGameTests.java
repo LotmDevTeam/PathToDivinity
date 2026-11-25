@@ -176,11 +176,11 @@ public class PTDGameTests {
         helper.succeed();
     }
 
-    /** LOTM's /beyondersummon grants one mob; it alone is a Beyonder, and its own sequence beats its type's profile. */
+    /** LOTM's /beyonderentity summon grants one mob; it alone is a Beyonder, and its own sequence beats its type's profile. */
     @GameTest(template = EMPTY)
     public static void summonedBeyonderIsOnlyThatMob(GameTestHelper helper) {
         BeyonderClass pathway = BeyonderClassInit.getRegistry().iterator().next();
-        // Granted before joining the world, as /beyondersummon does, so LOTM's join setup sees it.
+        // Granted before joining the world, as /beyonderentity summon does, so LOTM's join setup sees it.
         Zombie summoned = EntityType.ZOMBIE.create(helper.getLevel());
         MobBeyonders.give(summoned, pathway, 2);
         BlockPos pos = helper.absolutePos(MIDDLE);
@@ -253,7 +253,7 @@ public class PTDGameTests {
         helper.succeed();
     }
 
-    /** PtD's own /beyonder summon is gone: LOTM's /beyondersummon is the one single-mob summon (LOTM #203). */
+    /** PtD's own /beyonder summon is gone: LOTM's /beyonderentity summon is the one single-mob summon (LOTM #203). */
     @GameTest(template = EMPTY)
     public static void beyonderSummonIsLeftToLotm(GameTestHelper helper) {
         var beyonder = helper.getLevel().getServer().getCommands().getDispatcher().getRoot().getChild("beyonder");

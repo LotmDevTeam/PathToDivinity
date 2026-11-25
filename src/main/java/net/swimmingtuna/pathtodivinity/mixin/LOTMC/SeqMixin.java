@@ -42,7 +42,7 @@ public abstract class SeqMixin {
         if (MobAbilitySequenceContext.isSelectingAbilitiesFor(living)) {
             return;
         }
-        // A mob given a pathway of its own (LOTM's /beyondersummon) keeps that sequence over its type's profile,
+        // A mob given a pathway of its own (LOTM's /beyonderentity summon) keeps that sequence over its type's profile,
         // and so does every mob of a type an admin mapped by hand with /beyonderentity (LOTM #203).
         if (MobBeyonders.hasGrant(living) || ReleasedTypes.isReleased(living)) {
             return;
