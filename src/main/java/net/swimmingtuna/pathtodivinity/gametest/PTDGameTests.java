@@ -30,6 +30,11 @@ import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
 import net.swimmingtuna.pathtodivinity.gating.SequenceGates;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
+import net.swimmingtuna.pathtodivinity.beyonders.BeyonderRegistrations;
+import net.swimmingtuna.pathtodivinity.beyonders.ReleasedTypes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
+import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
 
 import java.util.List;
 import java.util.Optional;
@@ -171,11 +176,11 @@ public class PTDGameTests {
         helper.succeed();
     }
 
-    /** /beyonder summon tags one mob; it alone is a Beyonder, and its own sequence beats its type's profile. */
+    /** LOTM's /beyondersummon grants one mob; it alone is a Beyonder, and its own sequence beats its type's profile. */
     @GameTest(template = EMPTY)
     public static void summonedBeyonderIsOnlyThatMob(GameTestHelper helper) {
         BeyonderClass pathway = BeyonderClassInit.getRegistry().iterator().next();
-        // Granted before joining the world, as /beyonder summon does, so LOTM's join setup sees it.
+        // Granted before joining the world, as /beyondersummon does, so LOTM's join setup sees it.
         Zombie summoned = EntityType.ZOMBIE.create(helper.getLevel());
         MobBeyonders.give(summoned, pathway, 2);
         BlockPos pos = helper.absolutePos(MIDDLE);
@@ -190,6 +195,69 @@ public class PTDGameTests {
         Spirituality.setSpirituality(summoned, max / 2);
         helper.assertTrue(Spirituality.getSpirituality(summoned) == max / 2, "summoned mob's spirituality should be settable");
         helper.assertTrue(Pathways.getPathway(plain) == null, "an untagged zombie must not become a Beyonder");
+        helper.succeed();
+    }
+
+    /**
+     * LOTM #203: a hand-made /beyonderentity mapping beats the type's PtD profile. The Elder Guardian's profile is an
+     * inert Sequence 8 Sailor; mapped by hand to a Sequence 5 Bard it keeps that through a refresh, gets the Bard's
+     * sequence and pathway health, and stays a PtD boss. After /beyonderentity remove, PtD takes the type back.
+     * One synchronous test, so no other test sees the guardian's mapping changed.
+     */
+    @GameTest(template = EMPTY)
+    public static void handMappingBeatsProfile(GameTestHelper helper) {
+        MinecraftServer server = helper.getLevel().getServer();
+        BeyonderEntityData data = BeyonderEntityData.getInstance(server.overworld());
+        EntityType<ElderGuardian> type = EntityType.ELDER_GUARDIAN;
+        ResourceLocation id = EntityType.getKey(type);
+        String ptdMapping = data.getStringForEntity(type);
+        String sailor8 = BeyonderClassInit.SAILOR.get().sequenceIds().get(8);
+        BeyonderClass bard = BeyonderClassInit.BARD.get();
+        String bard5 = bard.sequenceIds().get(5);
+        helper.assertTrue(sailor8.equals(ptdMapping), "PtD should have mapped the Elder Guardian to " + sailor8 + ", not " + ptdMapping);
+        try {
+            // What /beyonderentity add minecraft:elder_guardian lotm:bard 5 does.
+            data.setEntityString(type, bard5);
+            helper.assertTrue(BeyonderRegistrations.isReleased(server, id), "a hand mapping should release the type at once");
+            BeyonderRegistrations.apply(server, false);
+            helper.assertTrue(bard5.equals(data.getStringForEntity(type)),
+                    "a refresh must keep the hand mapping, but it is " + data.getStringForEntity(type));
+
+            ElderGuardian guardian = helper.spawn(EntityType.ELDER_GUARDIAN, MIDDLE);
+            helper.assertTrue(ReleasedTypes.isReleased(guardian), "the guardian's type should be released");
+            helper.assertTrue(Pathways.getPathway(guardian) == bard, "the guardian should be a Bard");
+            helper.assertTrue(Pathways.getSequence(guardian) == 5, "the hand mapping's sequence 5 should beat the profile's 8, was "
+                    + Pathways.getSequence(guardian));
+            float base = (float) type.create(helper.getLevel()).getAttributeBaseValue(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+            helper.assertTrue(guardian.getMaxHealth() > base, "the inert rule must not skip the Bard's pathway health ("
+                    + guardian.getMaxHealth() + " vs base " + base + ")");
+            helper.assertTrue(PTDUtil.isBeyonderEntity(guardian), "the guardian should still be a PtD boss");
+            helper.assertTrue(guardian.getPersistentData().contains("PTDDamageMultiplier"), "the profile's damage multiplier should stay");
+            guardian.discard();
+
+            // What /beyonderentity remove minecraft:elder_guardian does; the next refresh hands it back to PtD.
+            data.removeEntity(type);
+            BeyonderRegistrations.apply(server, false);
+            helper.assertTrue(sailor8.equals(data.getStringForEntity(type)), "after remove PtD should map the type again, but it is "
+                    + data.getStringForEntity(type));
+            helper.assertFalse(BeyonderRegistrations.isReleased(server, id), "after remove the type should be PtD's again");
+            ElderGuardian again = helper.spawn(EntityType.ELDER_GUARDIAN, MIDDLE);
+            helper.assertTrue(Pathways.getSequence(again) == 8, "back under PtD the guardian should be Sequence 8");
+            again.discard();
+        } finally {
+            if (!sailor8.equals(data.getStringForEntity(type))) {
+                data.removeEntity(type);
+                BeyonderRegistrations.apply(server, false);
+            }
+        }
+        helper.succeed();
+    }
+
+    /** PtD's own /beyonder summon is gone: LOTM's /beyondersummon is the one single-mob summon (LOTM #203). */
+    @GameTest(template = EMPTY)
+    public static void beyonderSummonIsLeftToLotm(GameTestHelper helper) {
+        var beyonder = helper.getLevel().getServer().getCommands().getDispatcher().getRoot().getChild("beyonder");
+        helper.assertTrue(beyonder == null || beyonder.getChild("summon") == null, "PtD must not register /beyonder summon");
         helper.succeed();
     }
 

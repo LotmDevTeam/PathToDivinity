@@ -8,11 +8,14 @@ import net.swimmingtuna.lotm.world.worlddata.BeyonderEntityData;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
+import net.swimmingtuna.pathtodivinity.beyonders.BeyonderRegistrations;
+import net.swimmingtuna.pathtodivinity.beyonders.ReleasedTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 import net.swimmingtuna.lotm.ability.AbilityUse;
@@ -40,9 +43,22 @@ public class BeyonderEntityDataMixin {
     @Inject(method = "selectAndUseAbility(Lnet/minecraft/world/entity/Mob;)V", at = @At("HEAD"), cancellable = true, remap = false)
     private static void pathtodivinity$skipAbilitiesWhenDisabled(Mob mob, CallbackInfo ci) {
         BeyonderProfile profile = BeyonderProfiles.find(mob);
-        if (profile != null && !profile.usesAbilities() && !MobBeyonders.hasGrant(mob)) {
+        if (profile != null && !profile.usesAbilities() && !MobBeyonders.hasGrant(mob) && !ReleasedTypes.isReleased(mob)) {
             ci.cancel();
         }
+    }
+
+    /** An admin's /beyonderentity add/remove/clear: a hand mapping beats the type's PtD profile (LOTM #203). */
+    @Inject(method = {"setEntityString", "removeEntity", "removeString"}, at = @At("RETURN"), remap = false)
+    private void pathtodivinity$mappingChanged(CallbackInfoReturnable<Boolean> cir) {
+        if (cir.getReturnValueZ()) {
+            BeyonderRegistrations.onLotmMappingsChanged();
+        }
+    }
+
+    @Inject(method = "clearMappings", at = @At("RETURN"), remap = false)
+    private void pathtodivinity$mappingsCleared(CallbackInfo ci) {
+        BeyonderRegistrations.onLotmMappingsChanged();
     }
 
     @Redirect(
