@@ -5,6 +5,7 @@ import net.swimmingtuna.lotm.beyonder.MobBeyonders;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
+import net.swimmingtuna.pathtodivinity.beyonders.ReleasedTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -14,7 +15,8 @@ import net.swimmingtuna.lotm.beyonder.Pathways;
  * When a mob registered with LOTM joins the world, LOTM applies its pathway's stat modifiers and
  * pathway events on top of Path to Divinity's scaling. For bosses whose profile says
  * {@code "ability_sequence": -1} ("a Beyonder of this pathway, but inert") both are skipped, so
- * giving such a boss a pathway changes nothing about how it fights.
+ * giving such a boss a pathway changes nothing about how it fights. A type an admin mapped by hand with
+ * {@code /beyonderentity} ({@link ReleasedTypes}) gets them as usual.
  *
  * <p>LOTM does that setup in {@code MobBeyonders.startUp}, on join and when a mob is given a pathway.
  */
@@ -41,6 +43,6 @@ public class LotmJoinModifiersMixin {
 
     private static boolean usesPathwayEffects(LivingEntity entity) {
         BeyonderProfile profile = BeyonderProfiles.find(entity);
-        return profile == null || profile.usesAbilities() || MobBeyonders.hasGrant(entity);
+        return profile == null || profile.usesAbilities() || MobBeyonders.hasGrant(entity) || ReleasedTypes.isReleased(entity);
     }
 }

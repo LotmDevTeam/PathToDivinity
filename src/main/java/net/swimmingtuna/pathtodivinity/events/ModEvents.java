@@ -49,6 +49,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -58,7 +59,7 @@ import net.swimmingtuna.lotm.client.Configs;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.lotm.entity.Mobs.PlayerMobEntity;
 import net.swimmingtuna.lotm.init.BeyonderClassInit;
-import net.swimmingtuna.pathtodivinity.BeyonderSummonCommand;
+import net.swimmingtuna.pathtodivinity.LegacySummonMigration;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.combat.CombatTag;
 import net.swimmingtuna.pathtodivinity.config.PTDServerConfig;
@@ -309,7 +310,7 @@ public class ModEvents {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void migrateSummonedBeyonder(EntityJoinLevelEvent event) {
         if (!event.getLevel().isClientSide() && event.getEntity() instanceof LivingEntity living) {
-            BeyonderSummonCommand.migrateLegacy(living);
+            LegacySummonMigration.migrateLegacy(living);
         }
     }
 
@@ -344,6 +345,11 @@ public class ModEvents {
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event) {
         BeyonderRegistrations.apply(event.getServer(), true);
+    }
+
+    @SubscribeEvent
+    public static void onServerStopped(ServerStoppedEvent event) {
+        BeyonderRegistrations.onServerStopped();
     }
 
     @SubscribeEvent

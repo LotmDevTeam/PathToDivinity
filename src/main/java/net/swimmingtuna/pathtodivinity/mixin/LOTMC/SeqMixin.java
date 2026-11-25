@@ -6,6 +6,7 @@ import net.swimmingtuna.lotm.beyonder.MobBeyonders;
 import net.swimmingtuna.pathtodivinity.MobAbilitySequenceContext;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
+import net.swimmingtuna.pathtodivinity.beyonders.ReleasedTypes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,8 +42,9 @@ public abstract class SeqMixin {
         if (MobAbilitySequenceContext.isSelectingAbilitiesFor(living)) {
             return;
         }
-        // A mob given a pathway of its own (/beyonder summon, /lotmob) keeps that sequence over its type's profile.
-        if (MobBeyonders.hasGrant(living)) {
+        // A mob given a pathway of its own (LOTM's /beyonderentity summon) keeps that sequence over its type's profile,
+        // and so does every mob of a type an admin mapped by hand with /beyonderentity (LOTM #203).
+        if (MobBeyonders.hasGrant(living) || ReleasedTypes.isReleased(living)) {
             return;
         }
         BeyonderProfile profile = BeyonderProfiles.find(living);

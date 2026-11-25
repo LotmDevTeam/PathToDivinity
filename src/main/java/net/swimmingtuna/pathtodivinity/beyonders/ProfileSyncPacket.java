@@ -46,6 +46,7 @@ public final class ProfileSyncPacket implements CustomPacketPayload {
         }
         if (player != null) {
             PTDNetwork.sendToPlayer(packet, player);
+            PTDNetwork.sendToPlayer(new ReleasedTypesPacket(ReleasedTypes.server()), player);
         } else {
             PTDNetwork.sendToAll(packet);
         }

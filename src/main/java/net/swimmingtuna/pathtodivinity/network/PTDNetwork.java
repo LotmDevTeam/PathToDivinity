@@ -10,6 +10,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.swimmingtuna.pathtodivinity.PTD;
 import net.swimmingtuna.pathtodivinity.beyonders.ProfileSyncPacket;
+import net.swimmingtuna.pathtodivinity.beyonders.ReleasedTypesPacket;
 
 /**
  * This mod's packets.
@@ -25,7 +26,7 @@ import net.swimmingtuna.pathtodivinity.beyonders.ProfileSyncPacket;
 @EventBusSubscriber(modid = PTD.MOD_ID)
 public final class PTDNetwork {
 
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
 
     private PTDNetwork() {
     }
@@ -43,6 +44,7 @@ public final class PTDNetwork {
         registrar.playToServer(ProfileActionC2SPacket.TYPE, ProfileActionC2SPacket.STREAM_CODEC, ProfileActionC2SPacket::handle);
         registrar.playToClient(ProfileVisibilityS2CPacket.TYPE, ProfileVisibilityS2CPacket.STREAM_CODEC, ProfileVisibilityS2CPacket::handle);
         registrar.playToClient(ProfileSyncPacket.TYPE, ProfileSyncPacket.STREAM_CODEC, ProfileSyncPacket::handle);
+        registrar.playToClient(ReleasedTypesPacket.TYPE, ReleasedTypesPacket.STREAM_CODEC, ReleasedTypesPacket::handle);
     }
 
     public static void sendToPlayer(CustomPacketPayload packet, ServerPlayer player) {

@@ -23,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import net.swimmingtuna.lotm.beyonder.api.BeyonderClass;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfile;
 import net.swimmingtuna.pathtodivinity.beyonders.BeyonderProfiles;
+import net.swimmingtuna.pathtodivinity.beyonders.ReleasedTypes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -117,7 +118,10 @@ public class BeyonderCheckCommand {
                         .append(Component.literal(")").withStyle(ChatFormatting.WHITE));
             }
             message.append(line);
-            if (profile != null && !profile.usesAbilities()) {
+            if (profile != null && ReleasedTypes.isReleased(living)) {
+                message.append(Component.literal("\n  Mapped by hand").withStyle(ChatFormatting.YELLOW)
+                        .append(Component.literal(" (/beyonderentity overrides " + profile.id() + "'s pathway, sequence and abilities)").withStyle(ChatFormatting.GRAY)));
+            } else if (profile != null && !profile.usesAbilities()) {
                 message.append(Component.literal("\n  Abilities: off").withStyle(ChatFormatting.YELLOW)
                         .append(Component.literal(" (ability_sequence -1 in " + profile.id() + ")").withStyle(ChatFormatting.GRAY)));
             }

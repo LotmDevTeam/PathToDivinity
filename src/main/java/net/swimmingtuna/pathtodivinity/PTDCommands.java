@@ -27,7 +27,6 @@ public class PTDCommands {
         BeyonderProfileCommand.register(event.getDispatcher());
         BeyonderCheckCommand.register(event.getDispatcher());
         AbilityBanCommand.register(event.getDispatcher());
-        BeyonderSummonCommand.register(event.getDispatcher(), event.getBuildContext());
         InactivityCommand.register(event.getDispatcher());
         DemoteCommand.register(event.getDispatcher());
     }
